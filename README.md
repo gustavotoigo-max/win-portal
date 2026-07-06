@@ -74,6 +74,7 @@ https://your-domain.com/ADM
 ```
 
 The admin link is intentionally not shown in the public navigation.
+The `/ADM` page is forced dynamic so it always checks the current login session and admin role.
 
 ## Fake purchase flow
 
@@ -117,6 +118,7 @@ https://your-domain.com/api/stripe/webhook
 - `/pt/dashboard`: customer license dashboard
 - `/ADM`: hidden admin license management
 - `/api/licenses/fake-purchase`: creates a fake order and license for the logged-in user
+- `/api/auth/logout`: signs out the current user
 - `/api/ativar`: first online activation for the Windows software
 - `/api/revalidar`: later online revalidation for an existing activation
 - `/api/checkout`: creates a Stripe Checkout session for future real payment flow

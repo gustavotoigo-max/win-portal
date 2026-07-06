@@ -44,6 +44,7 @@ npm.cmd run build
 - `app/[locale]/cadastro/page.jsx`: cadastro
 - `app/[locale]/dashboard/page.jsx`: dashboard do usuario
 - `app/ADM/page.jsx`: area administrativa oculta, acessivel somente por `/ADM`
+- `app/api/auth/logout/route.js`: encerra a sessao ao clicar no circulo do perfil
 - `app/api/licenses/fake-purchase/route.js`: cria pedido fake e licenca para usuario autenticado
 - `app/api/checkout/route.js`: cria sessao Stripe Checkout para fluxo futuro de pagamento real
 - `app/api/stripe/webhook/route.js`: recebe webhook Stripe e cria pedido/licenca
@@ -157,6 +158,7 @@ Area ADM:
 
 - rota oculta `/ADM`
 - o link ADM foi removido da navegacao publica
+- a rota ADM foi marcada como dinamica para sempre checar sessao e role atual
 - interface para ativar, revogar e bloquear licencas
 - usuario precisa ter `role = 'admin'` em `profiles`
 
@@ -165,6 +167,7 @@ Compra/licenca no fluxo atual:
 - usuario cria perfil ou faz login
 - no dashboard, clica em `Gerar key fake`
 - `/api/licenses/fake-purchase` cria uma ordem com valor zero e uma licenca ativa
+- o dashboard mostra mensagem de sucesso ou erro via parametro `fakePurchase`
 - a key aparece no dashboard
 - o cliente insere essa key no software Windows
 - o software chama `/api/licenses/validate` para validar e registrar a maquina
@@ -225,11 +228,10 @@ Se aparecer `Email not confirmed` ao tentar login:
    - adicionar `NEXT_PUBLIC_STRIPE_PRICE_ID`
    - criar webhook para `/api/stripe/webhook`
    - adicionar `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET`
-6. Melhorar protecao das rotas `/dashboard` e `/admin` para redirecionar anonimos.
+6. Melhorar protecao geral das rotas e mensagens de permissao.
 7. Trocar dados demo por mensagens de vazio quando Supabase estiver conectado.
 8. Criar tela ADM mais completa com busca real, filtros e historico de eventos.
-9. Implementar logout.
-10. Criar testes ou scripts de smoke test para auth, licencas e webhook.
+9. Criar testes ou scripts de smoke test para auth, licencas e webhook.
 
 ## Pontos tecnicos pendentes
 
@@ -238,7 +240,7 @@ Se aparecer `Email not confirmed` ao tentar login:
 - A area ADM consulta dados reais somente se o usuario autenticado tiver `role = 'admin'`.
 - As acoes ADM usam `SUPABASE_SERVICE_ROLE_KEY`; isso deve ficar apenas no ambiente do servidor/Vercel.
 - O dashboard ainda cai em `demoLicenses` se Supabase nao estiver configurado. Com Supabase configurado e usuario real, lista vazio ate gerar a primeira key fake.
-- Ainda nao ha pagina de logout.
+- Logout ja existe em `/api/auth/logout` e e acionado pelo circulo do perfil.
 - Ainda nao ha fluxo de recuperacao de senha.
 
 ## Como retomar

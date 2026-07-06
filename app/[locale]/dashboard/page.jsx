@@ -5,6 +5,19 @@ import { decryptLicenseKey } from "@/lib/license-crypto";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
+function fakePurchaseMessage(t, code) {
+  const messages = {
+    success: t.dashboard.fakePurchaseSuccess,
+    missing_config: t.dashboard.fakePurchaseMissingConfig,
+    profile_error: t.dashboard.fakePurchaseProfileError,
+    order_error: t.dashboard.fakePurchaseOrderError,
+    license_error: t.dashboard.fakePurchaseLicenseError
+  };
+  return code ? messages[code] || t.dashboard.fakePurchaseUnknownError : null;
+}
+
 async function getLicenses(locale) {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return demoLicenses;
@@ -45,11 +58,13 @@ async function getLicenses(locale) {
   });
 }
 
-export default async function DashboardPage({ params }) {
+export default async function DashboardPage({ params, searchParams }) {
   const { locale: rawLocale } = await params;
+  const { fakePurchase } = await searchParams;
   const locale = normalizeLocale(rawLocale);
   const t = getDictionary(locale);
   const licenses = await getLicenses(locale);
+  const message = fakePurchaseMessage(t, fakePurchase);
   const active = licenses.filter((item) => item.status === "active").length;
   const blocked = licenses.filter((item) => item.status === "blocked").length;
   const revoked = licenses.filter((item) => item.status === "revoked").length;
@@ -69,6 +84,8 @@ export default async function DashboardPage({ params }) {
             <button className="btn primary" type="submit">{t.dashboard.buy}</button>
           </form>
         </section>
+
+        {message && <p className="note">{message}</p>}
 
         <section className="dash-grid">
           <article className="dash-card"><span>{t.dashboard.total}</span><strong>{licenses.length}</strong></article>

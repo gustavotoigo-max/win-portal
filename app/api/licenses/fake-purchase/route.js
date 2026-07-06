@@ -4,6 +4,8 @@ import { encryptLicenseKey, licenseKeyHash } from "@/lib/license-crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 function createLicenseKey() {
   const raw = randomUUID().replaceAll("-", "").toUpperCase();
   return `WIN-${raw.slice(0, 4)}-${raw.slice(4, 8)}-${raw.slice(8, 12)}-${raw.slice(12, 16)}`;
@@ -25,24 +27,21 @@ function createOrderNumber() {
 export async function POST(request) {
   const form = await request.formData();
   const locale = form.get("locale") || "pt";
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
+  const dashboardUrl = (code) => new URL(`/${locale}/dashboard?fakePurchase=${code}`, request.url);
 
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
     !process.env.SUPABASE_SERVICE_ROLE_KEY
   ) {
-    return NextResponse.redirect(
-      `${baseUrl}/${locale}/dashboard?fakePurchase=missing_config`,
-      303
-    );
+    return NextResponse.redirect(dashboardUrl("missing_config"), 303);
   }
 
   const supabase = await createClient();
   const { data: userData, error: userError } = await supabase.auth.getUser();
 
   if (userError || !userData?.user) {
-    return NextResponse.redirect(`${baseUrl}/${locale}/login`, 303);
+    return NextResponse.redirect(new URL(`/${locale}/login`, request.url), 303);
   }
 
   const admin = createAdminClient();
@@ -60,10 +59,7 @@ export async function POST(request) {
   );
 
   if (profileError) {
-    return NextResponse.redirect(
-      `${baseUrl}/${locale}/dashboard?fakePurchase=profile_error`,
-      303
-    );
+    return NextResponse.redirect(dashboardUrl("profile_error"), 303);
   }
 
   const { data: order, error: orderError } = await admin
@@ -80,10 +76,7 @@ export async function POST(request) {
     .single();
 
   if (orderError) {
-    return NextResponse.redirect(
-      `${baseUrl}/${locale}/dashboard?fakePurchase=order_error`,
-      303
-    );
+    return NextResponse.redirect(dashboardUrl("order_error"), 303);
   }
 
   const licenseKey = createLicenseKey();
@@ -107,10 +100,7 @@ export async function POST(request) {
     .single();
 
   if (licenseError) {
-    return NextResponse.redirect(
-      `${baseUrl}/${locale}/dashboard?fakePurchase=license_error`,
-      303
-    );
+    return NextResponse.redirect(dashboardUrl("license_error"), 303);
   }
 
   await admin.from("license_events").insert({
@@ -119,5 +109,5 @@ export async function POST(request) {
     notes: "Fake purchase generated from customer dashboard"
   });
 
-  return NextResponse.redirect(`${baseUrl}/${locale}/dashboard?fakePurchase=success`, 303);
+  return NextResponse.redirect(dashboardUrl("success"), 303);
 }

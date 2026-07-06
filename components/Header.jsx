@@ -37,9 +37,12 @@ export default function Header({ locale, active = "home" }) {
               </Link>
             ))}
           </div>
-          <Link className="avatar" href={`/${locale}/login`} aria-label={t.nav.login}>
-            <span>GP</span>
-          </Link>
+          <form action="/api/auth/logout" method="post">
+            <input type="hidden" name="locale" value={locale} />
+            <button className="avatar" type="submit" aria-label={t.nav.logout} title={t.nav.logout}>
+              <span>GP</span>
+            </button>
+          </form>
         </div>
       </nav>
     </header>

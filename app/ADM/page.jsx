@@ -1,8 +1,11 @@
 import Header from "@/components/Header";
 import { demoLicenses, statusClass } from "@/lib/demo-data";
 import { getDictionary } from "@/lib/i18n";
+import { decryptLicenseKey } from "@/lib/license-crypto";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 
 async function getAdminLicenses() {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -28,14 +31,14 @@ async function getAdminLicenses() {
 
   const { data, error } = await supabase
     .from("licenses")
-    .select("id, license_key, status, orders(order_number), profiles(email), machines(machine_name)")
+    .select("id, license_key, license_key_ciphertext, license_key_hint, status, orders(order_number), profiles(email), machines(machine_name)")
     .order("created_at", { ascending: false });
 
   if (error || !data?.length) return [];
 
   return data.map((license) => ({
     id: license.id,
-    key: license.license_key,
+    key: decryptLicenseKey(license.license_key_ciphertext) || license.license_key || `****-${license.license_key_hint || "----"}`,
     status: license.status,
     machine: license.machines?.[0]?.machine_name || "-",
     order: license.orders?.order_number || "-",
