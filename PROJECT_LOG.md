@@ -19,14 +19,15 @@ Ultimos commits relevantes:
 
 ## Estado atual
 
-O projeto comecou como um site estatico e foi migrado para uma aplicacao Next.js preparada para Vercel, Supabase e Stripe.
+O projeto comecou como um site estatico e foi migrado para uma aplicacao Next.js preparada para Vercel, Supabase e, futuramente, Stripe. No fluxo atual, compra real foi pausada e substituida por uma compra fake que gera uma key automaticamente.
 
 Stack atual:
 
 - Next.js 15
 - React 19
 - Supabase Auth + PostgreSQL
-- Stripe Checkout
+- Compra fake para gerar licencas no fluxo atual
+- Stripe Checkout mantido no codigo como integracao futura
 - Vercel
 - Rotas com idioma: `/pt` e `/en`
 
@@ -43,7 +44,8 @@ npm.cmd run build
 - `app/[locale]/cadastro/page.jsx`: cadastro
 - `app/[locale]/dashboard/page.jsx`: dashboard do usuario
 - `app/[locale]/admin/page.jsx`: area administrativa
-- `app/api/checkout/route.js`: cria sessao Stripe Checkout
+- `app/api/licenses/fake-purchase/route.js`: cria pedido fake e licenca para usuario autenticado
+- `app/api/checkout/route.js`: cria sessao Stripe Checkout para fluxo futuro de pagamento real
 - `app/api/stripe/webhook/route.js`: recebe webhook Stripe e cria pedido/licenca
 - `app/api/licenses/validate/route.js`: endpoint para o software Windows validar licenca
 - `app/api/admin/licenses/route.js`: atualiza status de licenca pelo ADM
@@ -103,6 +105,8 @@ Mapeamento discutido para Supabase:
 
 Seguranca: uma chave secret do Supabase foi colada na conversa. Ela deve ser considerada exposta e precisa ser rotacionada antes de producao.
 
+As variaveis Stripe nao sao obrigatorias enquanto o fluxo atual for de compra fake.
+
 ## Vercel
 
 Houve erro de deploy:
@@ -144,8 +148,18 @@ Area ADM:
 - interface para ativar, revogar e bloquear licencas
 - usuario precisa ter `role = 'admin'` em `profiles`
 
-Pagamento:
+Compra/licenca no fluxo atual:
 
+- usuario cria perfil ou faz login
+- no dashboard, clica em `Gerar key fake`
+- `/api/licenses/fake-purchase` cria uma ordem com valor zero e uma licenca ativa
+- a key aparece no dashboard
+- o cliente insere essa key no software Windows
+- o software chama `/api/licenses/validate` para validar e registrar a maquina
+
+Pagamento real:
+
+- pausado por enquanto
 - depende das variaveis Stripe
 - `/api/checkout` cria sessao Checkout
 - `/api/stripe/webhook` cria pedido e licenca depois do pagamento
@@ -177,12 +191,16 @@ set role = 'admin'
 where email = 'seu-email@example.com';
 ```
 
-4. Configurar Stripe:
+4. Testar compra fake:
+   - entrar com usuario real
+   - abrir `/pt/dashboard`
+   - clicar em `Gerar key fake`
+   - confirmar linhas em `orders`, `licenses` e `license_events`
+5. Configurar Stripe futuramente:
    - criar produto/preco
    - adicionar `NEXT_PUBLIC_STRIPE_PRICE_ID`
    - criar webhook para `/api/stripe/webhook`
    - adicionar `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET`
-5. Ajustar fluxo real de associar pedidos/licencas ao usuario comprador.
 6. Melhorar protecao das rotas `/dashboard` e `/admin` para redirecionar anonimos.
 7. Trocar dados demo por mensagens de vazio quando Supabase estiver conectado.
 8. Criar tela ADM mais completa com busca real, filtros e historico de eventos.
@@ -191,10 +209,11 @@ where email = 'seu-email@example.com';
 
 ## Pontos tecnicos pendentes
 
-- O webhook Stripe cria `orders` e `licenses`, mas ainda nao associa automaticamente ao `user_id` porque o checkout atual nao envia o id do usuario autenticado.
+- O fluxo atual usa `/api/licenses/fake-purchase`, que cria `orders` e `licenses` associados ao usuario autenticado.
+- O webhook Stripe ainda existe, mas e um fluxo futuro e ainda nao associa automaticamente ao `user_id`.
 - A area ADM consulta dados reais somente se o usuario autenticado tiver `role = 'admin'`.
 - As acoes ADM usam `SUPABASE_SERVICE_ROLE_KEY`; isso deve ficar apenas no ambiente do servidor/Vercel.
-- O dashboard ainda cai em `demoLicenses` se Supabase nao estiver configurado ou se nao houver dados.
+- O dashboard ainda cai em `demoLicenses` se Supabase nao estiver configurado. Com Supabase configurado e usuario real, lista vazio ate gerar a primeira key fake.
 - Ainda nao ha pagina de logout.
 - Ainda nao ha fluxo de recuperacao de senha.
 

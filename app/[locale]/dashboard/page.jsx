@@ -2,8 +2,9 @@ import Header from "@/components/Header";
 import { demoLicenses, statusClass } from "@/lib/demo-data";
 import { getDictionary, normalizeLocale } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
-async function getLicenses() {
+async function getLicenses(locale) {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return demoLicenses;
   }
@@ -12,7 +13,7 @@ async function getLicenses() {
   const { data: userData } = await supabase.auth.getUser();
 
   if (!userData?.user) {
-    return demoLicenses;
+    redirect(`/${locale}/login`);
   }
 
   const { data, error } = await supabase
@@ -21,8 +22,12 @@ async function getLicenses() {
     .eq("user_id", userData.user.id)
     .order("created_at", { ascending: false });
 
-  if (error || !data?.length) {
-    return demoLicenses;
+  if (error) {
+    return [];
+  }
+
+  if (!data?.length) {
+    return [];
   }
 
   return data.map((license) => {
@@ -43,7 +48,7 @@ export default async function DashboardPage({ params }) {
   const { locale: rawLocale } = await params;
   const locale = normalizeLocale(rawLocale);
   const t = getDictionary(locale);
-  const licenses = await getLicenses();
+  const licenses = await getLicenses(locale);
   const active = licenses.filter((item) => item.status === "active").length;
   const blocked = licenses.filter((item) => item.status === "blocked").length;
   const revoked = licenses.filter((item) => item.status === "revoked").length;
@@ -58,7 +63,7 @@ export default async function DashboardPage({ params }) {
             <h1>{t.dashboard.title}</h1>
             <p className="muted">{t.dashboard.subtitle}</p>
           </div>
-          <form action="/api/checkout" method="post">
+          <form action="/api/licenses/fake-purchase" method="post">
             <input type="hidden" name="locale" value={locale} />
             <button className="btn primary" type="submit">{t.dashboard.buy}</button>
           </form>
@@ -91,16 +96,22 @@ export default async function DashboardPage({ params }) {
                 </tr>
               </thead>
               <tbody>
-                {licenses.map((license) => (
-                  <tr key={license.id}>
-                    <td>{license.key}</td>
-                    <td><span className={statusClass(license.status)}>{license.status}</span></td>
-                    <td>{license.lastMachine}</td>
-                    <td>{license.lastSeen}</td>
-                    <td>{license.order}</td>
-                    <td>{license.date}</td>
+                {licenses.length ? (
+                  licenses.map((license) => (
+                    <tr key={license.id}>
+                      <td>{license.key}</td>
+                      <td><span className={statusClass(license.status)}>{license.status}</span></td>
+                      <td>{license.lastMachine}</td>
+                      <td>{license.lastSeen}</td>
+                      <td>{license.order}</td>
+                      <td>{license.date}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6">{t.dashboard.empty}</td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

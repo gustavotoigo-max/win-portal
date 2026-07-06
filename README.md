@@ -1,12 +1,13 @@
 # WinPortal
 
-WinPortal is a Next.js app for selling Windows software licenses, with customer login, signup, payment flow, license dashboard, admin license management, and Portuguese/English routing.
+WinPortal is a Next.js app for selling Windows software licenses, with customer login, signup, fake purchase license generation, license dashboard, admin license management, and Portuguese/English routing.
 
 ## Stack
 
 - Next.js on Vercel
 - Supabase Auth + PostgreSQL
-- Stripe Checkout + webhook
+- Fake purchase flow for the current stage
+- Stripe Checkout + webhook kept as future payment integration
 - Locale routes: `/pt` and `/en`
 
 ## Local setup
@@ -32,6 +33,8 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_STRIPE_PRICE_ID=
 ```
 
+Stripe variables are optional while the project uses fake purchases. Supabase variables are required for real login and license generation.
+
 ## Supabase
 
 1. Create a Supabase project.
@@ -46,7 +49,28 @@ set role = 'admin'
 where email = 'your-email@example.com';
 ```
 
+## Fake purchase flow
+
+The current customer flow does not charge the user.
+
+1. User signs up or logs in.
+2. User opens `/pt/dashboard` or `/en/dashboard`.
+3. User clicks the fake key button.
+4. The app creates:
+   - one row in `orders`
+   - one row in `licenses`
+   - one row in `license_events`
+5. The generated license key appears in the dashboard and should be inserted into the Windows software.
+
+Important route:
+
+```text
+/api/licenses/fake-purchase
+```
+
 ## Stripe
+
+Stripe is not required for the current fake purchase stage. Keep this section for the future paid flow.
 
 1. Create a product and price in Stripe.
 2. Put the price id in `NEXT_PUBLIC_STRIPE_PRICE_ID`.
@@ -66,7 +90,8 @@ https://your-domain.com/api/stripe/webhook
 - `/pt/cadastro`: signup
 - `/pt/dashboard`: customer license dashboard
 - `/pt/admin`: admin license management
-- `/api/checkout`: creates a Stripe Checkout session
+- `/api/licenses/fake-purchase`: creates a fake order and license for the logged-in user
+- `/api/checkout`: creates a Stripe Checkout session for future real payment flow
 - `/api/stripe/webhook`: creates orders and licenses after payment
 - `/api/licenses/validate`: endpoint for the Windows software to validate a license
 - `/api/admin/licenses`: updates license status from admin actions
