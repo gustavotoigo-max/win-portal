@@ -1,4 +1,6 @@
-create extension if not exists "pgcrypto";
+-- Supabase/Postgres provides gen_random_uuid() on current projects.
+-- If your database reports that gen_random_uuid() does not exist, enable pgcrypto
+-- from Database > Extensions in the Supabase dashboard, then run this file again.
 
 create table if not exists public.profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
