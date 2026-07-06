@@ -16,6 +16,10 @@ npm install
 npm run dev
 ```
 
+## Vercel deploy
+
+The project includes `vercel.json` to force the Next.js preset and `.next` output directory. If the Vercel dashboard still has an old Output Directory value such as `public`, clear it or keep this repository config as the source of truth.
+
 Copy `.env.example` to `.env.local` and fill:
 
 ```bash
