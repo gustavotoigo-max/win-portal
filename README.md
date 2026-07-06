@@ -76,6 +76,12 @@ https://your-domain.com/ADM
 The admin link is intentionally not shown in the public navigation.
 The `/ADM` page is forced dynamic so it always checks the current login session and admin role.
 
+If the project database already existed before the signed activation API, run this migration too:
+
+```text
+supabase/migrations/20260706_license_activation_contract.sql
+```
+
 ## Fake purchase flow
 
 The current customer flow does not charge the user.

@@ -42,7 +42,8 @@ export default function FakePurchaseButton({ locale, dictionary }) {
 
       if (!response.ok || !payload.ok) {
         const key = messagesByCode[payload.code] || "fakePurchaseUnknownError";
-        setMessage(dictionary.dashboard[key]);
+        const detail = payload.message ? ` Detalhe: ${payload.message}` : "";
+        setMessage(`${dictionary.dashboard[key]}${detail}`);
         return;
       }
 

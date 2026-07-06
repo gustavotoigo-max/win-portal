@@ -55,6 +55,7 @@ npm.cmd run build
 - `lib/supabase/*`: clientes Supabase browser/server/admin
 - `lib/stripe.js`: cliente Stripe
 - `supabase/schema.sql`: schema do banco
+- `supabase/migrations/20260706_license_activation_contract.sql`: migracao incremental para bancos ja criados antes do contrato de ativacao assinado
 - `vercel.json`: configura Vercel como Next.js com output `.next`
 
 ## Banco de dados
