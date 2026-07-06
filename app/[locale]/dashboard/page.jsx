@@ -1,0 +1,112 @@
+import Header from "@/components/Header";
+import { demoLicenses, statusClass } from "@/lib/demo-data";
+import { getDictionary, normalizeLocale } from "@/lib/i18n";
+import { createClient } from "@/lib/supabase/server";
+
+async function getLicenses() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return demoLicenses;
+  }
+
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+
+  if (!userData?.user) {
+    return demoLicenses;
+  }
+
+  const { data, error } = await supabase
+    .from("licenses")
+    .select("id, license_key, status, expires_at, orders(order_number, created_at), machines(machine_name, last_seen_at)")
+    .eq("user_id", userData.user.id)
+    .order("created_at", { ascending: false });
+
+  if (error || !data?.length) {
+    return demoLicenses;
+  }
+
+  return data.map((license) => {
+    const machine = license.machines?.[0];
+    return {
+      id: license.id,
+      key: license.license_key,
+      status: license.status,
+      lastMachine: machine?.machine_name || "-",
+      lastSeen: machine?.last_seen_at?.slice(0, 10) || "-",
+      order: license.orders?.order_number || "-",
+      date: license.orders?.created_at?.slice(0, 10) || "-"
+    };
+  });
+}
+
+export default async function DashboardPage({ params }) {
+  const { locale: rawLocale } = await params;
+  const locale = normalizeLocale(rawLocale);
+  const t = getDictionary(locale);
+  const licenses = await getLicenses();
+  const active = licenses.filter((item) => item.status === "active").length;
+  const blocked = licenses.filter((item) => item.status === "blocked").length;
+  const revoked = licenses.filter((item) => item.status === "revoked").length;
+
+  return (
+    <>
+      <Header locale={locale} active="dashboard" />
+      <main className="dashboard-page container">
+        <section className="dashboard-heading">
+          <div>
+            <p className="eyebrow">{t.nav.dashboard}</p>
+            <h1>{t.dashboard.title}</h1>
+            <p className="muted">{t.dashboard.subtitle}</p>
+          </div>
+          <form action="/api/checkout" method="post">
+            <input type="hidden" name="locale" value={locale} />
+            <button className="btn primary" type="submit">{t.dashboard.buy}</button>
+          </form>
+        </section>
+
+        <section className="dash-grid">
+          <article className="dash-card"><span>{t.dashboard.total}</span><strong>{licenses.length}</strong></article>
+          <article className="dash-card"><span>{t.dashboard.active}</span><strong>{active}</strong></article>
+          <article className="dash-card"><span>{t.dashboard.blocked}</span><strong>{blocked}</strong></article>
+          <article className="dash-card"><span>{t.dashboard.revoked}</span><strong>{revoked}</strong></article>
+        </section>
+
+        <section className="table-card section-block">
+          <div className="toolbar-row">
+            <div>
+              <p className="eyebrow">{t.dashboard.license}</p>
+              <h2>{t.dashboard.title}</h2>
+            </div>
+          </div>
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>{t.dashboard.license}</th>
+                  <th>{t.dashboard.status}</th>
+                  <th>{t.dashboard.lastMachine}</th>
+                  <th>{t.dashboard.lastSeen}</th>
+                  <th>{t.dashboard.order}</th>
+                  <th>{t.dashboard.date}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {licenses.map((license) => (
+                  <tr key={license.id}>
+                    <td>{license.key}</td>
+                    <td><span className={statusClass(license.status)}>{license.status}</span></td>
+                    <td>{license.lastMachine}</td>
+                    <td>{license.lastSeen}</td>
+                    <td>{license.order}</td>
+                    <td>{license.date}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="note">{t.dashboard.note}</p>
+        </section>
+      </main>
+    </>
+  );
+}
