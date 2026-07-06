@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
+import { encryptLicenseKey, licenseKeyHash } from "@/lib/license-crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -85,14 +86,22 @@ export async function POST(request) {
     );
   }
 
+  const licenseKey = createLicenseKey();
   const { data: license, error: licenseError } = await admin
     .from("licenses")
     .insert({
       user_id: user.id,
       order_id: order.id,
-      license_key: createLicenseKey(),
+      license_key: null,
+      license_key_hash: licenseKeyHash(licenseKey),
+      license_key_hint: licenseKey.slice(-4),
+      license_key_ciphertext: encryptLicenseKey(licenseKey),
+      app_id: process.env.LICENSE_APP_ID || "com.suaempresa.templateativacao",
       status: "active",
-      max_machines: 1
+      max_machines: 1,
+      offline_allowed: true,
+      offline_max_days: 30,
+      features: ["core"]
     })
     .select("id")
     .single();

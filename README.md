@@ -31,9 +31,22 @@ STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_STRIPE_PRICE_ID=
+LICENSE_APP_ID=com.suaempresa.templateativacao
+LICENSE_HMAC_SECRET=
+LICENSE_ENCRYPTION_KEY=
+LICENSE_ED25519_PRIVATE_KEY_PEM=
+LICENSE_ED25519_PRIVATE_KEY_BASE64=
 ```
 
 Stripe variables are optional while the project uses fake purchases. Supabase variables are required for real login and license generation.
+
+License variables:
+
+- `LICENSE_HMAC_SECRET`: server-only secret used to hash license keys. Required before production.
+- `LICENSE_ENCRYPTION_KEY`: server-only secret used to encrypt the key for dashboard display.
+- `LICENSE_ED25519_PRIVATE_KEY_PEM`: server-only Ed25519 private key in PEM format. Use `\n` escaped line breaks in Vercel.
+- `LICENSE_ED25519_PRIVATE_KEY_BASE64`: alternative Ed25519 private key as base64 PKCS8 DER.
+- The Windows client must contain only the Ed25519 public key.
 
 ## Supabase
 
@@ -104,12 +117,97 @@ https://your-domain.com/api/stripe/webhook
 - `/pt/dashboard`: customer license dashboard
 - `/ADM`: hidden admin license management
 - `/api/licenses/fake-purchase`: creates a fake order and license for the logged-in user
+- `/api/ativar`: first online activation for the Windows software
+- `/api/revalidar`: later online revalidation for an existing activation
 - `/api/checkout`: creates a Stripe Checkout session for future real payment flow
 - `/api/stripe/webhook`: creates orders and licenses after payment
-- `/api/licenses/validate`: endpoint for the Windows software to validate a license
+- `/api/licenses/validate`: legacy validation endpoint
 - `/api/admin/licenses`: updates license status from admin actions
 
 ## License validation payload
+
+Preferred activation endpoints for the Windows client:
+
+```text
+POST /api/ativar
+POST /api/revalidar
+```
+
+Activation payload:
+
+```json
+{
+  "app_id": "com.suaempresa.templateativacao",
+  "email": "usuario@empresa.com",
+  "license_key": "WIN-ABCD-1234-EFGH-5678",
+  "machine_id": "stable-machine-id",
+  "machine_name": "DESKTOP-01",
+  "software_version": "1.0.0",
+  "client_utc": "2026-07-06T12:00:00+00:00",
+  "system_info": {
+    "os": "Windows 11",
+    "arch": "x64"
+  }
+}
+```
+
+Revalidation payload:
+
+```json
+{
+  "license_id": "uuid",
+  "activation_id": "uuid",
+  "email": "usuario@empresa.com",
+  "machine_id": "stable-machine-id",
+  "software_version": "1.0.0",
+  "last_validation_utc": "2026-07-06T12:00:00+00:00",
+  "system_info": {
+    "os": "Windows 11",
+    "arch": "x64"
+  }
+}
+```
+
+Successful response:
+
+```json
+{
+  "ok": true,
+  "status": "ACTIVE",
+  "message": "Licenca valida.",
+  "license": {
+    "license_id": "uuid",
+    "activation_id": "uuid",
+    "app_id": "com.suaempresa.templateativacao",
+    "email": "usuario@empresa.com",
+    "license_key_sha256": "hash-da-chave",
+    "machine_id": "stable-machine-id",
+    "software_version": "1.0.0",
+    "issued_at_utc": "2026-07-06T12:00:00+00:00",
+    "last_server_validation_utc": "2026-07-06T12:00:00+00:00",
+    "expires_at_utc": null,
+    "revoked": false,
+    "revoked_at_utc": null,
+    "offline_allowed": true,
+    "offline_max_days": 30,
+    "features": ["core"]
+  },
+  "signature": "assinatura-ed25519-base64"
+}
+```
+
+Error response:
+
+```json
+{
+  "ok": false,
+  "status": "DENIED",
+  "code": "LICENSE_REVOKED",
+  "message": "Licenca revogada."
+}
+```
+
+Legacy endpoint still available:
 
 ```json
 {

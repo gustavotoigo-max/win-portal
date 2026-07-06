@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { licenseKeyHash } from "@/lib/license-crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request) {
@@ -16,8 +17,8 @@ export async function POST(request) {
     const { data: license, error } = await supabase
       .from("licenses")
       .select("id, status, max_machines, expires_at")
-      .eq("license_key", licenseKey)
-      .single();
+      .or(`license_key.eq.${licenseKey},license_key_hash.eq.${licenseKeyHash(licenseKey)}`)
+      .maybeSingle();
 
     if (error || !license) {
       return NextResponse.json({ valid: false, reason: "not_found" }, { status: 404 });

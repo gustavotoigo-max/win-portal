@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import { demoLicenses, statusClass } from "@/lib/demo-data";
 import { getDictionary, normalizeLocale } from "@/lib/i18n";
+import { decryptLicenseKey } from "@/lib/license-crypto";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -18,7 +19,7 @@ async function getLicenses(locale) {
 
   const { data, error } = await supabase
     .from("licenses")
-    .select("id, license_key, status, expires_at, orders(order_number, created_at), machines(machine_name, last_seen_at)")
+    .select("id, license_key, license_key_ciphertext, license_key_hint, status, expires_at, orders(order_number, created_at), machines(machine_name, last_seen_at)")
     .eq("user_id", userData.user.id)
     .order("created_at", { ascending: false });
 
@@ -34,7 +35,7 @@ async function getLicenses(locale) {
     const machine = license.machines?.[0];
     return {
       id: license.id,
-      key: license.license_key,
+      key: decryptLicenseKey(license.license_key_ciphertext) || license.license_key || `****-${license.license_key_hint || "----"}`,
       status: license.status,
       lastMachine: machine?.machine_name || "-",
       lastSeen: machine?.last_seen_at?.slice(0, 10) || "-",

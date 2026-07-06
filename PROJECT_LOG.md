@@ -95,6 +95,11 @@ STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
 NEXT_PUBLIC_SITE_URL=
 NEXT_PUBLIC_STRIPE_PRICE_ID=
+LICENSE_APP_ID=
+LICENSE_HMAC_SECRET=
+LICENSE_ENCRYPTION_KEY=
+LICENSE_ED25519_PRIVATE_KEY_PEM=
+LICENSE_ED25519_PRIVATE_KEY_BASE64=
 ```
 
 Mapeamento discutido para Supabase:
@@ -106,6 +111,12 @@ Mapeamento discutido para Supabase:
 Seguranca: uma chave secret do Supabase foi colada na conversa. Ela deve ser considerada exposta e precisa ser rotacionada antes de producao.
 
 As variaveis Stripe nao sao obrigatorias enquanto o fluxo atual for de compra fake.
+
+As variaveis de licenca sao usadas para:
+
+- HMAC da key (`LICENSE_HMAC_SECRET`)
+- criptografia da key exibida no dashboard (`LICENSE_ENCRYPTION_KEY`)
+- assinatura Ed25519 da licenca offline (`LICENSE_ED25519_PRIVATE_KEY_PEM` ou `LICENSE_ED25519_PRIVATE_KEY_BASE64`)
 
 ## Vercel
 
@@ -167,16 +178,23 @@ Pagamento real:
 
 Validacao de licenca pelo software Windows:
 
-- endpoint: `/api/licenses/validate`
-- payload esperado:
+- endpoints preferidos: `/api/ativar` e `/api/revalidar`
+- endpoint legado ainda disponivel: `/api/licenses/validate`
+- payload de ativacao esperado:
 
 ```json
 {
-  "licenseKey": "WIN-EXEMPLO",
-  "machineFingerprint": "id-unico-da-maquina",
-  "machineName": "DESKTOP-01"
+  "app_id": "com.suaempresa.templateativacao",
+  "email": "usuario@empresa.com",
+  "license_key": "WIN-EXEMPLO",
+  "machine_id": "id-unico-da-maquina",
+  "machine_name": "DESKTOP-01",
+  "software_version": "1.0.0",
+  "system_info": {}
 }
 ```
+
+Resposta de sucesso segue o contrato com `ok`, `status`, objeto `license` canonico e `signature` Ed25519 base64.
 
 ## Proximos passos recomendados
 
@@ -244,3 +262,9 @@ order by table_name;
 ```
 
 E confira se existem as tabelas principais: `profiles`, `orders`, `licenses`, `machines`, `license_events`.
+
+Depois de atualizar esta etapa, conferir tambem:
+
+- `activations`
+- `validation_logs`
+- `revocations`
