@@ -674,7 +674,7 @@ select:focus {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 760px;
+  min-width: 1040px;
 }
 
 th,
@@ -701,6 +701,38 @@ th {
   min-height: 34px;
   padding: 0 12px;
   font-size: 12px;
+}
+
+.license-key-cell {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 250px;
+}
+
+.license-key-cell code {
+  color: var(--cyan);
+  font-family: Consolas, "Liberation Mono", monospace;
+  overflow-wrap: anywhere;
+}
+
+.table-action-btn {
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.table-action-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.table-action-error {
+  color: var(--danger);
+  font-size: 11px;
+  line-height: 1.35;
 }
 
 .note {

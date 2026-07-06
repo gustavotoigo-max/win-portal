@@ -1,5 +1,6 @@
 import FakePurchaseButton from "@/components/FakePurchaseButton";
 import Header from "@/components/Header";
+import { LicenseKeyCell, LicenseStatusButton } from "@/components/LicenseTableControls";
 import { demoLicenses, statusClass } from "@/lib/demo-data";
 import { getDictionary, normalizeLocale } from "@/lib/i18n";
 import { decryptLicenseKey } from "@/lib/license-crypto";
@@ -169,23 +170,44 @@ export default async function DashboardPage({ params, searchParams }) {
                   <th>{t.dashboard.lastSeen}</th>
                   <th>{t.dashboard.order}</th>
                   <th>{t.dashboard.date}</th>
+                  <th>{t.dashboard.revoke}</th>
+                  <th>{t.dashboard.block}</th>
                 </tr>
               </thead>
               <tbody>
                 {licenses.length ? (
                   licenses.map((license) => (
                     <tr key={license.id}>
-                      <td>{license.key}</td>
+                      <td><LicenseKeyCell licenseKey={license.key} dictionary={t} /></td>
                       <td><span className={statusClass(license.status)}>{license.status}</span></td>
                       <td>{license.lastMachine}</td>
                       <td>{license.lastSeen}</td>
                       <td>{license.order}</td>
                       <td>{license.date}</td>
+                      <td>
+                        <LicenseStatusButton
+                          licenseId={license.id}
+                          currentStatus={license.status}
+                          action="revoked"
+                          label={t.dashboard.revoke}
+                          dictionary={t}
+                        />
+                      </td>
+                      <td>
+                        <LicenseStatusButton
+                          licenseId={license.id}
+                          currentStatus={license.status}
+                          action="blocked"
+                          label={t.dashboard.block}
+                          variant="danger"
+                          dictionary={t}
+                        />
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6">{t.dashboard.empty}</td>
+                    <td colSpan="8">{t.dashboard.empty}</td>
                   </tr>
                 )}
               </tbody>
