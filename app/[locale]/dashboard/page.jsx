@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import { demoLicenses, statusClass } from "@/lib/demo-data";
 import { getDictionary, normalizeLocale } from "@/lib/i18n";
 import { decryptLicenseKey } from "@/lib/license-crypto";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -31,13 +32,15 @@ async function getLicenses(locale) {
     redirect(`/${locale}/login`);
   }
 
-  const { data, error } = await supabase
+  const queryClient = process.env.SUPABASE_SERVICE_ROLE_KEY ? createAdminClient() : supabase;
+  const { data, error } = await queryClient
     .from("licenses")
-    .select("id, license_key, license_key_ciphertext, license_key_hint, status, expires_at, orders(order_number, created_at), machines(machine_name, last_seen_at)")
+    .select("id, order_id, license_key, license_key_ciphertext, license_key_hint, status, expires_at, created_at")
     .eq("user_id", userData.user.id)
     .order("created_at", { ascending: false });
 
   if (error) {
+    console.error("Dashboard licenses query failed:", error.message);
     return [];
   }
 
@@ -45,16 +48,73 @@ async function getLicenses(locale) {
     return [];
   }
 
+  const orderIds = [...new Set(data.map((license) => license.order_id).filter(Boolean))];
+  const licenseIds = data.map((license) => license.id);
+  const ordersById = new Map();
+  const machinesByLicenseId = new Map();
+
+  if (orderIds.length) {
+    const { data: orders, error: ordersError } = await queryClient
+      .from("orders")
+      .select("id, order_number, created_at")
+      .in("id", orderIds);
+
+    if (ordersError) {
+      console.error("Dashboard orders query failed:", ordersError.message);
+    } else {
+      orders?.forEach((order) => ordersById.set(order.id, order));
+    }
+  }
+
+  const { data: activations, error: activationsError } = await queryClient
+    .from("activations")
+    .select("license_id, machine_id, machine_name, last_seen_at, last_validated_at, activated_at")
+    .in("license_id", licenseIds)
+    .order("last_seen_at", { ascending: false, nullsFirst: false });
+
+  if (activationsError) {
+    console.error("Dashboard activations query failed:", activationsError.message);
+  } else {
+    activations?.forEach((activation) => {
+      if (!machinesByLicenseId.has(activation.license_id)) {
+        machinesByLicenseId.set(activation.license_id, {
+          name: activation.machine_name || activation.machine_id,
+          seenAt: activation.last_seen_at || activation.last_validated_at || activation.activated_at
+        });
+      }
+    });
+  }
+
+  const { data: machines, error: machinesError } = await queryClient
+    .from("machines")
+    .select("license_id, machine_fingerprint, machine_name, last_seen_at, registered_at")
+    .in("license_id", licenseIds)
+    .order("last_seen_at", { ascending: false });
+
+  if (machinesError) {
+    console.error("Dashboard machines query failed:", machinesError.message);
+  } else {
+    machines?.forEach((machine) => {
+      if (!machinesByLicenseId.has(machine.license_id)) {
+        machinesByLicenseId.set(machine.license_id, {
+          name: machine.machine_name || machine.machine_fingerprint,
+          seenAt: machine.last_seen_at || machine.registered_at
+        });
+      }
+    });
+  }
+
   return data.map((license) => {
-    const machine = license.machines?.[0];
+    const order = ordersById.get(license.order_id);
+    const machine = machinesByLicenseId.get(license.id);
     return {
       id: license.id,
       key: decryptLicenseKey(license.license_key_ciphertext) || license.license_key || `****-${license.license_key_hint || "----"}`,
       status: license.status,
-      lastMachine: machine?.machine_name || "-",
-      lastSeen: machine?.last_seen_at?.slice(0, 10) || "-",
-      order: license.orders?.order_number || "-",
-      date: license.orders?.created_at?.slice(0, 10) || "-"
+      lastMachine: machine?.name || "-",
+      lastSeen: machine?.seenAt?.slice(0, 10) || "-",
+      order: order?.order_number || "-",
+      date: order?.created_at?.slice(0, 10) || license.created_at?.slice(0, 10) || "-"
     };
   });
 }
