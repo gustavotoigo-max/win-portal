@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/browser";
 
 const messagesByCode = {
@@ -12,12 +13,15 @@ const messagesByCode = {
 };
 
 export default function FakePurchaseButton({ locale, dictionary }) {
+  const router = useRouter();
   const [message, setMessage] = useState("");
+  const [generatedKey, setGeneratedKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleClick() {
     setIsLoading(true);
     setMessage("");
+    setGeneratedKey("");
 
     try {
       const supabase = createClient();
@@ -47,7 +51,9 @@ export default function FakePurchaseButton({ locale, dictionary }) {
         return;
       }
 
-      window.location.href = `/${locale}/dashboard?fakePurchase=success`;
+      setMessage(dictionary.dashboard.fakePurchaseSuccess);
+      setGeneratedKey(payload.licenseKey || "");
+      router.refresh();
     } catch {
       setMessage(dictionary.dashboard.fakePurchaseUnknownError);
     } finally {
@@ -61,6 +67,12 @@ export default function FakePurchaseButton({ locale, dictionary }) {
         {isLoading ? dictionary.dashboard.generating : dictionary.dashboard.buy}
       </button>
       {message && <p className="note">{message}</p>}
+      {generatedKey && (
+        <div className="generated-key-box">
+          <span>{dictionary.dashboard.generatedKeyLabel}</span>
+          <code>{generatedKey}</code>
+        </div>
+      )}
     </div>
   );
 }

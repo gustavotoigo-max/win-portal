@@ -712,6 +712,32 @@ th {
   background: rgba(255, 255, 255, 0.035);
 }
 
+.generated-key-box {
+  align-items: flex-start;
+  background: rgba(71, 242, 255, 0.08);
+  border: 1px solid rgba(71, 242, 255, 0.24);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 12px;
+}
+
+.generated-key-box span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.generated-key-box code {
+  color: var(--cyan);
+  font-family: Consolas, "Liberation Mono", monospace;
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 880px) {
   .nav-shell {
     align-items: flex-start;

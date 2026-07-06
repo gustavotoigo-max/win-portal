@@ -154,7 +154,7 @@ export async function POST(request) {
   });
 
   if (json || wantsJson(request)) {
-    return NextResponse.json({ ok: true, licenseId: license.id });
+    return NextResponse.json({ ok: true, licenseId: license.id, licenseKey });
   }
 
   return NextResponse.redirect(dashboardUrl("success"), 303);
