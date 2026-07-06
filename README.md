@@ -49,6 +49,19 @@ set role = 'admin'
 where email = 'your-email@example.com';
 ```
 
+During testing, Supabase may block login with `Email not confirmed`. You have two options:
+
+- Confirm the user through the email sent by Supabase.
+- Or disable email confirmation in `Authentication > Providers > Email > Confirm email`.
+
+Use the hidden admin URL:
+
+```text
+https://your-domain.com/ADM
+```
+
+The admin link is intentionally not shown in the public navigation.
+
 ## Fake purchase flow
 
 The current customer flow does not charge the user.
@@ -89,7 +102,7 @@ https://your-domain.com/api/stripe/webhook
 - `/pt/login`: login
 - `/pt/cadastro`: signup
 - `/pt/dashboard`: customer license dashboard
-- `/pt/admin`: admin license management
+- `/ADM`: hidden admin license management
 - `/api/licenses/fake-purchase`: creates a fake order and license for the logged-in user
 - `/api/checkout`: creates a Stripe Checkout session for future real payment flow
 - `/api/stripe/webhook`: creates orders and licenses after payment

@@ -17,6 +17,7 @@ export function middleware(request) {
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
+    pathname === "/ADM" ||
     pathname.startsWith("/favicon") ||
     PUBLIC_FILE.test(pathname)
   ) {

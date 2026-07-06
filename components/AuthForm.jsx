@@ -25,6 +25,7 @@ export default function AuthForm({ locale, dictionary, mode }) {
           email,
           password,
           options: {
+            emailRedirectTo: `${window.location.origin}/${locale}/dashboard`,
             data: {
               full_name: form.get("name"),
               company: form.get("company"),
@@ -35,7 +36,17 @@ export default function AuthForm({ locale, dictionary, mode }) {
       : await supabase.auth.signInWithPassword({ email, password });
 
     if (result.error) {
-      setMessage(result.error.message);
+      const errorText = result.error.message.toLowerCase();
+      if (errorText.includes("email not confirmed")) {
+        setMessage(dictionary.auth.emailNotConfirmed);
+      } else {
+        setMessage(result.error.message);
+      }
+      return;
+    }
+
+    if (isSignup && !result.data.session) {
+      setMessage(dictionary.auth.confirmEmailNotice);
       return;
     }
 

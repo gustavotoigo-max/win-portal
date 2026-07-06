@@ -1,7 +1,8 @@
 import Header from "@/components/Header";
 import { demoLicenses, statusClass } from "@/lib/demo-data";
-import { getDictionary, normalizeLocale } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
 async function getAdminLicenses() {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -11,7 +12,9 @@ async function getAdminLicenses() {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
 
-  if (!userData?.user) return demoLicenses;
+  if (!userData?.user) {
+    redirect("/pt/login");
+  }
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -19,14 +22,16 @@ async function getAdminLicenses() {
     .eq("user_id", userData.user.id)
     .single();
 
-  if (profile?.role !== "admin") return demoLicenses;
+  if (profile?.role !== "admin") {
+    redirect("/pt/dashboard");
+  }
 
   const { data, error } = await supabase
     .from("licenses")
     .select("id, license_key, status, orders(order_number), profiles(email), machines(machine_name)")
     .order("created_at", { ascending: false });
 
-  if (error || !data?.length) return demoLicenses;
+  if (error || !data?.length) return [];
 
   return data.map((license) => ({
     id: license.id,
@@ -38,9 +43,8 @@ async function getAdminLicenses() {
   }));
 }
 
-export default async function AdminPage({ params }) {
-  const { locale: rawLocale } = await params;
-  const locale = normalizeLocale(rawLocale);
+export default async function AdminPage() {
+  const locale = "pt";
   const t = getDictionary(locale);
   const licenses = await getAdminLicenses();
 
@@ -73,23 +77,29 @@ export default async function AdminPage({ params }) {
                 </tr>
               </thead>
               <tbody>
-                {licenses.map((license) => (
-                  <tr key={license.id}>
-                    <td>{license.user}</td>
-                    <td>{license.key}</td>
-                    <td><span className={statusClass(license.status)}>{license.status}</span></td>
-                    <td>{license.machine || license.lastMachine}</td>
-                    <td>{license.order}</td>
-                    <td>
-                      <form className="admin-actions" action="/api/admin/licenses" method="post">
-                        <input type="hidden" name="licenseId" value={license.id} />
-                        <button className="btn secondary" name="action" value="active" type="submit">{t.admin.activate}</button>
-                        <button className="btn secondary" name="action" value="revoked" type="submit">{t.admin.revoke}</button>
-                        <button className="btn danger" name="action" value="blocked" type="submit">{t.admin.block}</button>
-                      </form>
-                    </td>
+                {licenses.length ? (
+                  licenses.map((license) => (
+                    <tr key={license.id}>
+                      <td>{license.user}</td>
+                      <td>{license.key}</td>
+                      <td><span className={statusClass(license.status)}>{license.status}</span></td>
+                      <td>{license.machine || license.lastMachine}</td>
+                      <td>{license.order}</td>
+                      <td>
+                        <form className="admin-actions" action="/api/admin/licenses" method="post">
+                          <input type="hidden" name="licenseId" value={license.id} />
+                          <button className="btn secondary" name="action" value="active" type="submit">{t.admin.activate}</button>
+                          <button className="btn secondary" name="action" value="revoked" type="submit">{t.admin.revoke}</button>
+                          <button className="btn danger" name="action" value="blocked" type="submit">{t.admin.block}</button>
+                        </form>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6">{t.admin.empty}</td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

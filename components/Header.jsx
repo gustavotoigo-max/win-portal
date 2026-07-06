@@ -7,8 +7,7 @@ export default function Header({ locale, active = "home" }) {
   const nav = [
     ["home", t.nav.home, `/${locale}`],
     ["dashboard", t.nav.dashboard, `/${locale}/dashboard`],
-    ["signup", t.nav.signup, `/${locale}/cadastro`],
-    ["admin", t.nav.admin, `/${locale}/admin`]
+    ["signup", t.nav.signup, `/${locale}/cadastro`]
   ];
 
   return (

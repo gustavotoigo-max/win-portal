@@ -43,7 +43,7 @@ npm.cmd run build
 - `app/[locale]/login/page.jsx`: login
 - `app/[locale]/cadastro/page.jsx`: cadastro
 - `app/[locale]/dashboard/page.jsx`: dashboard do usuario
-- `app/[locale]/admin/page.jsx`: area administrativa
+- `app/ADM/page.jsx`: area administrativa oculta, acessivel somente por `/ADM`
 - `app/api/licenses/fake-purchase/route.js`: cria pedido fake e licenca para usuario autenticado
 - `app/api/checkout/route.js`: cria sessao Stripe Checkout para fluxo futuro de pagamento real
 - `app/api/stripe/webhook/route.js`: recebe webhook Stripe e cria pedido/licenca
@@ -144,7 +144,8 @@ Dashboard do usuario:
 
 Area ADM:
 
-- rota `/pt/admin` ou `/en/admin`
+- rota oculta `/ADM`
+- o link ADM foi removido da navegacao publica
 - interface para ativar, revogar e bloquear licencas
 - usuario precisa ter `role = 'admin'` em `profiles`
 
@@ -190,6 +191,11 @@ update public.profiles
 set role = 'admin'
 where email = 'seu-email@example.com';
 ```
+
+Se aparecer `Email not confirmed` ao tentar login:
+
+- confirmar o e-mail pelo link enviado pelo Supabase; ou
+- para testes, desativar `Confirm email` em `Authentication > Providers > Email`.
 
 4. Testar compra fake:
    - entrar com usuario real
