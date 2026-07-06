@@ -167,6 +167,7 @@ Compra/licenca no fluxo atual:
 - usuario cria perfil ou faz login
 - no dashboard, clica em `Gerar key fake`
 - `/api/licenses/fake-purchase` cria uma ordem com valor zero e uma licenca ativa
+- o botao `Gerar key fake` usa um componente client-side que envia o access token Supabase via Bearer para evitar problemas de cookie/sessao em form POST
 - o dashboard mostra mensagem de sucesso ou erro via parametro `fakePurchase`
 - a key aparece no dashboard
 - o cliente insere essa key no software Windows

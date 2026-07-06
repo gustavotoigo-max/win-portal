@@ -24,9 +24,39 @@ function createOrderNumber() {
   return `FAKE-${stamp}-${Math.floor(Math.random() * 9000 + 1000)}`;
 }
 
-export async function POST(request) {
+function wantsJson(request) {
+  return request.headers.get("accept")?.includes("application/json") ||
+    request.headers.get("content-type")?.includes("application/json");
+}
+
+function jsonError(code, message, status = 400) {
+  return NextResponse.json({ ok: false, code, message }, { status });
+}
+
+async function requestContext(request) {
+  if (request.headers.get("content-type")?.includes("application/json")) {
+    const body = await request.json();
+    return { locale: body.locale || "pt", json: true };
+  }
+
   const form = await request.formData();
-  const locale = form.get("locale") || "pt";
+  return { locale: form.get("locale") || "pt", json: false };
+}
+
+async function getRequestUser(request, admin) {
+  const authorization = request.headers.get("authorization") || "";
+  const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : null;
+
+  if (token) {
+    return admin.auth.getUser(token);
+  }
+
+  const supabase = await createClient();
+  return supabase.auth.getUser();
+}
+
+export async function POST(request) {
+  const { locale, json } = await requestContext(request);
   const dashboardUrl = (code) => new URL(`/${locale}/dashboard?fakePurchase=${code}`, request.url);
 
   if (
@@ -34,17 +64,22 @@ export async function POST(request) {
     !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
     !process.env.SUPABASE_SERVICE_ROLE_KEY
   ) {
+    if (json || wantsJson(request)) {
+      return jsonError("missing_config", "Supabase configuration is incomplete.", 500);
+    }
     return NextResponse.redirect(dashboardUrl("missing_config"), 303);
   }
 
-  const supabase = await createClient();
-  const { data: userData, error: userError } = await supabase.auth.getUser();
+  const admin = createAdminClient();
+  const { data: userData, error: userError } = await getRequestUser(request, admin);
 
   if (userError || !userData?.user) {
+    if (json || wantsJson(request)) {
+      return jsonError("auth_required", "Authentication is required.", 401);
+    }
     return NextResponse.redirect(new URL(`/${locale}/login`, request.url), 303);
   }
 
-  const admin = createAdminClient();
   const user = userData.user;
 
   const { error: profileError } = await admin.from("profiles").upsert(
@@ -59,6 +94,9 @@ export async function POST(request) {
   );
 
   if (profileError) {
+    if (json || wantsJson(request)) {
+      return jsonError("profile_error", profileError.message, 500);
+    }
     return NextResponse.redirect(dashboardUrl("profile_error"), 303);
   }
 
@@ -76,6 +114,9 @@ export async function POST(request) {
     .single();
 
   if (orderError) {
+    if (json || wantsJson(request)) {
+      return jsonError("order_error", orderError.message, 500);
+    }
     return NextResponse.redirect(dashboardUrl("order_error"), 303);
   }
 
@@ -100,6 +141,9 @@ export async function POST(request) {
     .single();
 
   if (licenseError) {
+    if (json || wantsJson(request)) {
+      return jsonError("license_error", licenseError.message, 500);
+    }
     return NextResponse.redirect(dashboardUrl("license_error"), 303);
   }
 
@@ -108,6 +152,10 @@ export async function POST(request) {
     action: "created",
     notes: "Fake purchase generated from customer dashboard"
   });
+
+  if (json || wantsJson(request)) {
+    return NextResponse.json({ ok: true, licenseId: license.id });
+  }
 
   return NextResponse.redirect(dashboardUrl("success"), 303);
 }

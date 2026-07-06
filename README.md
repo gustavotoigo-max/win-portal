@@ -83,11 +83,12 @@ The current customer flow does not charge the user.
 1. User signs up or logs in.
 2. User opens `/pt/dashboard` or `/en/dashboard`.
 3. User clicks the fake key button.
-4. The app creates:
+4. The client sends the current Supabase access token to `/api/licenses/fake-purchase`.
+5. The app creates:
    - one row in `orders`
    - one row in `licenses`
    - one row in `license_events`
-5. The generated license key appears in the dashboard and should be inserted into the Windows software.
+6. The generated license key appears in the dashboard and should be inserted into the Windows software.
 
 Important route:
 

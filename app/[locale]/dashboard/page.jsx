@@ -1,3 +1,4 @@
+import FakePurchaseButton from "@/components/FakePurchaseButton";
 import Header from "@/components/Header";
 import { demoLicenses, statusClass } from "@/lib/demo-data";
 import { getDictionary, normalizeLocale } from "@/lib/i18n";
@@ -79,10 +80,7 @@ export default async function DashboardPage({ params, searchParams }) {
             <h1>{t.dashboard.title}</h1>
             <p className="muted">{t.dashboard.subtitle}</p>
           </div>
-          <form action="/api/licenses/fake-purchase" method="post">
-            <input type="hidden" name="locale" value={locale} />
-            <button className="btn primary" type="submit">{t.dashboard.buy}</button>
-          </form>
+          <FakePurchaseButton locale={locale} dictionary={t} />
         </section>
 
         {message && <p className="note">{message}</p>}
