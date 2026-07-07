@@ -7,7 +7,7 @@ import {
 } from "@/lib/license-crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-const DEFAULT_APP_ID = "com.suaempresa.templateativacao";
+const DEFAULT_APP_ID = "com.winportal.windowssoftware";
 
 function isExpired(expiresAt) {
   return expiresAt && new Date(expiresAt) < new Date();
@@ -59,6 +59,14 @@ export async function POST(request) {
 
     if (license.profiles?.email && license.profiles.email.toLowerCase() !== email.toLowerCase()) {
       return NextResponse.json(errorResponse("INVALID_EMAIL", "E-mail nao pertence a licenca."), {
+        status: 403
+      });
+    }
+
+    const expectedAppId = process.env.LICENSE_APP_ID || DEFAULT_APP_ID;
+    const licenseAppId = license.app_id || expectedAppId;
+    if (licenseAppId !== appId) {
+      return NextResponse.json(errorResponse("LICENSE_APP_MISMATCH", "Licenca pertence a outro aplicativo."), {
         status: 403
       });
     }

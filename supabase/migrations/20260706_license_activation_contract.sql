@@ -6,7 +6,7 @@ alter table public.licenses alter column license_key drop not null;
 alter table public.licenses add column if not exists license_key_hash text;
 alter table public.licenses add column if not exists license_key_hint text;
 alter table public.licenses add column if not exists license_key_ciphertext text;
-alter table public.licenses add column if not exists app_id text not null default 'com.suaempresa.templateativacao';
+alter table public.licenses add column if not exists app_id text not null default 'com.winportal.windowssoftware';
 alter table public.licenses add column if not exists revoked_at timestamptz;
 alter table public.licenses add column if not exists offline_allowed boolean not null default true;
 alter table public.licenses add column if not exists offline_max_days integer not null default 30;

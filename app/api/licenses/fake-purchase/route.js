@@ -130,7 +130,7 @@ export async function POST(request) {
       license_key_hash: licenseKeyHash(licenseKey),
       license_key_hint: licenseKey.slice(-4),
       license_key_ciphertext: encryptLicenseKey(licenseKey),
-      app_id: process.env.LICENSE_APP_ID || "com.suaempresa.templateativacao",
+      app_id: process.env.LICENSE_APP_ID || "com.winportal.windowssoftware",
       status: "active",
       max_machines: 1,
       offline_allowed: true,

@@ -31,7 +31,7 @@ STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_STRIPE_PRICE_ID=
-LICENSE_APP_ID=com.suaempresa.templateativacao
+LICENSE_APP_ID=com.winportal.windowssoftware
 LICENSE_HMAC_SECRET=
 LICENSE_ENCRYPTION_KEY=
 LICENSE_ED25519_PRIVATE_KEY_PEM=
@@ -146,7 +146,7 @@ Activation payload:
 
 ```json
 {
-  "app_id": "com.suaempresa.templateativacao",
+  "app_id": "com.winportal.windowssoftware",
   "email": "usuario@empresa.com",
   "license_key": "WIN-ABCD-1234-EFGH-5678",
   "machine_id": "stable-machine-id",
@@ -187,7 +187,7 @@ Successful response:
   "license": {
     "license_id": "uuid",
     "activation_id": "uuid",
-    "app_id": "com.suaempresa.templateativacao",
+    "app_id": "com.winportal.windowssoftware",
     "email": "usuario@empresa.com",
     "license_key_sha256": "hash-da-chave",
     "machine_id": "stable-machine-id",

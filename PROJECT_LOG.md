@@ -189,7 +189,7 @@ Validacao de licenca pelo software Windows:
 
 ```json
 {
-  "app_id": "com.suaempresa.templateativacao",
+  "app_id": "com.winportal.windowssoftware",
   "email": "usuario@empresa.com",
   "license_key": "WIN-EXEMPLO",
   "machine_id": "id-unico-da-maquina",

@@ -33,7 +33,7 @@ create table if not exists public.licenses (
   license_key_hash text unique,
   license_key_hint text,
   license_key_ciphertext text,
-  app_id text not null default 'com.suaempresa.templateativacao',
+  app_id text not null default 'com.winportal.windowssoftware',
   status text not null default 'active' check (status in ('active', 'revoked', 'blocked', 'expired')),
   max_machines integer not null default 1,
   expires_at timestamptz,
@@ -105,7 +105,7 @@ alter table public.licenses alter column license_key drop not null;
 alter table public.licenses add column if not exists license_key_hash text;
 alter table public.licenses add column if not exists license_key_hint text;
 alter table public.licenses add column if not exists license_key_ciphertext text;
-alter table public.licenses add column if not exists app_id text not null default 'com.suaempresa.templateativacao';
+alter table public.licenses add column if not exists app_id text not null default 'com.winportal.windowssoftware';
 alter table public.licenses add column if not exists revoked_at timestamptz;
 alter table public.licenses add column if not exists offline_allowed boolean not null default true;
 alter table public.licenses add column if not exists offline_max_days integer not null default 30;
