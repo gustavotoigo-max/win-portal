@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-const allowed = new Set(["revoked", "blocked"]);
+const allowed = new Set(["revoked", "blocked", "clear_activation"]);
 
 function jsonError(code, message, status = 400) {
   return NextResponse.json({ ok: false, code, message }, { status });
@@ -40,23 +40,45 @@ export async function POST(request) {
       return jsonError("not_found", "License not found.", 404);
     }
 
-    const { error: updateError } = await supabase
-      .from("licenses")
-      .update({
-        status: action,
-        revoked_at: action === "revoked" ? new Date().toISOString() : null
-      })
-      .eq("id", licenseId)
-      .eq("user_id", userData.user.id);
+    if (action === "clear_activation") {
+      const { error: activationsError } = await supabase
+        .from("activations")
+        .delete()
+        .eq("license_id", licenseId);
 
-    if (updateError) {
-      return jsonError("update_failed", updateError.message, 500);
+      if (activationsError) {
+        return jsonError("clear_failed", activationsError.message, 500);
+      }
+
+      const { error: machinesError } = await supabase
+        .from("machines")
+        .delete()
+        .eq("license_id", licenseId);
+
+      if (machinesError) {
+        return jsonError("clear_failed", machinesError.message, 500);
+      }
+    } else {
+      const { error: updateError } = await supabase
+        .from("licenses")
+        .update({
+          status: action,
+          revoked_at: action === "revoked" ? new Date().toISOString() : null
+        })
+        .eq("id", licenseId)
+        .eq("user_id", userData.user.id);
+
+      if (updateError) {
+        return jsonError("update_failed", updateError.message, 500);
+      }
     }
 
     await supabase.from("license_events").insert({
       license_id: licenseId,
       action,
-      notes: "Updated from customer dashboard"
+      notes: action === "clear_activation"
+        ? "Activation records cleared from customer dashboard"
+        : "Updated from customer dashboard"
     });
 
     return NextResponse.json({ ok: true });

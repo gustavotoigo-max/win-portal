@@ -170,6 +170,7 @@ export default async function DashboardPage({ params, searchParams }) {
                   <th>{t.dashboard.lastSeen}</th>
                   <th>{t.dashboard.order}</th>
                   <th>{t.dashboard.date}</th>
+                  <th>{t.dashboard.clearActivation}</th>
                   <th>{t.dashboard.revoke}</th>
                   <th>{t.dashboard.block}</th>
                 </tr>
@@ -184,6 +185,15 @@ export default async function DashboardPage({ params, searchParams }) {
                       <td>{license.lastSeen}</td>
                       <td>{license.order}</td>
                       <td>{license.date}</td>
+                      <td>
+                        <LicenseStatusButton
+                          licenseId={license.id}
+                          currentStatus={license.status}
+                          action="clear_activation"
+                          label={t.dashboard.clear}
+                          dictionary={t}
+                        />
+                      </td>
                       <td>
                         <LicenseStatusButton
                           licenseId={license.id}
@@ -207,7 +217,7 @@ export default async function DashboardPage({ params, searchParams }) {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="8">{t.dashboard.empty}</td>
+                    <td colSpan="9">{t.dashboard.empty}</td>
                   </tr>
                 )}
               </tbody>
