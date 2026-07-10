@@ -28,6 +28,7 @@ create table if not exists public.orders (
 create table if not exists public.licenses (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references public.profiles(user_id) on delete set null,
+  customer_email text,
   order_id uuid references public.orders(id) on delete set null,
   license_key text unique,
   license_key_hash text unique,
@@ -102,6 +103,7 @@ create table if not exists public.revocations (
 );
 
 alter table public.licenses alter column license_key drop not null;
+alter table public.licenses add column if not exists customer_email text;
 alter table public.licenses add column if not exists license_key_hash text;
 alter table public.licenses add column if not exists license_key_hint text;
 alter table public.licenses add column if not exists license_key_ciphertext text;
@@ -291,6 +293,7 @@ with check (public.is_admin());
 
 create index if not exists idx_orders_user_id on public.orders(user_id);
 create index if not exists idx_licenses_user_id on public.licenses(user_id);
+create index if not exists idx_licenses_customer_email on public.licenses(customer_email);
 create index if not exists idx_licenses_order_id on public.licenses(order_id);
 create index if not exists idx_licenses_key on public.licenses(license_key);
 create unique index if not exists idx_licenses_key_hash on public.licenses(license_key_hash);

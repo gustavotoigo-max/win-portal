@@ -153,6 +153,10 @@ select {
   margin: 0 auto;
 }
 
+.admin-page {
+  width: min(1480px, calc(100% - 32px));
+}
+
 .section-band {
   padding: 96px 0 56px;
 }
@@ -677,6 +681,11 @@ table {
   min-width: 1140px;
 }
 
+.admin-license-table {
+  min-width: 1780px;
+  table-layout: fixed;
+}
+
 th,
 td {
   padding: 14px 12px;
@@ -691,6 +700,39 @@ th {
   text-transform: uppercase;
 }
 
+.admin-license-table th,
+.admin-license-table td {
+  padding: 12px 10px;
+}
+
+.admin-license-table th:nth-child(1),
+.admin-license-table td:nth-child(1) {
+  width: 210px;
+}
+
+.admin-license-table th:nth-child(2),
+.admin-license-table td:nth-child(2) {
+  width: 330px;
+}
+
+.admin-license-table th:nth-child(6),
+.admin-license-table td:nth-child(6) {
+  width: 260px;
+}
+
+.admin-license-table th:nth-child(14),
+.admin-license-table td:nth-child(14) {
+  width: 240px;
+}
+
+.mono-cell {
+  color: var(--muted);
+  display: inline-block;
+  font-family: Consolas, "Liberation Mono", monospace;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
 .admin-actions {
   display: flex;
   flex-wrap: wrap;
@@ -701,6 +743,29 @@ th {
   min-height: 34px;
   padding: 0 12px;
   font-size: 12px;
+}
+
+.admin-create-card,
+.admin-table-card {
+  margin-top: 18px;
+}
+
+.admin-create-form {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) 120px auto;
+  gap: 14px;
+  align-items: end;
+}
+
+.admin-create-form label {
+  color: #b8d8e1;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.compact-note {
+  grid-column: 1 / -1;
+  margin-top: 0;
 }
 
 .license-key-cell {
@@ -806,9 +871,11 @@ th {
 
   .welcome-card,
   .dashboard-heading,
-  .toolbar-row {
+  .toolbar-row,
+  .admin-create-form {
     align-items: flex-start;
     flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .preview-layout {

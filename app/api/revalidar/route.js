@@ -49,7 +49,7 @@ export async function POST(request) {
 
     const { data: license, error: licenseError } = await admin
       .from("licenses")
-      .select("id, user_id, license_key_hash, status, expires_at, created_at, app_id, offline_allowed, offline_max_days, features, revoked_at, profiles(email)")
+      .select("id, user_id, customer_email, license_key_hash, status, expires_at, created_at, app_id, offline_allowed, offline_max_days, features, revoked_at, profiles(email)")
       .eq("id", licenseId)
       .single();
 
@@ -59,7 +59,8 @@ export async function POST(request) {
       });
     }
 
-    if (license.profiles?.email && license.profiles.email.toLowerCase() !== email.toLowerCase()) {
+    const licenseEmail = license.customer_email || license.profiles?.email;
+    if (licenseEmail && licenseEmail.toLowerCase() !== email.toLowerCase()) {
       return NextResponse.json(errorResponse("INVALID_EMAIL", "E-mail nao pertence a licenca."), {
         status: 403
       });

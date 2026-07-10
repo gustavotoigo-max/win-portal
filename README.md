@@ -1,12 +1,12 @@
 # WinPortal
 
-WinPortal is a Next.js app for selling Windows software licenses, with customer login, signup, fake purchase license generation, license dashboard, admin license management, and Portuguese/English routing.
+WinPortal is a Next.js app for selling Windows software licenses, with customer login, signup, manual official license generation, license dashboard, admin license management, and Portuguese/English routing.
 
 ## Stack
 
 - Next.js on Vercel
 - Supabase Auth + PostgreSQL
-- Fake purchase flow for the current stage
+- Manual official license flow for the current stage
 - Stripe Checkout + webhook kept as future payment integration
 - Locale routes: `/pt` and `/en`
 
@@ -38,7 +38,7 @@ LICENSE_ED25519_PRIVATE_KEY_PEM=
 LICENSE_ED25519_PRIVATE_KEY_BASE64=
 ```
 
-Stripe variables are optional while the project uses fake purchases. Supabase variables are required for real login and license generation.
+Stripe variables are optional while manual license sales are handled outside the site. Supabase variables are required for real login and license generation.
 
 License variables:
 
@@ -82,29 +82,30 @@ If the project database already existed before the signed activation API, run th
 supabase/migrations/20260706_license_activation_contract.sql
 ```
 
-## Fake purchase flow
+## Manual license flow
 
-The current customer flow does not charge the user.
+The current customer flow does not charge the user inside the site.
 
-1. User signs up or logs in.
-2. User opens `/pt/dashboard` or `/en/dashboard`.
-3. User clicks the fake key button.
-4. The client sends the current Supabase access token to `/api/licenses/fake-purchase`.
-5. The app creates:
+1. Customer gives the purchase email to the administrator.
+2. Admin opens `/ADM`.
+3. Admin creates an official license manually for the customer's email.
+4. The app creates:
    - one row in `orders`
    - one row in `licenses`
    - one row in `license_events`
-6. The generated license key appears in the dashboard and should be inserted into the Windows software.
+5. The generated license key appears in the admin panel.
+6. Admin sends the key manually to the customer.
+7. Customer activates the Windows software with the same email and license key.
 
 Important route:
 
 ```text
-/api/licenses/fake-purchase
+/api/admin/licenses/create
 ```
 
 ## Stripe
 
-Stripe is not required for the current fake purchase stage. Keep this section for the future paid flow.
+Stripe is not required for the current manual license stage. Keep this section for the future paid flow.
 
 1. Create a product and price in Stripe.
 2. Put the price id in `NEXT_PUBLIC_STRIPE_PRICE_ID`.

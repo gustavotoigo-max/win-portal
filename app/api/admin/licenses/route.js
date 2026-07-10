@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
-const allowed = new Set(["active", "revoked", "blocked"]);
+const allowed = new Set(["active", "revoked", "blocked", "clear_activation"]);
 
 export async function POST(request) {
   try {
@@ -32,22 +32,45 @@ export async function POST(request) {
     }
 
     const supabase = createAdminClient();
-    const { error } = await supabase
-      .from("licenses")
-      .update({
-        status,
-        revoked_at: status === "revoked" ? new Date().toISOString() : null
-      })
-      .eq("id", licenseId);
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (status === "clear_activation") {
+      const { error: activationsError } = await supabase
+        .from("activations")
+        .delete()
+        .eq("license_id", licenseId);
+
+      if (activationsError) {
+        return NextResponse.json({ error: activationsError.message }, { status: 500 });
+      }
+
+      const { error: machinesError } = await supabase
+        .from("machines")
+        .delete()
+        .eq("license_id", licenseId);
+
+      if (machinesError) {
+        return NextResponse.json({ error: machinesError.message }, { status: 500 });
+      }
+    } else {
+      const { error } = await supabase
+        .from("licenses")
+        .update({
+          status,
+          revoked_at: status === "revoked" ? new Date().toISOString() : null
+        })
+        .eq("id", licenseId);
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
     }
 
     await supabase.from("license_events").insert({
       license_id: licenseId,
       action: status,
-      notes: "Updated from admin panel"
+      notes: status === "clear_activation"
+        ? "Activation records cleared from admin panel"
+        : "Updated from admin panel"
     });
 
     const referer = request.headers.get("referer") || "/";

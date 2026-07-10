@@ -19,14 +19,14 @@ Ultimos commits relevantes:
 
 ## Estado atual
 
-O projeto comecou como um site estatico e foi migrado para uma aplicacao Next.js preparada para Vercel, Supabase e, futuramente, Stripe. No fluxo atual, compra real foi pausada e substituida por uma compra fake que gera uma key automaticamente.
+O projeto comecou como um site estatico e foi migrado para uma aplicacao Next.js preparada para Vercel, Supabase e, futuramente, Stripe. No fluxo atual, compra real no site foi pausada e substituida por criacao manual de licencas oficiais pelo ADM.
 
 Stack atual:
 
 - Next.js 15
 - React 19
 - Supabase Auth + PostgreSQL
-- Compra fake para gerar licencas no fluxo atual
+- Criacao manual de licencas oficiais no ADM
 - Stripe Checkout mantido no codigo como integracao futura
 - Vercel
 - Rotas com idioma: `/pt` e `/en`
@@ -45,7 +45,7 @@ npm.cmd run build
 - `app/[locale]/dashboard/page.jsx`: dashboard do usuario
 - `app/ADM/page.jsx`: area administrativa oculta, acessivel somente por `/ADM`
 - `app/api/auth/logout/route.js`: encerra a sessao ao clicar no circulo do perfil
-- `app/api/licenses/fake-purchase/route.js`: cria pedido fake e licenca para usuario autenticado
+- `app/api/admin/licenses/create/route.js`: cria licenca oficial manual para o e-mail informado pelo ADM
 - `app/api/checkout/route.js`: cria sessao Stripe Checkout para fluxo futuro de pagamento real
 - `app/api/stripe/webhook/route.js`: recebe webhook Stripe e cria pedido/licenca
 - `app/api/licenses/validate/route.js`: endpoint para o software Windows validar licenca
@@ -112,7 +112,7 @@ Mapeamento discutido para Supabase:
 
 Seguranca: uma chave secret do Supabase foi colada na conversa. Ela deve ser considerada exposta e precisa ser rotacionada antes de producao.
 
-As variaveis Stripe nao sao obrigatorias enquanto o fluxo atual for de compra fake.
+As variaveis Stripe nao sao obrigatorias enquanto o fluxo atual for de criacao manual de licencas.
 
 As variaveis de licenca sao usadas para:
 
@@ -165,14 +165,14 @@ Area ADM:
 
 Compra/licenca no fluxo atual:
 
-- usuario cria perfil ou faz login
-- no dashboard, clica em `Gerar key fake`
-- `/api/licenses/fake-purchase` cria uma ordem com valor zero e uma licenca ativa
-- o botao `Gerar key fake` usa um componente client-side que envia o access token Supabase via Bearer para evitar problemas de cookie/sessao em form POST
-- o dashboard mostra mensagem de sucesso ou erro via parametro `fakePurchase`
-- a key aparece no dashboard
-- o cliente insere essa key no software Windows
-- o software chama `/api/licenses/validate` para validar e registrar a maquina
+- cliente informa o e-mail de compra ao administrador
+- ADM acessa `/ADM`
+- ADM usa o formulario "Criacao manual de licenca"
+- `/api/admin/licenses/create` cria uma ordem manual, uma licenca ativa e um evento
+- a key aparece no painel ADM para copia
+- ADM envia a key manualmente ao cliente
+- cliente ativa o software Windows usando o mesmo e-mail e key
+- o software chama `/api/ativar` e depois `/api/revalidar`
 
 Pagamento real:
 
@@ -220,10 +220,10 @@ Se aparecer `Email not confirmed` ao tentar login:
 - confirmar o e-mail pelo link enviado pelo Supabase; ou
 - para testes, desativar `Confirm email` em `Authentication > Providers > Email`.
 
-4. Testar compra fake:
-   - entrar com usuario real
-   - abrir `/pt/dashboard`
-   - clicar em `Gerar key fake`
+4. Testar criacao manual:
+   - entrar como usuario ADM
+   - abrir `/ADM`
+   - gerar licenca oficial para um e-mail
    - confirmar linhas em `orders`, `licenses` e `license_events`
 5. Configurar Stripe futuramente:
    - criar produto/preco
@@ -237,11 +237,11 @@ Se aparecer `Email not confirmed` ao tentar login:
 
 ## Pontos tecnicos pendentes
 
-- O fluxo atual usa `/api/licenses/fake-purchase`, que cria `orders` e `licenses` associados ao usuario autenticado.
+- O fluxo atual usa `/api/admin/licenses/create`, que cria `orders` e `licenses` para o e-mail informado pelo ADM.
 - O webhook Stripe ainda existe, mas e um fluxo futuro e ainda nao associa automaticamente ao `user_id`.
 - A area ADM consulta dados reais somente se o usuario autenticado tiver `role = 'admin'`.
 - As acoes ADM usam `SUPABASE_SERVICE_ROLE_KEY`; isso deve ficar apenas no ambiente do servidor/Vercel.
-- O dashboard ainda cai em `demoLicenses` se Supabase nao estiver configurado. Com Supabase configurado e usuario real, lista vazio ate gerar a primeira key fake.
+- O dashboard ainda cai em `demoLicenses` se Supabase nao estiver configurado. Com Supabase configurado e usuario real, lista vazio ate existir uma licenca criada para o `user_id` ou e-mail do usuario.
 - Logout ja existe em `/api/auth/logout` e e acionado pelo circulo do perfil.
 - Ainda nao ha fluxo de recuperacao de senha.
 

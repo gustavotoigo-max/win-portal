@@ -1,6 +1,5 @@
-import FakePurchaseButton from "@/components/FakePurchaseButton";
 import Header from "@/components/Header";
-import { LicenseKeyCell, LicenseStatusButton } from "@/components/LicenseTableControls";
+import { LicenseKeyCell } from "@/components/LicenseTableControls";
 import { demoLicenses, statusClass } from "@/lib/demo-data";
 import { getDictionary, normalizeLocale } from "@/lib/i18n";
 import { decryptLicenseKey } from "@/lib/license-crypto";
@@ -9,17 +8,6 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
-
-function fakePurchaseMessage(t, code) {
-  const messages = {
-    success: t.dashboard.fakePurchaseSuccess,
-    missing_config: t.dashboard.fakePurchaseMissingConfig,
-    profile_error: t.dashboard.fakePurchaseProfileError,
-    order_error: t.dashboard.fakePurchaseOrderError,
-    license_error: t.dashboard.fakePurchaseLicenseError
-  };
-  return code ? messages[code] || t.dashboard.fakePurchaseUnknownError : null;
-}
 
 async function getLicenses(locale) {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -34,10 +22,11 @@ async function getLicenses(locale) {
   }
 
   const queryClient = process.env.SUPABASE_SERVICE_ROLE_KEY ? createAdminClient() : supabase;
+  const userEmail = userData.user.email?.toLowerCase();
   const { data, error } = await queryClient
     .from("licenses")
-    .select("id, order_id, license_key, license_key_ciphertext, license_key_hint, status, expires_at, created_at")
-    .eq("user_id", userData.user.id)
+    .select("id, order_id, customer_email, license_key, license_key_ciphertext, license_key_hint, status, expires_at, created_at")
+    .or(`user_id.eq.${userData.user.id},customer_email.eq.${userEmail}`)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -122,11 +111,10 @@ async function getLicenses(locale) {
 
 export default async function DashboardPage({ params, searchParams }) {
   const { locale: rawLocale } = await params;
-  const { fakePurchase } = await searchParams;
+  await searchParams;
   const locale = normalizeLocale(rawLocale);
   const t = getDictionary(locale);
   const licenses = await getLicenses(locale);
-  const message = fakePurchaseMessage(t, fakePurchase);
   const active = licenses.filter((item) => item.status === "active").length;
   const blocked = licenses.filter((item) => item.status === "blocked").length;
   const revoked = licenses.filter((item) => item.status === "revoked").length;
@@ -141,10 +129,7 @@ export default async function DashboardPage({ params, searchParams }) {
             <h1>{t.dashboard.title}</h1>
             <p className="muted">{t.dashboard.subtitle}</p>
           </div>
-          <FakePurchaseButton locale={locale} dictionary={t} />
         </section>
-
-        {message && <p className="note">{message}</p>}
 
         <section className="dash-grid">
           <article className="dash-card"><span>{t.dashboard.total}</span><strong>{licenses.length}</strong></article>
@@ -170,9 +155,6 @@ export default async function DashboardPage({ params, searchParams }) {
                   <th>{t.dashboard.lastSeen}</th>
                   <th>{t.dashboard.order}</th>
                   <th>{t.dashboard.date}</th>
-                  <th>{t.dashboard.clearActivation}</th>
-                  <th>{t.dashboard.revoke}</th>
-                  <th>{t.dashboard.block}</th>
                 </tr>
               </thead>
               <tbody>
@@ -185,39 +167,11 @@ export default async function DashboardPage({ params, searchParams }) {
                       <td>{license.lastSeen}</td>
                       <td>{license.order}</td>
                       <td>{license.date}</td>
-                      <td>
-                        <LicenseStatusButton
-                          licenseId={license.id}
-                          currentStatus={license.status}
-                          action="clear_activation"
-                          label={t.dashboard.clear}
-                          dictionary={t}
-                        />
-                      </td>
-                      <td>
-                        <LicenseStatusButton
-                          licenseId={license.id}
-                          currentStatus={license.status}
-                          action="revoked"
-                          label={t.dashboard.revoke}
-                          dictionary={t}
-                        />
-                      </td>
-                      <td>
-                        <LicenseStatusButton
-                          licenseId={license.id}
-                          currentStatus={license.status}
-                          action="blocked"
-                          label={t.dashboard.block}
-                          variant="danger"
-                          dictionary={t}
-                        />
-                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="9">{t.dashboard.empty}</td>
+                    <td colSpan="6">{t.dashboard.empty}</td>
                   </tr>
                 )}
               </tbody>
