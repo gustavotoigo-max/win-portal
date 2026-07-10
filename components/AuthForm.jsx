@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/browser";
 
 export default function AuthForm({ locale, dictionary, mode }) {
   const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const isSignup = mode === "signup";
 
   async function handleSubmit(event) {
@@ -82,7 +83,24 @@ export default function AuthForm({ locale, dictionary, mode }) {
             <Link href={`/${locale}/login`}>{dictionary.auth.forgot}</Link>
           </span>
         )}
-        <input name="password" type="password" placeholder="********" required minLength={6} />
+        <div className="password-field">
+          <input
+            name="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="********"
+            required
+            minLength={6}
+          />
+          <button
+            aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+            className="password-toggle"
+            type="button"
+            title={showPassword ? "Ocultar senha" : "Mostrar senha"}
+            onClick={() => setShowPassword((value) => !value)}
+          >
+            {showPassword ? "◐" : "◉"}
+          </button>
+        </div>
       </label>
 
       <button className="btn primary full" type="submit">

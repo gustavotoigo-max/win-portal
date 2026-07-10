@@ -1,15 +1,27 @@
 import AdminCreateLicenseForm from "@/components/AdminCreateLicenseForm";
+import AdminLicensePanel from "@/components/AdminLicensePanel";
 import Header from "@/components/Header";
-import { LicenseKeyCell } from "@/components/LicenseTableControls";
 import { getAdminContext } from "@/lib/admin-auth";
-import { demoLicenses, statusClass } from "@/lib/demo-data";
+import { demoLicenses } from "@/lib/demo-data";
 import { getDictionary } from "@/lib/i18n";
 import { decryptLicenseKey } from "@/lib/license-crypto";
+import { products } from "@/lib/products";
 import { createAdminClient } from "@/lib/supabase/admin";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
+
+const productNames = new Map(products.map((product) => [product.id, product.name]));
+
+function formatDateTime(value, locale = "pt-BR") {
+  if (!value) return "-";
+  return new Intl.DateTimeFormat(locale, {
+    dateStyle: "short",
+    timeStyle: "short",
+    timeZone: "America/Sao_Paulo"
+  }).format(new Date(value));
+}
 
 async function getAdminLicenses() {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -29,9 +41,15 @@ async function getAdminLicenses() {
   }
 
   const admin = createAdminClient();
+  await admin
+    .from("licenses")
+    .update({ status: "expired" })
+    .eq("status", "active")
+    .lt("expires_at", new Date().toISOString());
+
   const { data, error } = await admin
     .from("licenses")
-    .select("id, user_id, customer_email, order_id, license_key, license_key_ciphertext, license_key_hint, status, max_machines, expires_at, created_at, orders(order_number, customer_email, created_at), profiles(email)")
+    .select("id, user_id, customer_email, order_id, product_id, license_key, license_key_ciphertext, license_key_hint, status, max_machines, expires_at, created_at, orders(order_number, customer_email, created_at, product_id), profiles(email)")
     .order("created_at", { ascending: false });
 
   if (error || !data?.length) return { licenses: [], adminContext };
@@ -72,19 +90,37 @@ async function getAdminLicenses() {
       id: license.id,
       key: decryptLicenseKey(license.license_key_ciphertext) || license.license_key || `****-${license.license_key_hint || "----"}`,
       status: license.status,
+      product: productNames.get(license.product_id || license.orders?.product_id) || "-",
       maxMachines: license.max_machines,
       machineName: activation?.machine_name || "-",
       machineId: activation?.machine_id || "-",
       activationStatus: activation?.status || "-",
       softwareVersion: activation?.software_version || "-",
-      activatedAt: activation?.activated_at?.slice(0, 10) || "-",
-      lastSeen: activation?.last_seen_at?.slice(0, 10) || "-",
-      lastValidation: log?.created_at?.slice(0, 10) || activation?.last_validated_at?.slice(0, 10) || "-",
+      activatedAt: formatDateTime(activation?.activated_at),
+      lastSeen: formatDateTime(activation?.last_seen_at),
+      lastValidation: formatDateTime(log?.created_at || activation?.last_validated_at),
       lastIp: log?.ip_address || "-",
       order: license.orders?.order_number || "-",
       user: license.customer_email || license.orders?.customer_email || license.profiles?.email || "-",
-      createdAt: license.created_at?.slice(0, 10) || "-"
+      expiresAt: license.expires_at ? formatDateTime(license.expires_at) : "Sem vencimento",
+      createdAt: formatDateTime(license.created_at)
     };
+  });
+
+  licenses.forEach((license) => {
+    license.searchText = [
+      license.user,
+      license.key,
+      license.status,
+      license.product,
+      license.machineName,
+      license.machineId,
+      license.softwareVersion,
+      license.lastIp,
+      license.order,
+      license.createdAt,
+      license.expiresAt
+    ].join(" ").toLowerCase();
   });
 
   return { licenses, adminContext };
@@ -142,67 +178,7 @@ export default async function AdminPage() {
               <h2>{t.admin.licensesTitle}</h2>
             </div>
           </div>
-          <div className="admin-license-list">
-            {licenses.length ? (
-              licenses.map((license) => (
-                <article
-                  className="admin-license-card"
-                  key={license.id}
-                  data-license-search={[
-                    license.user,
-                    license.key,
-                    license.status,
-                    license.machineName,
-                    license.machineId,
-                    license.softwareVersion,
-                    license.lastIp,
-                    license.order,
-                    license.createdAt
-                  ].join(" ").toLowerCase()}
-                >
-                  <div className="license-card-head">
-                    <div>
-                      <span className="field-label">{t.admin.user}</span>
-                      <strong>{license.user}</strong>
-                    </div>
-                    <span className={statusClass(license.status)}>{license.status}</span>
-                  </div>
-
-                  <div className="license-card-key">
-                    <span className="field-label">{t.admin.license}</span>
-                    <LicenseKeyCell licenseKey={license.key} dictionary={t} />
-                  </div>
-
-                  <div className="license-detail-grid">
-                    <div><span className="field-label">{t.admin.maxMachines}</span><strong>{license.maxMachines}</strong></div>
-                    <div><span className="field-label">{t.admin.machineName}</span><strong>{license.machineName}</strong></div>
-                    <div><span className="field-label">{t.admin.softwareVersion}</span><strong>{license.softwareVersion}</strong></div>
-                    <div><span className="field-label">{t.admin.activatedAt}</span><strong>{license.activatedAt}</strong></div>
-                    <div><span className="field-label">{t.admin.lastSeen}</span><strong>{license.lastSeen}</strong></div>
-                    <div><span className="field-label">{t.admin.lastValidation}</span><strong>{license.lastValidation}</strong></div>
-                    <div><span className="field-label">{t.admin.lastIp}</span><strong>{license.lastIp}</strong></div>
-                    <div><span className="field-label">{t.admin.order}</span><strong>{license.order}</strong></div>
-                    <div><span className="field-label">{t.admin.createdAt}</span><strong>{license.createdAt}</strong></div>
-                  </div>
-
-                  <div className="machine-id-block">
-                    <span className="field-label">{t.admin.machineId}</span>
-                    <code>{license.machineId}</code>
-                  </div>
-
-                  <form className="admin-actions license-card-actions" action="/api/admin/licenses" method="post">
-                    <input type="hidden" name="licenseId" value={license.id} />
-                    <button className="btn secondary" name="action" value="active" type="submit">{t.admin.activate}</button>
-                    <button className="btn secondary" name="action" value="clear_activation" type="submit">{t.admin.clearActivation}</button>
-                    <button className="btn secondary" name="action" value="revoked" type="submit">{t.admin.revoke}</button>
-                    <button className="btn danger" name="action" value="blocked" type="submit">{t.admin.block}</button>
-                  </form>
-                </article>
-              ))
-            ) : (
-              <p className="note">{t.admin.empty}</p>
-            )}
-          </div>
+          <AdminLicensePanel licenses={licenses} dictionary={t} />
           <p className="note">{t.admin.note}</p>
         </section>
           </>

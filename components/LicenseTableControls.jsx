@@ -14,7 +14,12 @@ export function LicenseKeyCell({ licenseKey, dictionary }) {
   return (
     <div className="license-key-cell">
       <code>{licenseKey}</code>
-      <button className="btn secondary table-action-btn" type="button" onClick={copyKey}>
+      <button
+        className="btn secondary table-action-btn"
+        type="button"
+        title={dictionary.dashboard.copy}
+        onClick={copyKey}
+      >
         {copied ? dictionary.dashboard.copied : dictionary.dashboard.copy}
       </button>
     </div>

@@ -75,6 +75,11 @@ export async function POST(request) {
     }
 
     if (isExpired(license.expires_at)) {
+      await admin
+        .from("licenses")
+        .update({ status: "expired" })
+        .eq("id", license.id)
+        .eq("status", "active");
       return NextResponse.json(errorResponse("LICENSE_EXPIRED", "Licenca expirada."));
     }
 

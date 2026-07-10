@@ -3,25 +3,34 @@ import { getAdminContext } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const allowed = new Set(["active", "revoked", "blocked", "clear_activation"]);
+const actionMessages = {
+  active: "Licenca ativada com sucesso.",
+  clear_activation: "Ativacao limpa com sucesso.",
+  revoked: "Licenca revogada com sucesso.",
+  blocked: "Licenca bloqueada com sucesso."
+};
 
 export async function POST(request) {
   try {
-    const form = await request.formData();
-    const licenseId = form.get("licenseId");
-    const status = form.get("action");
+    const contentType = request.headers.get("content-type") || "";
+    const payload = contentType.includes("application/json")
+      ? await request.json()
+      : Object.fromEntries((await request.formData()).entries());
+    const licenseId = payload.licenseId;
+    const status = payload.action;
 
     if (!licenseId || !allowed.has(status)) {
-      return NextResponse.json({ error: "Invalid license update." }, { status: 400 });
+      return NextResponse.json({ ok: false, message: "Invalid license update." }, { status: 400 });
     }
 
     const adminContext = await getAdminContext();
 
     if (!adminContext.isAuthenticated) {
-      return NextResponse.json({ error: "Authentication is required." }, { status: 401 });
+      return NextResponse.json({ ok: false, message: "Authentication is required." }, { status: 401 });
     }
 
     if (!adminContext.isAdmin) {
-      return NextResponse.json({ error: "Admin access is required." }, { status: 403 });
+      return NextResponse.json({ ok: false, message: "Admin access is required." }, { status: 403 });
     }
 
     const supabase = createAdminClient();
@@ -33,7 +42,7 @@ export async function POST(request) {
         .eq("license_id", licenseId);
 
       if (activationsError) {
-        return NextResponse.json({ error: activationsError.message }, { status: 500 });
+        return NextResponse.json({ ok: false, message: activationsError.message }, { status: 500 });
       }
 
       const { error: machinesError } = await supabase
@@ -42,7 +51,7 @@ export async function POST(request) {
         .eq("license_id", licenseId);
 
       if (machinesError) {
-        return NextResponse.json({ error: machinesError.message }, { status: 500 });
+        return NextResponse.json({ ok: false, message: machinesError.message }, { status: 500 });
       }
     } else {
       const { error } = await supabase
@@ -54,7 +63,7 @@ export async function POST(request) {
         .eq("id", licenseId);
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ ok: false, message: error.message }, { status: 500 });
       }
     }
 
@@ -66,9 +75,8 @@ export async function POST(request) {
         : "Updated from admin panel"
     });
 
-    const referer = request.headers.get("referer") || "/";
-    return NextResponse.redirect(referer, 303);
+    return NextResponse.json({ ok: true, message: actionMessages[status] });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, message: error.message }, { status: 500 });
   }
 }

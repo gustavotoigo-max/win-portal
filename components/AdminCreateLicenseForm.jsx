@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { products } from "@/lib/products";
 
 export default function AdminCreateLicenseForm({ dictionary }) {
   const router = useRouter();
-  const [search, setSearch] = useState("");
   const [email, setEmail] = useState("");
   const [maxMachines, setMaxMachines] = useState(1);
+  const [productId, setProductId] = useState(products[0].id);
+  const [validityAmount, setValidityAmount] = useState("");
+  const [validityUnit, setValidityUnit] = useState("months");
   const [message, setMessage] = useState("");
   const [generatedKey, setGeneratedKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +25,13 @@ export default function AdminCreateLicenseForm({ dictionary }) {
       const response = await fetch("/api/admin/licenses/create", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, maxMachines: Number(maxMachines) || 1 })
+        body: JSON.stringify({
+          email,
+          maxMachines: Number(maxMachines) || 1,
+          productId,
+          validityAmount: validityAmount ? Number(validityAmount) : null,
+          validityUnit
+        })
       });
       const payload = await response.json();
 
@@ -35,6 +44,7 @@ export default function AdminCreateLicenseForm({ dictionary }) {
       setGeneratedKey(payload.licenseKey);
       setEmail("");
       setMaxMachines(1);
+      setValidityAmount("");
       router.refresh();
     } catch {
       setMessage(dictionary.admin.createError);
@@ -43,30 +53,8 @@ export default function AdminCreateLicenseForm({ dictionary }) {
     }
   }
 
-  function searchLicenses(value) {
-    setSearch(value);
-    const term = value.trim().toLowerCase();
-    document.querySelectorAll("[data-license-search]").forEach((item) => {
-      const text = item.getAttribute("data-license-search") || "";
-      item.hidden = Boolean(term) && !text.includes(term);
-    });
-  }
-
   return (
     <form className="admin-create-form official-license-form" onSubmit={createLicense}>
-      <div className="admin-search-field">
-        <label htmlFor="license-search">{dictionary.admin.licenseSearch}</label>
-        <input
-          id="license-search"
-          type="search"
-          value={search}
-          onChange={(event) => searchLicenses(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") event.preventDefault();
-          }}
-          placeholder={dictionary.admin.licenseSearchPlaceholder}
-        />
-      </div>
       <div>
         <label htmlFor="license-email">{dictionary.admin.customerEmail}</label>
         <input
@@ -79,6 +67,19 @@ export default function AdminCreateLicenseForm({ dictionary }) {
         />
       </div>
       <div>
+        <label htmlFor="license-product">{dictionary.admin.product}</label>
+        <select
+          id="license-product"
+          value={productId}
+          onChange={(event) => setProductId(event.target.value)}
+          required
+        >
+          {products.map((product) => (
+            <option key={product.id} value={product.id}>{product.name}</option>
+          ))}
+        </select>
+      </div>
+      <div>
         <label htmlFor="license-machines">{dictionary.admin.maxMachines}</label>
         <input
           id="license-machines"
@@ -89,6 +90,31 @@ export default function AdminCreateLicenseForm({ dictionary }) {
           onChange={(event) => setMaxMachines(event.target.value)}
           required
         />
+      </div>
+      <div>
+        <label htmlFor="license-validity-amount">{dictionary.admin.validity}</label>
+        <input
+          id="license-validity-amount"
+          type="number"
+          min="1"
+          value={validityAmount}
+          onChange={(event) => setValidityAmount(event.target.value)}
+          placeholder={dictionary.admin.noExpiration}
+          title={dictionary.admin.validityHint}
+        />
+      </div>
+      <div>
+        <label htmlFor="license-validity-unit">{dictionary.admin.validityUnit}</label>
+        <select
+          id="license-validity-unit"
+          value={validityUnit}
+          onChange={(event) => setValidityUnit(event.target.value)}
+          title={dictionary.admin.validityHint}
+        >
+          <option value="days">{dictionary.admin.days}</option>
+          <option value="months">{dictionary.admin.months}</option>
+          <option value="years">{dictionary.admin.years}</option>
+        </select>
       </div>
       <button className="btn primary generate-license-btn" type="submit" disabled={isLoading}>
         {isLoading ? dictionary.admin.creating : dictionary.admin.createLicense}

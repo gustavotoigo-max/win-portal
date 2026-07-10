@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getAdminContext } from "@/lib/admin-auth";
 import { encryptLicenseKey, licenseKeyHash } from "@/lib/license-crypto";
+import { getProductById } from "@/lib/products";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 function createLicenseKey() {
@@ -9,7 +10,7 @@ function createLicenseKey() {
   return `WIN-${raw.slice(0, 4)}-${raw.slice(4, 8)}-${raw.slice(8, 12)}-${raw.slice(12, 16)}`;
 }
 
-function createOrderNumber() {
+function createOrderNumber(prefix) {
   const date = new Date();
   const stamp = [
     date.getUTCFullYear(),
@@ -19,11 +20,22 @@ function createOrderNumber() {
     String(date.getUTCMinutes()).padStart(2, "0"),
     String(date.getUTCSeconds()).padStart(2, "0")
   ].join("");
-  return `MANUAL-${stamp}-${Math.floor(Math.random() * 9000 + 1000)}`;
+  return `${prefix}-${stamp}-${Math.floor(Math.random() * 9000 + 1000)}`;
 }
 
 function jsonError(code, message, status = 400) {
   return NextResponse.json({ ok: false, code, message }, { status });
+}
+
+function calculateExpiration(amount, unit) {
+  if (!amount) return null;
+
+  const expiresAt = new Date();
+  if (unit === "days") expiresAt.setUTCDate(expiresAt.getUTCDate() + amount);
+  if (unit === "months") expiresAt.setUTCMonth(expiresAt.getUTCMonth() + amount);
+  if (unit === "years") expiresAt.setUTCFullYear(expiresAt.getUTCFullYear() + amount);
+
+  return expiresAt.toISOString();
 }
 
 async function requireAdmin() {
@@ -48,6 +60,12 @@ export async function POST(request) {
     const body = await request.json();
     const customerEmail = String(body.email || "").trim().toLowerCase();
     const maxMachines = Math.max(1, Math.min(Number(body.maxMachines) || 1, 10));
+    const product = getProductById(body.productId);
+    const validityAmount = Number(body.validityAmount) > 0 ? Number(body.validityAmount) : null;
+    const validityUnit = ["days", "months", "years"].includes(body.validityUnit)
+      ? body.validityUnit
+      : "months";
+    const expiresAt = calculateExpiration(validityAmount, validityUnit);
 
     if (!customerEmail || !customerEmail.includes("@")) {
       return jsonError("invalid_email", "Informe um e-mail valido.", 400);
@@ -65,11 +83,12 @@ export async function POST(request) {
       .from("orders")
       .insert({
         user_id: userId,
-        order_number: createOrderNumber(),
+        order_number: createOrderNumber(product.orderPrefix),
         status: "paid",
         amount: 0,
         currency: "brl",
-        customer_email: customerEmail
+        customer_email: customerEmail,
+        product_id: product.id
       })
       .select("id")
       .single();
@@ -92,6 +111,8 @@ export async function POST(request) {
         app_id: process.env.LICENSE_APP_ID || "com.winportal.windowssoftware",
         status: "active",
         max_machines: maxMachines,
+        expires_at: expiresAt,
+        product_id: product.id,
         offline_allowed: true,
         offline_max_days: 30,
         features: ["core"]

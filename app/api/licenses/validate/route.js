@@ -29,6 +29,11 @@ export async function POST(request) {
     }
 
     if (license.expires_at && new Date(license.expires_at) < new Date()) {
+      await supabase
+        .from("licenses")
+        .update({ status: "expired" })
+        .eq("id", license.id)
+        .eq("status", "active");
       return NextResponse.json({ valid: false, reason: "expired" });
     }
 
