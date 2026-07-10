@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 export default function AdminCreateLicenseForm({ dictionary }) {
   const router = useRouter();
+  const [search, setSearch] = useState("");
   const [email, setEmail] = useState("");
   const [maxMachines, setMaxMachines] = useState(1);
   const [message, setMessage] = useState("");
@@ -42,8 +43,30 @@ export default function AdminCreateLicenseForm({ dictionary }) {
     }
   }
 
+  function searchLicenses(value) {
+    setSearch(value);
+    const term = value.trim().toLowerCase();
+    document.querySelectorAll("[data-license-search]").forEach((item) => {
+      const text = item.getAttribute("data-license-search") || "";
+      item.hidden = Boolean(term) && !text.includes(term);
+    });
+  }
+
   return (
     <form className="admin-create-form official-license-form" onSubmit={createLicense}>
+      <div className="admin-search-field">
+        <label htmlFor="license-search">{dictionary.admin.licenseSearch}</label>
+        <input
+          id="license-search"
+          type="search"
+          value={search}
+          onChange={(event) => searchLicenses(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") event.preventDefault();
+          }}
+          placeholder={dictionary.admin.licenseSearchPlaceholder}
+        />
+      </div>
       <div>
         <label htmlFor="license-email">{dictionary.admin.customerEmail}</label>
         <input

@@ -165,12 +165,25 @@ export default async function AdminPage() {
               <p className="eyebrow">{t.admin.license}</p>
               <h2>{t.admin.licensesTitle}</h2>
             </div>
-            <input aria-label={t.admin.search} placeholder={t.admin.search} />
           </div>
           <div className="admin-license-list">
             {licenses.length ? (
               licenses.map((license) => (
-                <article className="admin-license-card" key={license.id}>
+                <article
+                  className="admin-license-card"
+                  key={license.id}
+                  data-license-search={[
+                    license.user,
+                    license.key,
+                    license.status,
+                    license.machineName,
+                    license.machineId,
+                    license.softwareVersion,
+                    license.lastIp,
+                    license.order,
+                    license.createdAt
+                  ].join(" ").toLowerCase()}
+                >
                   <div className="license-card-head">
                     <div>
                       <span className="field-label">{t.admin.user}</span>
