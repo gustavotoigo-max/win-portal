@@ -6,11 +6,12 @@ import { getDictionary } from "@/lib/i18n";
 import { decryptLicenseKey } from "@/lib/license-crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-async function requireAdminUser() {
+async function getAdminContext() {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
 
@@ -18,23 +19,38 @@ async function requireAdminUser() {
     redirect("/pt/login");
   }
 
-  const { data: profile } = await supabase
+  const admin = createAdminClient();
+  const { data: profile } = await admin
     .from("profiles")
-    .select("role")
+    .select("role, email")
     .eq("user_id", userData.user.id)
-    .single();
+    .maybeSingle();
 
-  if (profile?.role !== "admin") {
-    redirect("/pt/dashboard");
-  }
+  const envAdmins = (process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean);
+  const userEmail = userData.user.email?.toLowerCase();
+
+  return {
+    isAdmin: profile?.role === "admin" || envAdmins.includes(userEmail),
+    userEmail,
+    role: profile?.role || "sem perfil"
+  };
 }
 
 async function getAdminLicenses() {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    return demoLicenses;
+    return {
+      licenses: demoLicenses,
+      adminContext: { isAdmin: true, userEmail: "demo", role: "admin" }
+    };
   }
 
-  await requireAdminUser();
+  const adminContext = await getAdminContext();
+  if (!adminContext.isAdmin) {
+    return { licenses: [], adminContext };
+  }
 
   const admin = createAdminClient();
   const { data, error } = await admin
@@ -42,7 +58,7 @@ async function getAdminLicenses() {
     .select("id, user_id, customer_email, order_id, license_key, license_key_ciphertext, license_key_hint, status, max_machines, expires_at, created_at, orders(order_number, customer_email, created_at), profiles(email)")
     .order("created_at", { ascending: false });
 
-  if (error || !data?.length) return [];
+  if (error || !data?.length) return { licenses: [], adminContext };
 
   const licenseIds = data.map((license) => license.id);
   const activationsByLicenseId = new Map();
@@ -72,7 +88,7 @@ async function getAdminLicenses() {
     }
   });
 
-  return data.map((license) => {
+  const licenses = data.map((license) => {
     const activation = activationsByLicenseId.get(license.id);
     const log = logsByLicenseId.get(license.id);
 
@@ -94,12 +110,14 @@ async function getAdminLicenses() {
       createdAt: license.created_at?.slice(0, 10) || "-"
     };
   });
+
+  return { licenses, adminContext };
 }
 
 export default async function AdminPage() {
   const locale = "pt";
   const t = getDictionary(locale);
-  const licenses = await getAdminLicenses();
+  const { licenses, adminContext } = await getAdminLicenses();
 
   return (
     <>
@@ -112,6 +130,23 @@ export default async function AdminPage() {
             <p className="muted">{t.admin.subtitle}</p>
           </div>
         </section>
+
+        {!adminContext.isAdmin ? (
+          <section className="table-card admin-create-card">
+            <p className="eyebrow">{t.nav.admin}</p>
+            <h2>{t.admin.accessDeniedTitle}</h2>
+            <p className="muted">{t.admin.accessDeniedText}</p>
+            <div className="admin-access-box">
+              <span>{t.admin.currentEmail}</span>
+              <code>{adminContext.userEmail || "-"}</code>
+              <span>{t.admin.currentRole}</span>
+              <code>{adminContext.role}</code>
+            </div>
+            <p className="note">{t.admin.accessDeniedSql}</p>
+            <Link className="btn secondary" href="/pt/dashboard">{t.nav.dashboard}</Link>
+          </section>
+        ) : (
+          <>
 
         <section className="table-card admin-create-card">
           <div className="toolbar-row">
@@ -181,6 +216,8 @@ export default async function AdminPage() {
           </div>
           <p className="note">{t.admin.note}</p>
         </section>
+          </>
+        )}
       </main>
     </>
   );

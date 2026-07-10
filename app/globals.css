@@ -845,6 +845,29 @@ th {
   overflow-wrap: anywhere;
 }
 
+.admin-access-box {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(7, 19, 26, 0.7);
+}
+
+.admin-access-box span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.admin-access-box code {
+  color: var(--cyan);
+  font-family: Consolas, "Liberation Mono", monospace;
+  overflow-wrap: anywhere;
+}
+
 .license-card-actions {
   margin-top: 16px;
 }
