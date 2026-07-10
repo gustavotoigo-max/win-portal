@@ -43,7 +43,7 @@ export default function AdminCreateLicenseForm({ dictionary }) {
   }
 
   return (
-    <form className="admin-create-form" onSubmit={createLicense}>
+    <form className="admin-create-form official-license-form" onSubmit={createLicense}>
       <div>
         <label htmlFor="license-email">{dictionary.admin.customerEmail}</label>
         <input
@@ -67,7 +67,7 @@ export default function AdminCreateLicenseForm({ dictionary }) {
           required
         />
       </div>
-      <button className="btn primary" type="submit" disabled={isLoading}>
+      <button className="btn primary generate-license-btn" type="submit" disabled={isLoading}>
         {isLoading ? dictionary.admin.creating : dictionary.admin.createLicense}
       </button>
       {message && <p className="note compact-note">{message}</p>}

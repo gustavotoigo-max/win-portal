@@ -132,61 +132,52 @@ export default async function AdminPage() {
             </div>
             <input aria-label={t.admin.search} placeholder={t.admin.search} />
           </div>
-          <div className="table-scroll">
-            <table className="admin-license-table">
-              <thead>
-                <tr>
-                  <th>{t.admin.user}</th>
-                  <th>{t.admin.license}</th>
-                  <th>{t.admin.status}</th>
-                  <th>{t.admin.maxMachines}</th>
-                  <th>{t.admin.machineName}</th>
-                  <th>{t.admin.machineId}</th>
-                  <th>{t.admin.softwareVersion}</th>
-                  <th>{t.admin.activatedAt}</th>
-                  <th>{t.admin.lastSeen}</th>
-                  <th>{t.admin.lastValidation}</th>
-                  <th>{t.admin.lastIp}</th>
-                  <th>{t.admin.order}</th>
-                  <th>{t.admin.createdAt}</th>
-                  <th>{t.admin.actions}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {licenses.length ? (
-                  licenses.map((license) => (
-                    <tr key={license.id}>
-                      <td>{license.user}</td>
-                      <td><LicenseKeyCell licenseKey={license.key} dictionary={t} /></td>
-                      <td><span className={statusClass(license.status)}>{license.status}</span></td>
-                      <td>{license.maxMachines}</td>
-                      <td>{license.machineName}</td>
-                      <td><span className="mono-cell">{license.machineId}</span></td>
-                      <td>{license.softwareVersion}</td>
-                      <td>{license.activatedAt}</td>
-                      <td>{license.lastSeen}</td>
-                      <td>{license.lastValidation}</td>
-                      <td>{license.lastIp}</td>
-                      <td>{license.order}</td>
-                      <td>{license.createdAt}</td>
-                      <td>
-                        <form className="admin-actions" action="/api/admin/licenses" method="post">
-                          <input type="hidden" name="licenseId" value={license.id} />
-                          <button className="btn secondary" name="action" value="active" type="submit">{t.admin.activate}</button>
-                          <button className="btn secondary" name="action" value="clear_activation" type="submit">{t.admin.clearActivation}</button>
-                          <button className="btn secondary" name="action" value="revoked" type="submit">{t.admin.revoke}</button>
-                          <button className="btn danger" name="action" value="blocked" type="submit">{t.admin.block}</button>
-                        </form>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="14">{t.admin.empty}</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+          <div className="admin-license-list">
+            {licenses.length ? (
+              licenses.map((license) => (
+                <article className="admin-license-card" key={license.id}>
+                  <div className="license-card-head">
+                    <div>
+                      <span className="field-label">{t.admin.user}</span>
+                      <strong>{license.user}</strong>
+                    </div>
+                    <span className={statusClass(license.status)}>{license.status}</span>
+                  </div>
+
+                  <div className="license-card-key">
+                    <span className="field-label">{t.admin.license}</span>
+                    <LicenseKeyCell licenseKey={license.key} dictionary={t} />
+                  </div>
+
+                  <div className="license-detail-grid">
+                    <div><span className="field-label">{t.admin.maxMachines}</span><strong>{license.maxMachines}</strong></div>
+                    <div><span className="field-label">{t.admin.machineName}</span><strong>{license.machineName}</strong></div>
+                    <div><span className="field-label">{t.admin.softwareVersion}</span><strong>{license.softwareVersion}</strong></div>
+                    <div><span className="field-label">{t.admin.activatedAt}</span><strong>{license.activatedAt}</strong></div>
+                    <div><span className="field-label">{t.admin.lastSeen}</span><strong>{license.lastSeen}</strong></div>
+                    <div><span className="field-label">{t.admin.lastValidation}</span><strong>{license.lastValidation}</strong></div>
+                    <div><span className="field-label">{t.admin.lastIp}</span><strong>{license.lastIp}</strong></div>
+                    <div><span className="field-label">{t.admin.order}</span><strong>{license.order}</strong></div>
+                    <div><span className="field-label">{t.admin.createdAt}</span><strong>{license.createdAt}</strong></div>
+                  </div>
+
+                  <div className="machine-id-block">
+                    <span className="field-label">{t.admin.machineId}</span>
+                    <code>{license.machineId}</code>
+                  </div>
+
+                  <form className="admin-actions license-card-actions" action="/api/admin/licenses" method="post">
+                    <input type="hidden" name="licenseId" value={license.id} />
+                    <button className="btn secondary" name="action" value="active" type="submit">{t.admin.activate}</button>
+                    <button className="btn secondary" name="action" value="clear_activation" type="submit">{t.admin.clearActivation}</button>
+                    <button className="btn secondary" name="action" value="revoked" type="submit">{t.admin.revoke}</button>
+                    <button className="btn danger" name="action" value="blocked" type="submit">{t.admin.block}</button>
+                  </form>
+                </article>
+              ))
+            ) : (
+              <p className="note">{t.admin.empty}</p>
+            )}
           </div>
           <p className="note">{t.admin.note}</p>
         </section>
