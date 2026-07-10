@@ -1,43 +1,15 @@
 import AdminCreateLicenseForm from "@/components/AdminCreateLicenseForm";
 import Header from "@/components/Header";
 import { LicenseKeyCell } from "@/components/LicenseTableControls";
+import { getAdminContext } from "@/lib/admin-auth";
 import { demoLicenses, statusClass } from "@/lib/demo-data";
 import { getDictionary } from "@/lib/i18n";
 import { decryptLicenseKey } from "@/lib/license-crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
-
-async function getAdminContext() {
-  const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-
-  if (!userData?.user) {
-    redirect("/pt/login");
-  }
-
-  const admin = createAdminClient();
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("role, email")
-    .eq("user_id", userData.user.id)
-    .maybeSingle();
-
-  const envAdmins = (process.env.ADMIN_EMAILS || "")
-    .split(",")
-    .map((email) => email.trim().toLowerCase())
-    .filter(Boolean);
-  const userEmail = userData.user.email?.toLowerCase();
-
-  return {
-    isAdmin: profile?.role === "admin" || envAdmins.includes(userEmail),
-    userEmail,
-    role: profile?.role || "sem perfil"
-  };
-}
 
 async function getAdminLicenses() {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -48,6 +20,10 @@ async function getAdminLicenses() {
   }
 
   const adminContext = await getAdminContext();
+  if (!adminContext.isAuthenticated) {
+    redirect("/pt/login");
+  }
+
   if (!adminContext.isAdmin) {
     return { licenses: [], adminContext };
   }

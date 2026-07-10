@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
+import { getAdminContext } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 
 const allowed = new Set(["active", "revoked", "blocked", "clear_activation"]);
 
@@ -14,20 +14,13 @@ export async function POST(request) {
       return NextResponse.json({ error: "Invalid license update." }, { status: 400 });
     }
 
-    const authClient = await createClient();
-    const { data: userData } = await authClient.auth.getUser();
+    const adminContext = await getAdminContext();
 
-    if (!userData?.user) {
+    if (!adminContext.isAuthenticated) {
       return NextResponse.json({ error: "Authentication is required." }, { status: 401 });
     }
 
-    const { data: profile } = await authClient
-      .from("profiles")
-      .select("role")
-      .eq("user_id", userData.user.id)
-      .single();
-
-    if (profile?.role !== "admin") {
+    if (!adminContext.isAdmin) {
       return NextResponse.json({ error: "Admin access is required." }, { status: 403 });
     }
 

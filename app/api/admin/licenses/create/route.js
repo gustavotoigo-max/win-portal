@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
+import { getAdminContext } from "@/lib/admin-auth";
 import { encryptLicenseKey, licenseKeyHash } from "@/lib/license-crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 
 function createLicenseKey() {
   const raw = randomUUID().replaceAll("-", "").toUpperCase();
@@ -27,24 +27,17 @@ function jsonError(code, message, status = 400) {
 }
 
 async function requireAdmin() {
-  const authClient = await createClient();
-  const { data: userData } = await authClient.auth.getUser();
+  const adminContext = await getAdminContext();
 
-  if (!userData?.user) {
+  if (!adminContext.isAuthenticated) {
     return { error: jsonError("auth_required", "Authentication is required.", 401) };
   }
 
-  const { data: profile } = await authClient
-    .from("profiles")
-    .select("role")
-    .eq("user_id", userData.user.id)
-    .single();
-
-  if (profile?.role !== "admin") {
+  if (!adminContext.isAdmin) {
     return { error: jsonError("admin_required", "Admin access is required.", 403) };
   }
 
-  return { user: userData.user };
+  return { user: adminContext.user };
 }
 
 export async function POST(request) {
