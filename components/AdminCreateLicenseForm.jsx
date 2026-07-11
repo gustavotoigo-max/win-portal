@@ -117,7 +117,7 @@ export default function AdminCreateLicenseForm({ dictionary }) {
         </select>
       </div>
       <button className="btn primary generate-license-btn" type="submit" disabled={isLoading}>
-        {isLoading ? dictionary.admin.creating : dictionary.admin.createLicense}
+        {isLoading ? dictionary.admin.creating : dictionary.admin.generateLicenseShort}
       </button>
       {message && <p className="note compact-note">{message}</p>}
       {generatedKey && (

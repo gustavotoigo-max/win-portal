@@ -774,7 +774,7 @@ th {
 
 .admin-create-form {
   display: grid;
-  grid-template-columns: minmax(240px, 1.2fr) minmax(220px, 1fr) 120px 130px 130px minmax(210px, auto);
+  grid-template-columns: minmax(240px, 1.2fr) minmax(220px, 1fr) 120px 130px 130px minmax(180px, 0.8fr);
   gap: 18px;
   align-items: end;
 }
@@ -814,16 +814,17 @@ th {
 
 .generate-license-btn {
   min-height: 48px;
-  width: 100%;
+  width: calc(100% - 10px);
+  margin-right: 10px;
 }
 
 .admin-license-list {
   display: grid;
-  gap: 18px;
+  gap: 10px;
 }
 
 .admin-license-card {
-  padding: 20px;
+  padding: 12px 14px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.035);
@@ -834,10 +835,10 @@ th {
 }
 
 .license-card-summary {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(220px, 1.3fr) minmax(160px, 0.8fr) minmax(170px, 0.8fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   cursor: pointer;
   list-style: none;
 }
@@ -850,10 +851,14 @@ th {
   min-width: 0;
 }
 
+.summary-meta {
+  min-width: 0;
+}
+
 .summary-chevron {
-  width: 26px;
-  height: 26px;
-  margin-bottom: 8px;
+  width: 22px;
+  height: 22px;
+  margin-bottom: 5px;
   flex: 0 0 auto;
   border: 1px solid var(--line);
   border-radius: 50%;
@@ -878,7 +883,7 @@ th {
 }
 
 .license-card-body {
-  margin-top: 14px;
+  margin-top: 10px;
   border-top: 1px solid var(--line);
 }
 
@@ -893,22 +898,22 @@ th {
 .field-label {
   color: #f0ca86;
   display: block;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
-  margin-bottom: 5px;
+  margin-bottom: 3px;
   text-transform: uppercase;
 }
 
 .license-card-key {
-  padding: 16px 0;
+  padding: 12px 0;
   border-bottom: 1px solid var(--line);
 }
 
 .license-detail-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  padding: 16px 0;
+  gap: 10px 14px;
+  padding: 12px 0;
 }
 
 .machine-id-block {
@@ -1169,6 +1174,10 @@ th {
     align-items: center;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .summary-meta {
+    grid-column: 1 / -1;
   }
 
   .license-key-cell,

@@ -80,6 +80,14 @@ export default function AdminLicensePanel({ licenses, dictionary }) {
                   <span className="field-label">{dictionary.admin.user}</span>
                   <strong>{license.user}</strong>
                 </div>
+                <div className="summary-meta">
+                  <span className="field-label">{dictionary.admin.product}</span>
+                  <strong>{license.product}</strong>
+                </div>
+                <div className="summary-meta">
+                  <span className="field-label">{dictionary.admin.expiresAt}</span>
+                  <strong>{license.expiresAt}</strong>
+                </div>
                 <span className={statusClass(license.status)}>{license.status}</span>
               </summary>
 
