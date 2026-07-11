@@ -10,5 +10,5 @@ export async function POST(request) {
     await supabase.auth.signOut();
   }
 
-  return NextResponse.redirect(new URL(`/${locale}/login`, request.url), 303);
+  return NextResponse.redirect(new URL(`/${locale}`, request.url), 303);
 }

@@ -4,10 +4,59 @@ import Link from "next/link";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/browser";
 
+function GoogleIcon() {
+  return (
+    <svg aria-hidden="true" height="18" viewBox="0 0 18 18" width="18">
+      <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62Z" />
+      <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18Z" />
+      <path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 0 1 3.7 9c0-.6.1-1.18.27-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.05l3.01-2.33Z" />
+      <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A8.65 8.65 0 0 0 9 0 9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58Z" />
+    </svg>
+  );
+}
+
+function EyeIcon({ hidden }) {
+  return (
+    <svg aria-hidden="true" height="18" viewBox="0 0 24 24" width="18">
+      {hidden ? (
+        <>
+          <path d="M3 3l18 18" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+          <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+          <path d="M9.9 5.1A9.7 9.7 0 0 1 12 5c5 0 9 4.5 10 7a13.5 13.5 0 0 1-3 4.2" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+          <path d="M6.1 6.4A13.6 13.6 0 0 0 2 12c1 2.5 5 7 10 7 1.3 0 2.6-.3 3.7-.8" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+        </>
+      ) : (
+        <>
+          <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z" fill="none" stroke="currentColor" strokeWidth="2" />
+          <circle cx="12" cy="12" fill="none" r="3" stroke="currentColor" strokeWidth="2" />
+        </>
+      )}
+    </svg>
+  );
+}
+
 export default function AuthForm({ locale, dictionary, mode }) {
+  const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const isSignup = mode === "signup";
+
+  function authRedirectUrl(method) {
+    return `${window.location.origin}/api/auth/callback?locale=${encodeURIComponent(locale)}&method=${encodeURIComponent(method)}`;
+  }
+
+  function friendlyAuthError(error) {
+    const text = error?.message?.toLowerCase() || "";
+
+    if (text.includes("email not confirmed")) return dictionary.auth.emailNotConfirmed;
+    if (text.includes("invalid login credentials")) return dictionary.auth.invalidCredentials;
+    if (text.includes("already") || text.includes("registered")) return dictionary.auth.emailInUse;
+    if (text.includes("password")) return dictionary.auth.passwordError;
+    if (text.includes("rate limit") || text.includes("too many")) return dictionary.auth.tooManyRequests;
+
+    return dictionary.auth.genericError;
+  }
 
   async function redirectAfterAuth(supabase, authResult) {
     try {
@@ -44,10 +93,75 @@ export default function AuthForm({ locale, dictionary, mode }) {
     window.location.href = `/${locale}/dashboard`;
   }
 
+  async function recordLoginMethod(method, provider = method) {
+    try {
+      await fetch("/api/auth/login-method", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ method, provider })
+      });
+    } catch {
+      // Login must not fail if profile enrichment is unavailable.
+    }
+  }
+
+  async function handleOAuth(provider) {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      setMessage(dictionary.auth.demoNotice);
+      return;
+    }
+
+    setMessage("");
+    setIsLoading(true);
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: authRedirectUrl(provider),
+        queryParams: provider === "google" ? { prompt: "select_account" } : undefined
+      }
+    });
+
+    if (error) {
+      setIsLoading(false);
+      setMessage(friendlyAuthError(error));
+    }
+  }
+
+  async function handleSso() {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      setMessage(dictionary.auth.demoNotice);
+      return;
+    }
+
+    const domain = email.split("@")[1]?.trim().toLowerCase();
+    if (!domain) {
+      setMessage(dictionary.auth.ssoEmailRequired);
+      return;
+    }
+
+    setMessage("");
+    setIsLoading(true);
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithSSO({
+      domain,
+      options: {
+        redirectTo: authRedirectUrl("sso")
+      }
+    });
+
+    if (error) {
+      setIsLoading(false);
+      setMessage(friendlyAuthError(error));
+    }
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const email = form.get("email");
+    const formEmail = String(form.get("email") || "").trim().toLowerCase();
     const password = form.get("password");
 
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -55,13 +169,16 @@ export default function AuthForm({ locale, dictionary, mode }) {
       return;
     }
 
+    setIsLoading(true);
+    setMessage("");
+
     const supabase = createClient();
     const result = isSignup
       ? await supabase.auth.signUp({
-          email,
+          email: formEmail,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/${locale}/dashboard`,
+            emailRedirectTo: authRedirectUrl("password"),
             data: {
               full_name: form.get("name"),
               company: form.get("company"),
@@ -69,23 +186,27 @@ export default function AuthForm({ locale, dictionary, mode }) {
             }
           }
         })
-      : await supabase.auth.signInWithPassword({ email, password });
+      : await supabase.auth.signInWithPassword({ email: formEmail, password });
 
     if (result.error) {
-      const errorText = result.error.message.toLowerCase();
-      if (errorText.includes("email not confirmed")) {
-        setMessage(dictionary.auth.emailNotConfirmed);
-      } else {
-        setMessage(result.error.message);
-      }
+      setIsLoading(false);
+      setMessage(friendlyAuthError(result.error));
+      return;
+    }
+
+    if (isSignup && result.data.user?.identities && result.data.user.identities.length === 0) {
+      setIsLoading(false);
+      setMessage(dictionary.auth.emailInUse);
       return;
     }
 
     if (isSignup && !result.data.session) {
+      setIsLoading(false);
       setMessage(dictionary.auth.confirmEmailNotice);
       return;
     }
 
+    await recordLoginMethod("password", "email");
     await redirectAfterAuth(supabase, result);
   }
 
@@ -98,31 +219,35 @@ export default function AuthForm({ locale, dictionary, mode }) {
         <>
           <label>
             {dictionary.auth.name}
-            <input name="name" type="text" placeholder={dictionary.auth.name} required />
+            <input name="name" type="text" placeholder={dictionary.auth.name} autoComplete="name" required />
           </label>
           <label>
-            {dictionary.auth.company}
-            <input name="company" type="text" placeholder={dictionary.auth.company} />
+            {dictionary.auth.companyOptional}
+            <input name="company" type="text" placeholder={dictionary.auth.company} autoComplete="organization" />
           </label>
         </>
       )}
 
       <label>
         {dictionary.auth.email}
-        <input name="email" type="email" placeholder="seu@email.com" required />
+        <input
+          name="email"
+          type="email"
+          placeholder="seu@email.com"
+          value={email}
+          autoComplete="email"
+          onChange={(event) => setEmail(event.target.value)}
+          required
+        />
       </label>
       <label>
         {dictionary.auth.password}
-        {!isSignup && (
-          <span>
-            <Link href={`/${locale}/login`}>{dictionary.auth.forgot}</Link>
-          </span>
-        )}
         <div className="password-field">
           <input
             name="password"
             type={showPassword ? "text" : "password"}
             placeholder="********"
+            autoComplete={isSignup ? "new-password" : "current-password"}
             required
             minLength={6}
           />
@@ -133,19 +258,29 @@ export default function AuthForm({ locale, dictionary, mode }) {
             title={showPassword ? "Ocultar senha" : "Mostrar senha"}
             onClick={() => setShowPassword((value) => !value)}
           >
-            {showPassword ? "◐" : "◉"}
+            <EyeIcon hidden={showPassword} />
           </button>
         </div>
       </label>
+      {!isSignup && (
+        <Link className="forgot-password-link" href={`/${locale}/esqueci-senha${email ? `?email=${encodeURIComponent(email)}` : ""}`}>
+          {dictionary.auth.forgot}
+        </Link>
+      )}
 
-      <button className="btn primary full" type="submit">
-        {isSignup ? dictionary.auth.submitSignup : dictionary.auth.submitLogin}
+      <button className="btn primary full" type="submit" disabled={isLoading}>
+        {isLoading ? dictionary.auth.processing : isSignup ? dictionary.auth.submitSignup : dictionary.auth.submitLogin}
       </button>
 
-      <div className="divider">OU CONTINUE COM</div>
+      <div className="divider">{dictionary.auth.continueWith}</div>
       <div className="social-row">
-        <button type="button">Google</button>
-        <button type="button">SSO</button>
+        <button className="google-auth-button" type="button" disabled={isLoading} onClick={() => handleOAuth("google")}>
+          <GoogleIcon />
+          <span>{dictionary.auth.continueGoogle}</span>
+        </button>
+        <button type="button" disabled={isLoading} onClick={handleSso}>
+          {dictionary.auth.continueSso}
+        </button>
       </div>
 
       {message && <p className="note">{message}</p>}

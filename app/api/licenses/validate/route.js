@@ -14,11 +14,20 @@ export async function POST(request) {
     }
 
     const supabase = createAdminClient();
-    const { data: license, error } = await supabase
+    const { data: hashedLicense, error: hashError } = await supabase
       .from("licenses")
       .select("id, status, max_machines, expires_at")
-      .or(`license_key.eq.${licenseKey},license_key_hash.eq.${licenseKeyHash(licenseKey)}`)
+      .eq("license_key_hash", licenseKeyHash(licenseKey))
       .maybeSingle();
+    const { data: plainLicense, error: plainError } = hashedLicense
+      ? { data: null, error: null }
+      : await supabase
+          .from("licenses")
+          .select("id, status, max_machines, expires_at")
+          .eq("license_key", licenseKey)
+          .maybeSingle();
+    const license = hashedLicense || plainLicense;
+    const error = hashError || plainError;
 
     if (error || !license) {
       return NextResponse.json({ valid: false, reason: "not_found" }, { status: 404 });

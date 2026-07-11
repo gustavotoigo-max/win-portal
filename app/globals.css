@@ -217,6 +217,63 @@ select {
   cursor: pointer;
 }
 
+.profile-menu {
+  position: relative;
+}
+
+.profile-menu summary {
+  list-style: none;
+}
+
+.profile-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.profile-menu-panel {
+  width: 210px;
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 90;
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(8, 25, 33, 0.98);
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.32);
+}
+
+.profile-email {
+  padding: 8px 10px;
+  color: var(--muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.profile-menu-panel a,
+.profile-menu-panel button {
+  width: 100%;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  background: transparent;
+  color: #b8d8e1;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.profile-menu-panel a:hover,
+.profile-menu-panel button:hover {
+  background: rgba(85, 242, 255, 0.08);
+  color: var(--cyan);
+}
+
 .container {
   width: min(1120px, calc(100% - 32px));
   margin: 0 auto;
@@ -600,6 +657,34 @@ h3 {
   align-items: center;
 }
 
+.release-status {
+  width: fit-content;
+  min-height: 34px;
+  margin-top: 20px;
+  padding: 7px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  background: rgba(8, 22, 30, 0.7);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.release-status.available {
+  border-color: rgba(85, 242, 255, 0.36);
+}
+
+.release-status.available strong {
+  color: var(--cyan);
+}
+
+.release-status.unavailable {
+  border-style: dashed;
+}
+
 .product-slider {
   min-height: 340px;
   padding: 18px;
@@ -707,10 +792,24 @@ select:focus {
   top: 12px;
   border: 0;
   border-radius: 7px;
-  background: rgba(85, 242, 255, 0.08);
-  color: var(--cyan);
+  background: #d7edf4;
+  color: #07131a;
   cursor: pointer;
   font-size: 15px;
+}
+
+.password-toggle svg {
+  display: block;
+  margin: 0 auto;
+}
+
+.forgot-password-link {
+  width: fit-content;
+  margin-top: 8px;
+  display: inline-flex;
+  color: var(--cyan);
+  font-size: 13px;
+  font-weight: 650;
 }
 
 .auth-card .btn {
@@ -730,12 +829,30 @@ select:focus {
 
 .social-row button {
   flex: 1;
-  height: 36px;
-  border: 0;
+  min-height: 40px;
+  border: 1px solid transparent;
   border-radius: var(--radius);
   background: #07131a;
   color: #b8d8e1;
   font-weight: 650;
+  cursor: pointer;
+}
+
+.social-row button:disabled,
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.google-auth-button {
+  justify-content: center;
+  gap: 10px;
+  border-color: #747775 !important;
+  background: #fff !important;
+  color: #1f1f1f !important;
+  font-family: Roboto, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .auth-switch {
@@ -1198,6 +1315,45 @@ th {
   line-height: 1.35;
 }
 
+.user-license-panel {
+  padding-top: 34px;
+}
+
+.user-license-list {
+  display: grid;
+  gap: 14px;
+}
+
+.user-license-card {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.user-license-key {
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.user-license-card .license-key-cell {
+  min-width: 0;
+}
+
+.user-license-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 16px;
+}
+
+.user-license-grid strong {
+  color: #f4fbff;
+  display: block;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
 .note {
   margin-top: 18px;
   padding: 14px 16px;
@@ -1292,7 +1448,8 @@ th {
   }
 
   .license-card-head,
-  .license-detail-grid {
+  .license-detail-grid,
+  .user-license-grid {
     grid-template-columns: 1fr;
   }
 

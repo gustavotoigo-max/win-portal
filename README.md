@@ -38,8 +38,13 @@ LICENSE_ED25519_PRIVATE_KEY_PEM=
 LICENSE_ED25519_PRIVATE_KEY_BASE64=
 RESEND_API_KEY=
 LICENSE_EMAIL_FROM=
+SUPABASE_INSTALLERS_BUCKET=
+GITHUB_RELEASES_REPOSITORY=gustavotoigo-max/win-portal
+GITHUB_RELEASES_TOKEN=
+GITHUB_RELEASES_CACHE_SECONDS=300
 DOWNLOAD_BASE_URL=
 DOWNLOAD_FALLBACK_URL=
+DOWNLOAD_PATH_IMAGEANALYZER=
 ```
 
 Stripe variables are optional while manual license sales are handled outside the site. Supabase variables are required for real login and license generation.
@@ -56,9 +61,44 @@ Email/download variables:
 
 - `RESEND_API_KEY`: optional Resend API key used to email the license after admin generation.
 - `LICENSE_EMAIL_FROM`: sender address used for license emails, for example `Licencas <licencas@your-domain.com>`.
+- `SUPABASE_INSTALLERS_BUCKET`: optional private Supabase Storage bucket for installer files. Recommended while you do not want GitHub Releases as the primary source.
+- `DOWNLOAD_PATH_IMAGEANALYZER`, `DOWNLOAD_PATH_PDFANALYZER`, etc.: optional Storage paths per product. If empty, the app uses the product installer filename, for example `ImageAnalyzer.exe`.
+- `GITHUB_RELEASES_REPOSITORY`: repository that stores product releases. Defaults to `gustavotoigo-max/win-portal`.
+- `GITHUB_RELEASES_TOKEN`: optional server-only GitHub token, recommended for private repositories or higher API limits.
+- `GITHUB_RELEASES_CACHE_SECONDS`: how long release metadata is cached. Defaults to 300 seconds.
 - `DOWNLOAD_URL_IMAGEANALYZER`, `DOWNLOAD_URL_PDFANALYZER`, etc.: optional direct installer URLs per product.
 - `DOWNLOAD_BASE_URL`: optional base URL used as `{DOWNLOAD_BASE_URL}/{product_id}.exe`.
 - `DOWNLOAD_FALLBACK_URL`: optional fallback page when no direct download URL is configured.
+
+Download priority is:
+
+1. Supabase Storage signed URL, when `SUPABASE_INSTALLERS_BUCKET` is configured.
+2. GitHub Releases asset.
+3. Direct/base/fallback URL variables.
+
+Supabase Storage is preferred over saving `.exe` files inside database tables. The database should store metadata; binary installers should live in object storage or releases.
+
+## Supabase Auth
+
+Authentication supports email/password, Google OAuth, and SSO.
+
+Required Supabase settings:
+
+- Authentication > URL Configuration > Site URL: your production URL, for example `https://your-domain.com`.
+- Authentication > URL Configuration > Redirect URLs:
+  - `https://your-domain.com/api/auth/callback`
+  - `http://localhost:3000/api/auth/callback`
+- Authentication > Providers > Google: enable Google and configure the OAuth client. In Google Cloud, the authorized redirect URI is the Supabase callback URL shown by Supabase, usually `https://PROJECT_REF.supabase.co/auth/v1/callback`.
+- SSO only works after a SAML/OIDC provider is configured in Supabase. The site sends the user's email domain to Supabase, which chooses the matching SSO provider.
+
+Email templates:
+
+- Confirm signup subject: `Win Confirmacao de conta`
+- Reset password subject: `Win Trocar senha`
+- Confirm signup body: paste `supabase/email-templates/confirm-account.html`
+- Reset password body: paste `supabase/email-templates/reset-password.html`
+
+After confirmation, the user is redirected through `/api/auth/callback` and then to `/ADM` if the account is admin, otherwise to the customer dashboard. Browsers normally block tabs from closing themselves after an email link, so redirecting to the logged-in area is the reliable behavior.
 
 ## Supabase
 
@@ -92,6 +132,24 @@ If the project database already existed before the signed activation API, run th
 
 ```text
 supabase/migrations/20260706_license_activation_contract.sql
+```
+
+To store login method metadata, run:
+
+```text
+supabase/migrations/20260711_auth_login_methods.sql
+```
+
+Equivalent SQL:
+
+```sql
+alter table public.profiles add column if not exists login_method text not null default 'password';
+alter table public.profiles add column if not exists login_provider text;
+alter table public.profiles add column if not exists last_login_at timestamptz;
+
+alter table public.profiles drop constraint if exists profiles_login_method_check;
+alter table public.profiles add constraint profiles_login_method_check
+check (login_method in ('password', 'google', 'sso', 'unknown'));
 ```
 
 ## Manual license flow

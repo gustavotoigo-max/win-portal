@@ -1,4 +1,5 @@
 import Header from "@/components/Header";
+import { getLatestProductRelease } from "@/lib/github-releases";
 import { getDictionary, normalizeLocale } from "@/lib/i18n";
 import { getAllProductPages, getProductPage } from "@/lib/product-pages";
 import Link from "next/link";
@@ -30,6 +31,13 @@ export default async function ProductPage({ params }) {
 
   if (!product) notFound();
 
+  const release = await getLatestProductRelease(product);
+  const publishedAt = release?.publishedAt
+    ? new Intl.DateTimeFormat(locale === "pt" ? "pt-BR" : "en-US", {
+        dateStyle: "medium"
+      }).format(new Date(release.publishedAt))
+    : null;
+
   return (
     <>
       <Header locale={locale} active="solutions" />
@@ -39,8 +47,18 @@ export default async function ProductPage({ params }) {
             <p className="eyebrow">{t.nav.solutions}</p>
             <h1>{product.title}</h1>
             <p className="hero-text">{product.subtitle}</p>
+            <div className={`release-status ${release ? "available" : "unavailable"}`}>
+              {release ? (
+                <>
+                  <strong>{t.product.version} {release.version}</strong>
+                  {publishedAt ? <span>{t.product.publishedAt} {publishedAt}</span> : null}
+                </>
+              ) : (
+                <span>{t.product.releaseUnavailable}</span>
+              )}
+            </div>
             <div className="button-row">
-              <Link className="btn primary" href={product.downloadUrl}>
+              <Link className="btn primary" download={product.releaseAsset} href={product.downloadUrl} rel="noopener noreferrer" target="_blank">
                 {t.product.download}
               </Link>
               <Link className="btn secondary" href={`/${locale}/cadastro`}>

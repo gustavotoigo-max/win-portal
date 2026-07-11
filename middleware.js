@@ -1,3 +1,4 @@
+import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 
 const PUBLIC_FILE = /\.(.*)$/;
@@ -11,8 +12,46 @@ function preferredLocale(request) {
   return acceptLanguage.toLowerCase().startsWith("pt") ? "pt" : "en";
 }
 
-export function middleware(request) {
+function copyCookies(fromResponse, toResponse) {
+  fromResponse.cookies.getAll().forEach((cookie) => {
+    const { name, value, ...options } = cookie;
+    toResponse.cookies.set(name, value, options);
+  });
+}
+
+async function refreshSupabaseSession(request) {
+  let response = NextResponse.next({ request });
+
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return response;
+  }
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          response = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
+        }
+      }
+    }
+  );
+
+  await supabase.auth.getUser();
+  return response;
+}
+
+export async function middleware(request) {
   const { pathname } = request.nextUrl;
+  const sessionResponse = await refreshSupabaseSession(request);
 
   if (
     pathname.startsWith("/_next") ||
@@ -21,7 +60,7 @@ export function middleware(request) {
     pathname.startsWith("/favicon") ||
     PUBLIC_FILE.test(pathname)
   ) {
-    return NextResponse.next();
+    return sessionResponse;
   }
 
   const pathnameHasLocale = locales.some(
@@ -29,12 +68,14 @@ export function middleware(request) {
   );
 
   if (pathnameHasLocale) {
-    return NextResponse.next();
+    return sessionResponse;
   }
 
   const url = request.nextUrl.clone();
   url.pathname = `/${preferredLocale(request)}${pathname === "/" ? "" : pathname}`;
-  return NextResponse.redirect(url);
+  const redirectResponse = NextResponse.redirect(url);
+  copyCookies(sessionResponse, redirectResponse);
+  return redirectResponse;
 }
 
 export const config = {

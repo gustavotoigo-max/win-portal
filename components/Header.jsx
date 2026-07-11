@@ -72,12 +72,19 @@ export default async function Header({ locale, active = "home" }) {
             ))}
           </div>
           {user && (
-            <form action="/api/auth/logout" method="post">
-              <input type="hidden" name="locale" value={locale} />
-              <button className="avatar" type="submit" aria-label={t.nav.logout} title={t.nav.logout}>
-                <span>{user.email?.slice(0, 2).toUpperCase() || "GP"}</span>
-              </button>
-            </form>
+            <details className="profile-menu">
+              <summary className="avatar" aria-label={t.nav.profileMenu} title={t.nav.profileMenu}>
+                <span>{user.email?.slice(0, 2).toUpperCase() || "WP"}</span>
+              </summary>
+              <div className="profile-menu-panel">
+                <span className="profile-email">{user.email}</span>
+                <Link href={`/${locale}/dashboard`}>{t.nav.myLicenses}</Link>
+                <form action="/api/auth/logout" method="post">
+                  <input type="hidden" name="locale" value={locale} />
+                  <button type="submit">{t.nav.logout}</button>
+                </form>
+              </div>
+            </details>
           )}
         </div>
       </nav>

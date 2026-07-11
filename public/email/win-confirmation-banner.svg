@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="220" viewBox="0 0 640 220" role="img" aria-label="WinPortal">
+  <rect width="640" height="220" fill="#0d2029"/>
+  <rect x="26" y="24" width="588" height="172" rx="14" fill="#102b38" stroke="#d8b577" stroke-opacity=".55"/>
+  <path d="M82 111c0-39 32-71 71-71h334c39 0 71 32 71 71s-32 71-71 71H153c-39 0-71-32-71-71Z" fill="#07131a" opacity=".72"/>
+  <path d="M163 113 209 76l46 37v58h-70v-38h-22v38h-46v-58Z" fill="none" stroke="#55f2ff" stroke-width="9" stroke-linejoin="round"/>
+  <text x="291" y="105" fill="#55f2ff" font-family="Arial, sans-serif" font-size="38" font-weight="700">WinPortal</text>
+  <text x="292" y="142" fill="#b8d8e1" font-family="Arial, sans-serif" font-size="19">Licencas seguras para software Windows</text>
+</svg>

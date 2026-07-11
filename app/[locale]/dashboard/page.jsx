@@ -3,13 +3,44 @@ import { LicenseKeyCell } from "@/components/LicenseTableControls";
 import { demoLicenses, statusClass } from "@/lib/demo-data";
 import { getDictionary, normalizeLocale } from "@/lib/i18n";
 import { decryptLicenseKey } from "@/lib/license-crypto";
+import { getProductById } from "@/lib/products";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-async function getLicenses(locale) {
+function formatDateTime(value, locale) {
+  if (!value) return "-";
+  return new Intl.DateTimeFormat(locale === "pt" ? "pt-BR" : "en-US", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  }).format(new Date(value));
+}
+
+function formatValidity(createdAt, expiresAt, locale, dictionary) {
+  if (!expiresAt) return dictionary.dashboard.noExpiration;
+
+  const created = createdAt ? new Date(createdAt) : new Date();
+  const expires = new Date(expiresAt);
+
+  if (expires < new Date()) return dictionary.dashboard.expired;
+
+  const days = Math.max(1, Math.round((expires.getTime() - created.getTime()) / 86400000));
+  if (days >= 365) {
+    const years = Math.max(1, Math.round(days / 365));
+    return locale === "pt" ? `${years} ${years === 1 ? "ano" : "anos"}` : `${years} ${years === 1 ? "year" : "years"}`;
+  }
+
+  if (days >= 30) {
+    const months = Math.max(1, Math.round(days / 30));
+    return locale === "pt" ? `${months} ${months === 1 ? "mes" : "meses"}` : `${months} ${months === 1 ? "month" : "months"}`;
+  }
+
+  return locale === "pt" ? `${days} ${days === 1 ? "dia" : "dias"}` : `${days} ${days === 1 ? "day" : "days"}`;
+}
+
+async function getLicenses(locale, dictionary) {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return demoLicenses;
   }
@@ -23,11 +54,27 @@ async function getLicenses(locale) {
 
   const queryClient = process.env.SUPABASE_SERVICE_ROLE_KEY ? createAdminClient() : supabase;
   const userEmail = userData.user.email?.toLowerCase();
-  const { data, error } = await queryClient
-    .from("licenses")
-    .select("id, order_id, customer_email, license_key, license_key_ciphertext, license_key_hint, status, expires_at, created_at")
-    .or(`user_id.eq.${userData.user.id},customer_email.eq.${userEmail}`)
-    .order("created_at", { ascending: false });
+  const licenseSelect = "id, order_id, customer_email, product_id, license_key, license_key_ciphertext, license_key_hint, status, expires_at, created_at";
+  const [byUserResult, byEmailResult] = await Promise.all([
+    queryClient
+      .from("licenses")
+      .select(licenseSelect)
+      .eq("user_id", userData.user.id)
+      .order("created_at", { ascending: false }),
+    queryClient
+      .from("licenses")
+      .select(licenseSelect)
+      .eq("customer_email", userEmail)
+      .order("created_at", { ascending: false })
+  ]);
+
+  const error = byUserResult.error || byEmailResult.error;
+  const data = [
+    ...(byUserResult.data || []),
+    ...(byEmailResult.data || [])
+  ]
+    .filter((license, index, all) => all.findIndex((item) => item.id === license.id) === index)
+    .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
 
   if (error) {
     console.error("Dashboard licenses query failed:", error.message);
@@ -100,11 +147,13 @@ async function getLicenses(locale) {
     return {
       id: license.id,
       key: decryptLicenseKey(license.license_key_ciphertext) || license.license_key || `****-${license.license_key_hint || "----"}`,
-      status: license.status,
+      status: license.expires_at && new Date(license.expires_at) < new Date() ? "expired" : license.status,
+      product: getProductById(license.product_id).name,
       lastMachine: machine?.name || "-",
-      lastSeen: machine?.seenAt?.slice(0, 10) || "-",
+      lastSeen: formatDateTime(machine?.seenAt, locale),
       order: order?.order_number || "-",
-      date: order?.created_at?.slice(0, 10) || license.created_at?.slice(0, 10) || "-"
+      date: formatDateTime(order?.created_at || license.created_at, locale),
+      validity: formatValidity(license.created_at, license.expires_at, locale, dictionary)
     };
   });
 }
@@ -114,10 +163,7 @@ export default async function DashboardPage({ params, searchParams }) {
   await searchParams;
   const locale = normalizeLocale(rawLocale);
   const t = getDictionary(locale);
-  const licenses = await getLicenses(locale);
-  const active = licenses.filter((item) => item.status === "active").length;
-  const blocked = licenses.filter((item) => item.status === "blocked").length;
-  const revoked = licenses.filter((item) => item.status === "revoked").length;
+  const licenses = await getLicenses(locale, t);
 
   return (
     <>
@@ -131,52 +177,36 @@ export default async function DashboardPage({ params, searchParams }) {
           </div>
         </section>
 
-        <section className="dash-grid">
-          <article className="dash-card"><span>{t.dashboard.total}</span><strong>{licenses.length}</strong></article>
-          <article className="dash-card"><span>{t.dashboard.active}</span><strong>{active}</strong></article>
-          <article className="dash-card"><span>{t.dashboard.blocked}</span><strong>{blocked}</strong></article>
-          <article className="dash-card"><span>{t.dashboard.revoked}</span><strong>{revoked}</strong></article>
-        </section>
-
-        <section className="table-card section-block">
+        <section className="table-card section-block user-license-panel">
           <div className="toolbar-row">
             <div>
               <p className="eyebrow">{t.dashboard.license}</p>
               <h2>{t.dashboard.title}</h2>
             </div>
           </div>
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>{t.dashboard.license}</th>
-                  <th>{t.dashboard.status}</th>
-                  <th>{t.dashboard.lastMachine}</th>
-                  <th>{t.dashboard.lastSeen}</th>
-                  <th>{t.dashboard.order}</th>
-                  <th>{t.dashboard.date}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {licenses.length ? (
-                  licenses.map((license) => (
-                    <tr key={license.id}>
-                      <td><LicenseKeyCell licenseKey={license.key} dictionary={t} /></td>
-                      <td><span className={statusClass(license.status)}>{license.status}</span></td>
-                      <td>{license.lastMachine}</td>
-                      <td>{license.lastSeen}</td>
-                      <td>{license.order}</td>
-                      <td>{license.date}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="6">{t.dashboard.empty}</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+
+          {licenses.length ? (
+            <div className="user-license-list">
+              {licenses.map((license) => (
+                <article className="user-license-card" key={license.id}>
+                  <div className="user-license-key">
+                    <span className="field-label">{t.dashboard.license}</span>
+                    <LicenseKeyCell licenseKey={license.key} dictionary={t} />
+                  </div>
+                  <div className="user-license-grid">
+                    <div><span className="field-label">{t.admin.product}</span><strong>{license.product}</strong></div>
+                    <div><span className="field-label">{t.dashboard.status}</span><span className={statusClass(license.status)}>{license.status}</span></div>
+                    <div><span className="field-label">{t.dashboard.lastMachine}</span><strong>{license.lastMachine}</strong></div>
+                    <div><span className="field-label">{t.dashboard.order}</span><strong>{license.order}</strong></div>
+                    <div><span className="field-label">{t.dashboard.purchaseDate}</span><strong>{license.date}</strong></div>
+                    <div><span className="field-label">{t.dashboard.validity}</span><strong>{license.validity}</strong></div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="note">{t.dashboard.empty}</p>
+          )}
           <p className="note">{t.dashboard.note}</p>
         </section>
       </main>
