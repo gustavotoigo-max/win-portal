@@ -9,6 +9,41 @@ export default function AuthForm({ locale, dictionary, mode }) {
   const [showPassword, setShowPassword] = useState(false);
   const isSignup = mode === "signup";
 
+  async function redirectAfterAuth(supabase, authResult) {
+    try {
+      const response = await fetch(`/api/auth/redirect-target?locale=${encodeURIComponent(locale)}`, {
+        cache: "no-store"
+      });
+
+      if (response.ok) {
+        const payload = await response.json();
+        if (payload.target) {
+          window.location.href = payload.target;
+          return;
+        }
+      }
+    } catch {
+      // Fall through to the client-side profile check below.
+    }
+
+    const userId = authResult.data?.user?.id || authResult.data?.session?.user?.id;
+
+    if (userId) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (profile?.role === "admin") {
+        window.location.href = "/ADM";
+        return;
+      }
+    }
+
+    window.location.href = `/${locale}/dashboard`;
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -51,7 +86,7 @@ export default function AuthForm({ locale, dictionary, mode }) {
       return;
     }
 
-    window.location.href = `/${locale}/dashboard`;
+    await redirectAfterAuth(supabase, result);
   }
 
   return (
