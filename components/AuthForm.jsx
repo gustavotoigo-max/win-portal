@@ -274,9 +274,15 @@ export default function AuthForm({ locale, dictionary, mode }) {
 
       <div className="divider">{dictionary.auth.continueWith}</div>
       <div className="social-row">
-        <button className="google-auth-button" type="button" disabled={isLoading} onClick={() => handleOAuth("google")}>
+        <button
+          aria-label={dictionary.auth.continueGoogle}
+          className="google-auth-button"
+          title={dictionary.auth.continueGoogle}
+          type="button"
+          disabled={isLoading}
+          onClick={() => handleOAuth("google")}
+        >
           <GoogleIcon />
-          <span>{dictionary.auth.continueGoogle}</span>
         </button>
         <button type="button" disabled={isLoading} onClick={handleSso}>
           {dictionary.auth.continueSso}

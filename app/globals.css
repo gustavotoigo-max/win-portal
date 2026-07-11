@@ -845,14 +845,18 @@ select:focus {
 }
 
 .google-auth-button {
+  flex: 0 0 44px !important;
+  width: 44px;
+  padding: 0;
   justify-content: center;
-  gap: 10px;
   border-color: #747775 !important;
   background: #fff !important;
   color: #1f1f1f !important;
-  font-family: Roboto, Arial, sans-serif;
-  font-size: 14px;
-  font-weight: 500;
+}
+
+.google-auth-button svg {
+  width: 18px;
+  height: 18px;
 }
 
 .auth-switch {
