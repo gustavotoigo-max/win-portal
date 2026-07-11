@@ -40,7 +40,9 @@ export default function AdminCreateLicenseForm({ dictionary }) {
         return;
       }
 
-      setMessage(dictionary.admin.createSuccess);
+      setMessage(payload.emailSent
+        ? dictionary.admin.createSuccess
+        : `${dictionary.admin.createSuccess} ${payload.emailMessage || dictionary.admin.emailNotSent}`);
       setGeneratedKey(payload.licenseKey);
       setEmail("");
       setMaxMachines(1);

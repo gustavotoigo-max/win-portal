@@ -1,7 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getAdminContext } from "@/lib/admin-auth";
+import { buildLicenseEmail } from "@/lib/email/license-email-template";
+import { sendEmail } from "@/lib/email/send-email";
 import { encryptLicenseKey, licenseKeyHash } from "@/lib/license-crypto";
+import { getProductPage } from "@/lib/product-pages";
 import { getProductById } from "@/lib/products";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -90,7 +93,7 @@ export async function POST(request) {
         customer_email: customerEmail,
         product_id: product.id
       })
-      .select("id")
+      .select("id, order_number")
       .single();
 
     if (orderError) {
@@ -130,7 +133,34 @@ export async function POST(request) {
       notes: `Official manual license generated for ${customerEmail}`
     });
 
-    return NextResponse.json({ ok: true, licenseId: license.id, licenseKey });
+    const productPage = getProductPage(product.id);
+    const downloadUrl = new URL(`/pt/solucoes/${product.id}`, request.url).toString();
+    const emailTemplate = buildLicenseEmail({
+      customerEmail,
+      licenseKey,
+      orderNumber: order.order_number,
+      product: productPage,
+      expiresAt,
+      downloadUrl
+    });
+    const emailResult = await sendEmail({
+      to: customerEmail,
+      ...emailTemplate
+    });
+
+    await admin.from("license_events").insert({
+      license_id: license.id,
+      action: emailResult.ok ? "email_sent" : "email_failed",
+      notes: emailResult.ok ? `License email sent to ${customerEmail}` : emailResult.message
+    });
+
+    return NextResponse.json({
+      ok: true,
+      licenseId: license.id,
+      licenseKey,
+      emailSent: emailResult.ok,
+      emailMessage: emailResult.ok ? "E-mail enviado ao cliente." : emailResult.message
+    });
   } catch (error) {
     return jsonError("server_error", error.message, 500);
   }

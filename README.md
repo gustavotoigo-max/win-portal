@@ -36,6 +36,10 @@ LICENSE_HMAC_SECRET=
 LICENSE_ENCRYPTION_KEY=
 LICENSE_ED25519_PRIVATE_KEY_PEM=
 LICENSE_ED25519_PRIVATE_KEY_BASE64=
+RESEND_API_KEY=
+LICENSE_EMAIL_FROM=
+DOWNLOAD_BASE_URL=
+DOWNLOAD_FALLBACK_URL=
 ```
 
 Stripe variables are optional while manual license sales are handled outside the site. Supabase variables are required for real login and license generation.
@@ -47,6 +51,14 @@ License variables:
 - `LICENSE_ED25519_PRIVATE_KEY_PEM`: server-only Ed25519 private key in PEM format. Use `\n` escaped line breaks in Vercel.
 - `LICENSE_ED25519_PRIVATE_KEY_BASE64`: alternative Ed25519 private key as base64 PKCS8 DER.
 - The Windows client must contain only the Ed25519 public key.
+
+Email/download variables:
+
+- `RESEND_API_KEY`: optional Resend API key used to email the license after admin generation.
+- `LICENSE_EMAIL_FROM`: sender address used for license emails, for example `Licencas <licencas@your-domain.com>`.
+- `DOWNLOAD_URL_IMAGEANALYZER`, `DOWNLOAD_URL_PDFANALYZER`, etc.: optional direct installer URLs per product.
+- `DOWNLOAD_BASE_URL`: optional base URL used as `{DOWNLOAD_BASE_URL}/{product_id}.exe`.
+- `DOWNLOAD_FALLBACK_URL`: optional fallback page when no direct download URL is configured.
 
 ## Supabase
 
@@ -94,7 +106,7 @@ The current customer flow does not charge the user inside the site.
    - one row in `licenses`
    - one row in `license_events`
 5. The generated license key appears in the admin panel.
-6. Admin sends the key manually to the customer.
+6. If email variables are configured, the app emails the key and product page link to the customer.
 7. Customer activates the Windows software with the same email and license key.
 
 Important route:
