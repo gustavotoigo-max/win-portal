@@ -79,7 +79,7 @@ select {
   gap: 10px;
   color: #b8d8e1;
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .brand-mark {
@@ -106,7 +106,7 @@ select {
 .nav-actions {
   gap: 20px;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .nav-link,
@@ -177,7 +177,7 @@ select {
   border-radius: 7px;
   color: #b8d8e1;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .nav-dropdown-menu a:hover {
@@ -213,7 +213,7 @@ select {
   background: linear-gradient(135deg, #d99b6a, #08333d 60%, #55f2ff);
   color: white;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -242,7 +242,7 @@ select {
   margin: 0 0 12px;
   color: var(--cyan);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0;
   text-transform: uppercase;
 }
@@ -257,18 +257,21 @@ p {
 h1 {
   margin-bottom: 18px;
   font-size: clamp(40px, 6vw, 72px);
+  font-weight: 700;
   line-height: 0.96;
 }
 
 h2 {
   margin-bottom: 14px;
   font-size: clamp(28px, 3.5vw, 44px);
+  font-weight: 650;
   line-height: 1.04;
 }
 
 h3 {
   margin-bottom: 10px;
   font-size: 20px;
+  font-weight: 650;
 }
 
 .hero-text,
@@ -305,7 +308,7 @@ h3 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-weight: 800;
+  font-weight: 650;
   cursor: pointer;
 }
 
@@ -491,7 +494,7 @@ h3 {
   place-items: center;
   background: rgba(85, 242, 255, 0.1);
   color: var(--cyan);
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .feature-card p,
@@ -520,7 +523,7 @@ h3 {
 .how-card a,
 .auth-card a {
   color: var(--cyan);
-  font-weight: 800;
+  font-weight: 650;
 }
 
 .cta-card,
@@ -573,7 +576,7 @@ h3 {
 
 .faq-list summary {
   cursor: pointer;
-  font-weight: 800;
+  font-weight: 650;
 }
 
 .faq-list p {
@@ -614,7 +617,7 @@ h3 {
   border-radius: var(--radius);
   background: linear-gradient(135deg, rgba(85, 242, 255, 0.06), rgba(255, 255, 255, 0.03));
   color: var(--muted);
-  font-weight: 800;
+  font-weight: 600;
   text-align: center;
 }
 
@@ -662,7 +665,7 @@ h3 {
   display: block;
   margin-top: 18px;
   color: #b8d8e1;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .auth-card label span {
@@ -732,7 +735,7 @@ select:focus {
   border-radius: var(--radius);
   background: #07131a;
   color: #b8d8e1;
-  font-weight: 800;
+  font-weight: 650;
 }
 
 .auth-switch {
@@ -791,7 +794,7 @@ select:focus {
   border-radius: 999px;
   color: white;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 650;
 }
 
 .status-active {
@@ -906,7 +909,7 @@ th {
 .admin-create-form label {
   color: #f0ca86;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .admin-search-field {
@@ -921,7 +924,7 @@ th {
   color: #f0ca86;
   display: block;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .compact-note {
@@ -1016,7 +1019,7 @@ th {
   color: #f0ca86;
   display: block;
   font-size: 10px;
-  font-weight: 800;
+  font-weight: 650;
   margin-bottom: 3px;
   text-transform: uppercase;
 }
@@ -1061,7 +1064,7 @@ th {
 .admin-access-box span {
   color: #f0ca86;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 650;
   text-transform: uppercase;
 }
 
@@ -1079,7 +1082,7 @@ th {
   margin: 0 0 16px;
   padding: 12px 14px;
   border-radius: var(--radius);
-  font-weight: 800;
+  font-weight: 650;
 }
 
 .operation-message.success {
@@ -1104,7 +1107,7 @@ th {
 
 .license-pagination span {
   color: var(--muted);
-  font-weight: 800;
+  font-weight: 650;
 }
 
 .license-pagination .btn:disabled {
@@ -1154,7 +1157,7 @@ th {
 .confirm-summary span {
   color: #f0ca86;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 650;
   text-transform: uppercase;
 }
 
@@ -1219,7 +1222,7 @@ th {
 .generated-key-box span {
   color: var(--muted);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
 }
 
