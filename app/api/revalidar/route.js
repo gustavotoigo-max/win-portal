@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { buildLicensePayload, errorResponse, successResponse } from "@/lib/license-crypto";
+import { getProductBySoftware } from "@/lib/products";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 function isExpired(expiresAt) {
@@ -16,17 +17,25 @@ export async function POST(request) {
     const {
       license_id: licenseId,
       activation_id: activationId,
+      software,
       email,
       machine_id: machineId,
       software_version: softwareVersion,
       system_info: systemInfo
     } = body;
 
-    if (!licenseId || !activationId || !email || !machineId) {
+    if (!licenseId || !activationId || !email || !machineId || !software) {
       return NextResponse.json(
-        errorResponse("INVALID_REQUEST", "license_id, activation_id, e-mail e Machine ID sao obrigatorios."),
+        errorResponse("INVALID_REQUEST", "license_id, activation_id, e-mail, Machine ID e software sao obrigatorios."),
         { status: 400 }
       );
+    }
+
+    const product = getProductBySoftware(software);
+    if (!product) {
+      return NextResponse.json(errorResponse("INVALID_SOFTWARE", "Software invalido."), {
+        status: 403
+      });
     }
 
     const admin = createAdminClient();
@@ -49,7 +58,7 @@ export async function POST(request) {
 
     const { data: license, error: licenseError } = await admin
       .from("licenses")
-      .select("id, user_id, customer_email, license_key_hash, status, expires_at, created_at, app_id, offline_allowed, offline_max_days, features, revoked_at, profiles(email)")
+      .select("id, user_id, customer_email, product_id, license_key_hash, status, expires_at, created_at, app_id, offline_allowed, offline_max_days, features, revoked_at, profiles(email)")
       .eq("id", licenseId)
       .single();
 
@@ -62,6 +71,18 @@ export async function POST(request) {
     const licenseEmail = license.customer_email || license.profiles?.email;
     if (licenseEmail && licenseEmail.toLowerCase() !== email.toLowerCase()) {
       return NextResponse.json(errorResponse("INVALID_EMAIL", "E-mail nao pertence a licenca."), {
+        status: 403
+      });
+    }
+
+    if (!license.product_id) {
+      return NextResponse.json(errorResponse("LICENSE_PRODUCT_MISSING", "Licenca sem produto vinculado."), {
+        status: 403
+      });
+    }
+
+    if (license.product_id !== product.id) {
+      return NextResponse.json(errorResponse("SOFTWARE_MISMATCH", "Licenca pertence a outro software."), {
         status: 403
       });
     }
@@ -84,11 +105,12 @@ export async function POST(request) {
     }
 
     const now = new Date();
+    const activationSystemInfo = { ...(systemInfo || {}), software: product.aliases?.[0] || product.name };
     await admin
       .from("activations")
       .update({
         software_version: softwareVersion,
-        system_info: systemInfo || {},
+        system_info: activationSystemInfo,
         last_seen_at: now.toISOString(),
         last_validated_at: now.toISOString()
       })
@@ -110,6 +132,7 @@ export async function POST(request) {
       activation,
       email,
       machineId,
+      product,
       softwareVersion,
       now
     });

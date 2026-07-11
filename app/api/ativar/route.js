@@ -5,6 +5,7 @@ import {
   licenseKeyHash,
   successResponse
 } from "@/lib/license-crypto";
+import { getProductBySoftware } from "@/lib/products";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const DEFAULT_APP_ID = "com.winportal.windowssoftware";
@@ -22,6 +23,7 @@ export async function POST(request) {
     const body = await request.json();
     const {
       app_id: appId = DEFAULT_APP_ID,
+      software,
       email,
       license_key: licenseKey,
       machine_id: machineId,
@@ -30,11 +32,18 @@ export async function POST(request) {
       system_info: systemInfo
     } = body;
 
-    if (!email || !licenseKey || !machineId) {
+    if (!email || !licenseKey || !machineId || !software) {
       return NextResponse.json(
-        errorResponse("INVALID_REQUEST", "E-mail, chave e Machine ID sao obrigatorios."),
+        errorResponse("INVALID_REQUEST", "E-mail, chave, Machine ID e software sao obrigatorios."),
         { status: 400 }
       );
+    }
+
+    const product = getProductBySoftware(software);
+    if (!product) {
+      return NextResponse.json(errorResponse("INVALID_SOFTWARE", "Software invalido."), {
+        status: 403
+      });
     }
 
     if (appId !== (process.env.LICENSE_APP_ID || DEFAULT_APP_ID)) {
@@ -47,7 +56,7 @@ export async function POST(request) {
     const hash = licenseKeyHash(licenseKey);
     const { data: license, error } = await admin
       .from("licenses")
-      .select("id, user_id, customer_email, license_key_hash, status, max_machines, expires_at, created_at, app_id, offline_allowed, offline_max_days, features, revoked_at, profiles(email)")
+      .select("id, user_id, customer_email, product_id, license_key_hash, status, max_machines, expires_at, created_at, app_id, offline_allowed, offline_max_days, features, revoked_at, profiles(email)")
       .eq("license_key_hash", hash)
       .single();
 
@@ -68,6 +77,18 @@ export async function POST(request) {
     const licenseAppId = license.app_id || expectedAppId;
     if (licenseAppId !== appId) {
       return NextResponse.json(errorResponse("LICENSE_APP_MISMATCH", "Licenca pertence a outro aplicativo."), {
+        status: 403
+      });
+    }
+
+    if (!license.product_id) {
+      return NextResponse.json(errorResponse("LICENSE_PRODUCT_MISSING", "Licenca sem produto vinculado."), {
+        status: 403
+      });
+    }
+
+    if (license.product_id !== product.id) {
+      return NextResponse.json(errorResponse("SOFTWARE_MISMATCH", "Licenca pertence a outro software."), {
         status: 403
       });
     }
@@ -103,13 +124,14 @@ export async function POST(request) {
 
     let activation = existing;
     const now = new Date();
+    const activationSystemInfo = { ...(systemInfo || {}), software: product.aliases?.[0] || product.name };
     if (activation) {
       const { data } = await admin
         .from("activations")
         .update({
           machine_name: machineName,
           software_version: softwareVersion,
-          system_info: systemInfo || {},
+          system_info: activationSystemInfo,
           last_seen_at: now.toISOString(),
           last_validated_at: now.toISOString(),
           status: "active"
@@ -126,7 +148,7 @@ export async function POST(request) {
           machine_id: machineId,
           machine_name: machineName,
           software_version: softwareVersion,
-          system_info: systemInfo || {},
+          system_info: activationSystemInfo,
           status: "active",
           last_seen_at: now.toISOString(),
           last_validated_at: now.toISOString()
@@ -152,6 +174,7 @@ export async function POST(request) {
       activation,
       email,
       machineId,
+      product,
       softwareVersion,
       now
     });
