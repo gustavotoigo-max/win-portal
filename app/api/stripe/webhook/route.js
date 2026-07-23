@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { encryptLicenseKey, licenseKeyHash } from "@/lib/license-crypto";
+import { queryOne } from "@/lib/neon/database";
 import { getStripe } from "@/lib/stripe";
 
 function licenseKey() {
@@ -25,37 +26,49 @@ export async function POST(request) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
-    const supabase = createAdminClient();
     const orderNumber = `ORD-${String(session.created).slice(-6)}`;
 
-    const { data: order, error: orderError } = await supabase
-      .from("orders")
-      .insert({
-        order_number: orderNumber,
-        stripe_session_id: session.id,
-        stripe_payment_intent_id: session.payment_intent,
-        status: "paid",
-        amount: session.amount_total || 0,
-        currency: session.currency || "usd",
-        customer_email: session.customer_details?.email
-      })
-      .select("id")
-      .single();
+    const productId = session.metadata?.product_id || null;
+    const customerEmail = session.customer_details?.email || session.customer_email || null;
+    const order = await queryOne(
+      `insert into public.orders (
+         order_number, stripe_session_id, stripe_payment_intent_id, status,
+         amount, currency, customer_email, product_id
+       )
+       values ($1, $2, $3, 'paid', $4, $5, $6, $7)
+       on conflict (stripe_session_id) do update set status = 'paid'
+       returning id`,
+      [
+        orderNumber,
+        session.id,
+        session.payment_intent,
+        session.amount_total || 0,
+        session.currency || "usd",
+        customerEmail,
+        productId
+      ]
+    );
 
-    if (orderError) {
-      return NextResponse.json({ error: orderError.message }, { status: 500 });
-    }
-
-    const { error: licenseError } = await supabase.from("licenses").insert({
-      order_id: order.id,
-      license_key: licenseKey(),
-      status: "active",
-      max_machines: 1
-    });
-
-    if (licenseError) {
-      return NextResponse.json({ error: licenseError.message }, { status: 500 });
-    }
+    const key = licenseKey();
+    await queryOne(
+      `insert into public.licenses (
+         order_id, customer_email, product_id, license_key_hash,
+         license_key_hint, license_key_ciphertext, status, max_machines
+       )
+       select $1, $2, $3, $4, $5, $6, 'active', 1
+       where not exists (
+         select 1 from public.licenses where order_id = $1
+       )
+       returning id`,
+      [
+        order.id,
+        customerEmail,
+        productId,
+        licenseKeyHash(key),
+        key.slice(-4),
+        encryptLicenseKey(key)
+      ]
+    );
   }
 
   return NextResponse.json({ received: true });

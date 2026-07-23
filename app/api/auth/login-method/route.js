@@ -1,21 +1,23 @@
 import { NextResponse } from "next/server";
 import { recordUserLoginMethod } from "@/lib/auth-profile";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthSession } from "@/lib/auth/server";
 
 export async function POST(request) {
   try {
     const body = await request.json();
-    const supabase = await createClient();
-    const { data } = await supabase.auth.getUser();
+    const session = await getAuthSession();
 
-    if (!data?.user) {
+    if (!session?.user) {
       return NextResponse.json({ ok: false, message: "Authentication is required." }, { status: 401 });
     }
 
     await recordUserLoginMethod({
-      user: data.user,
+      user: session.user,
       method: body.method,
-      provider: body.provider
+      provider: body.provider,
+      fullName: body.fullName,
+      company: body.company,
+      preferredLocale: body.preferredLocale
     });
 
     return NextResponse.json({ ok: true });

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/browser";
+import { authClient } from "@/lib/auth/client";
 
 export default function ForgotPasswordForm({ locale, dictionary, initialEmail = "" }) {
   const [email, setEmail] = useState(initialEmail);
@@ -12,17 +12,12 @@ export default function ForgotPasswordForm({ locale, dictionary, initialEmail = 
   async function handleSubmit(event) {
     event.preventDefault();
 
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      setMessage(dictionary.auth.demoNotice);
-      return;
-    }
-
     setIsLoading(true);
     setMessage("");
 
-    const supabase = createClient();
-    const redirectTo = `${window.location.origin}/api/auth/callback?locale=${encodeURIComponent(locale)}&method=password&next=/${locale}/trocar-senha`;
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+    const redirectTo = `${window.location.origin}/${locale}/trocar-senha`;
+    const { error } = await authClient.requestPasswordReset({
+      email: email.trim().toLowerCase(),
       redirectTo
     });
 
