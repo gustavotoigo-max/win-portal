@@ -16,13 +16,18 @@ export default function ForgotPasswordForm({ locale, dictionary, initialEmail = 
     setMessage("");
 
     const redirectTo = `${window.location.origin}/${locale}/trocar-senha`;
-    const { error } = await authClient.requestPasswordReset({
-      email: email.trim().toLowerCase(),
-      redirectTo
-    });
+    try {
+      const { error } = await authClient.requestPasswordReset({
+        email: email.trim().toLowerCase(),
+        redirectTo
+      });
 
-    setIsLoading(false);
-    setMessage(error ? dictionary.auth.resetError : dictionary.auth.resetSent);
+      setMessage(error ? dictionary.auth.resetError : dictionary.auth.resetSent);
+    } catch {
+      setMessage(dictionary.auth.resetError);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
