@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/browser";
+import { authClient } from "@/lib/auth/client";
 
 function EyeIcon({ hidden }) {
   return (
@@ -23,7 +23,7 @@ function EyeIcon({ hidden }) {
   );
 }
 
-export default function ResetPasswordForm({ locale, dictionary }) {
+export default function ResetPasswordForm({ locale, dictionary, token }) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
@@ -32,16 +32,18 @@ export default function ResetPasswordForm({ locale, dictionary }) {
   async function handleSubmit(event) {
     event.preventDefault();
 
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      setMessage(dictionary.auth.demoNotice);
+    if (!token) {
+      setMessage(dictionary.auth.resetError);
       return;
     }
 
     setIsLoading(true);
     setMessage("");
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.updateUser({ password });
+    const { error } = await authClient.resetPassword({
+      newPassword: password,
+      token
+    });
 
     if (error) {
       setIsLoading(false);

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminContext } from "@/lib/admin-auth";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { query } from "@/lib/neon/database";
 
 const allowed = new Set(["active", "revoked", "blocked", "clear_activation"]);
 const actionMessages = {
@@ -33,47 +33,31 @@ export async function POST(request) {
       return NextResponse.json({ ok: false, message: "Admin access is required." }, { status: 403 });
     }
 
-    const supabase = createAdminClient();
-
     if (status === "clear_activation") {
-      const { error: activationsError } = await supabase
-        .from("activations")
-        .delete()
-        .eq("license_id", licenseId);
-
-      if (activationsError) {
-        return NextResponse.json({ ok: false, message: activationsError.message }, { status: 500 });
-      }
-
-      const { error: machinesError } = await supabase
-        .from("machines")
-        .delete()
-        .eq("license_id", licenseId);
-
-      if (machinesError) {
-        return NextResponse.json({ ok: false, message: machinesError.message }, { status: 500 });
-      }
+      await query("delete from public.activations where license_id = $1", [licenseId]);
+      await query("delete from public.machines where license_id = $1", [licenseId]);
     } else {
-      const { error } = await supabase
-        .from("licenses")
-        .update({
-          status,
-          revoked_at: status === "revoked" ? new Date().toISOString() : null
-        })
-        .eq("id", licenseId);
-
-      if (error) {
-        return NextResponse.json({ ok: false, message: error.message }, { status: 500 });
-      }
+      await query(
+        `update public.licenses
+         set status = $1,
+             revoked_at = case when $1 = 'revoked' then now() else null end
+         where id = $2`,
+        [status, licenseId]
+      );
     }
 
-    await supabase.from("license_events").insert({
-      license_id: licenseId,
-      action: status,
-      notes: status === "clear_activation"
-        ? "Activation records cleared from admin panel"
-        : "Updated from admin panel"
-    });
+    await query(
+      `insert into public.license_events (license_id, admin_id, action, notes)
+       values ($1, $2, $3, $4)`,
+      [
+        licenseId,
+        adminContext.user?.id || null,
+        status,
+        status === "clear_activation"
+          ? "Activation records cleared from admin panel"
+          : "Updated from admin panel"
+      ]
+    );
 
     return NextResponse.json({ ok: true, message: actionMessages[status] });
   } catch (error) {

@@ -1,17 +1,12 @@
 import Link from "next/link";
 import { getDictionary, locales } from "@/lib/i18n";
 import { getAllProductPages } from "@/lib/product-pages";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthSession } from "@/lib/auth/server";
 
 async function getLoggedInUser() {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    return null;
-  }
-
   try {
-    const supabase = await createClient();
-    const { data } = await supabase.auth.getUser();
-    return data?.user || null;
+    const session = await getAuthSession();
+    return session?.user || null;
   } catch {
     return null;
   }

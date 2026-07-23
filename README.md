@@ -1,302 +1,108 @@
 # WinPortal
 
-WinPortal is a Next.js app for selling Windows software licenses, with customer login, signup, manual official license generation, license dashboard, admin license management, and Portuguese/English routing.
+Portal Next.js para cadastro de clientes, administracao de licencas, downloads e
+ativacao dos aplicativos WinPortal. O backend usa Neon PostgreSQL e Neon Auth.
 
-## Stack
+## Configuracao do Neon
 
-- Next.js on Vercel
-- Supabase Auth + PostgreSQL
-- Manual official license flow for the current stage
-- Stripe Checkout + webhook kept as future payment integration
-- Locale routes: `/pt` and `/en`
+1. No projeto do Neon, abra **SQL Editor**.
+2. Copie todo o conteudo de `neon/schema.sql`, execute e confirme que o comando
+   terminou sem erros.
+3. No projeto, habilite **Neon Auth**. Copie a URL fornecida pelo Neon para
+   `NEON_AUTH_BASE_URL`.
+4. Em **Connect**, copie a connection string do banco para `DATABASE_URL`.
+5. Gere um segredo aleatorio com pelo menos 32 caracteres para
+   `NEON_AUTH_COOKIE_SECRET`. Nao altere esse valor entre deploys.
 
-## Local setup
+Para desenvolvimento local, copie `.env.example` para `.env.local` e preencha
+os valores. Nunca envie `.env.local` para o Git.
 
-```bash
-npm install
-npm run dev
+## Variaveis da Vercel
+
+Em **Vercel > projeto > Settings > Environment Variables**, adicione:
+
+```dotenv
+DATABASE_URL=postgresql://...
+NEON_AUTH_BASE_URL=https://...
+NEON_AUTH_COOKIE_SECRET=segredo-aleatorio-com-pelo-menos-32-caracteres
+ADMIN_EMAILS=seu-email@exemplo.com
 ```
 
-## Vercel deploy
+Marque ao menos **Production**. Para testar previews, marque tambem **Preview**.
+Depois salve e faca um novo deploy.
 
-The project includes `vercel.json` to force the Next.js preset and `.next` output directory. If the Vercel dashboard still has an old Output Directory value such as `public`, clear it or keep this repository config as the source of truth.
+As variaveis de licenciamento existentes devem ser preservadas sem mudanca:
 
-Copy `.env.example` to `.env.local` and fill:
-
-```bash
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-NEXT_PUBLIC_STRIPE_PRICE_ID=
+```dotenv
 LICENSE_APP_ID=com.winportal.windowssoftware
 LICENSE_HMAC_SECRET=
 LICENSE_ENCRYPTION_KEY=
 LICENSE_ED25519_PRIVATE_KEY_PEM=
 LICENSE_ED25519_PRIVATE_KEY_BASE64=
-RESEND_API_KEY=
-LICENSE_EMAIL_FROM=
-SUPABASE_INSTALLERS_BUCKET=
-GITHUB_RELEASES_REPOSITORY=gustavotoigo-max/win-portal
-GITHUB_RELEASES_TOKEN=
-GITHUB_RELEASES_CACHE_SECONDS=300
-DOWNLOAD_BASE_URL=
-DOWNLOAD_FALLBACK_URL=
-DOWNLOAD_PATH_IMAGEANALYZER=
 ```
 
-Stripe variables are optional while manual license sales are handled outside the site. Supabase variables are required for real login and license generation.
+Tambem preserve as variaveis de Stripe, Resend, GitHub Releases e downloads que
+ja estiverem configuradas. As antigas variaveis `SUPABASE_*` so devem ser
+removidas da Vercel depois que o primeiro deploy com Neon estiver validado.
 
-License variables:
+## Primeiro administrador
 
-- `LICENSE_HMAC_SECRET`: server-only secret used to hash license keys. Required before production.
-- `LICENSE_ENCRYPTION_KEY`: server-only secret used to encrypt the key for dashboard display.
-- `LICENSE_ED25519_PRIVATE_KEY_PEM`: server-only Ed25519 private key in PEM format. Use `\n` escaped line breaks in Vercel.
-- `LICENSE_ED25519_PRIVATE_KEY_BASE64`: alternative Ed25519 private key as base64 PKCS8 DER.
-- The Windows client must contain only the Ed25519 public key.
-
-Email/download variables:
-
-- `RESEND_API_KEY`: optional Resend API key used to email the license after admin generation.
-- `LICENSE_EMAIL_FROM`: sender address used for license emails, for example `Licencas <licencas@your-domain.com>`.
-- `SUPABASE_INSTALLERS_BUCKET`: optional private Supabase Storage bucket for installer files. Recommended while you do not want GitHub Releases as the primary source.
-- `DOWNLOAD_PATH_IMAGEANALYZER`, `DOWNLOAD_PATH_PDFANALYZER`, etc.: optional Storage paths per product. If empty, the app uses the product installer filename, for example `ImageAnalyzer.exe`.
-- `GITHUB_RELEASES_REPOSITORY`: repository that stores product releases. Defaults to `gustavotoigo-max/win-portal`.
-- `GITHUB_RELEASES_TOKEN`: optional server-only GitHub token, recommended for private repositories or higher API limits.
-- `GITHUB_RELEASES_CACHE_SECONDS`: how long release metadata is cached. Defaults to 300 seconds.
-- `DOWNLOAD_URL_IMAGEANALYZER`, `DOWNLOAD_URL_PDFANALYZER`, etc.: optional direct installer URLs per product.
-- `DOWNLOAD_BASE_URL`: optional base URL used as `{DOWNLOAD_BASE_URL}/{product_id}.exe`.
-- `DOWNLOAD_FALLBACK_URL`: optional fallback page when no direct download URL is configured.
-
-Download priority is:
-
-1. Supabase Storage signed URL, when `SUPABASE_INSTALLERS_BUCKET` is configured.
-2. GitHub Releases asset.
-3. Direct/base/fallback URL variables.
-
-Supabase Storage is preferred over saving `.exe` files inside database tables. The database should store metadata; binary installers should live in object storage or releases.
-
-## Supabase Auth
-
-Authentication supports email/password, Google OAuth, and SSO.
-
-Required Supabase settings:
-
-- Authentication > URL Configuration > Site URL: your production URL, for example `https://your-domain.com`.
-- Authentication > URL Configuration > Redirect URLs:
-  - `https://your-domain.com/api/auth/callback`
-  - `http://localhost:3000/api/auth/callback`
-- Authentication > Providers > Google: enable Google and configure the OAuth client. In Google Cloud, the authorized redirect URI is the Supabase callback URL shown by Supabase, usually `https://PROJECT_REF.supabase.co/auth/v1/callback`.
-- SSO only works after a SAML/OIDC provider is configured in Supabase. The site sends the user's email domain to Supabase, which chooses the matching SSO provider.
-
-Email templates:
-
-- Confirm signup subject: `Win Confirmacao de conta`
-- Reset password subject: `Win Trocar senha`
-- Confirm signup body: paste `supabase/email-templates/confirm-account.html`
-- Reset password body: paste `supabase/email-templates/reset-password.html`
-
-After confirmation, the user is redirected through `/api/auth/callback` and then to `/ADM` if the account is admin, otherwise to the customer dashboard. Browsers normally block tabs from closing themselves after an email link, so redirecting to the logged-in area is the reliable behavior.
-
-## Supabase
-
-1. Create a Supabase project.
-2. Open SQL Editor.
-3. Run `supabase/schema.sql`.
-4. Create your first user.
-5. Promote your admin user:
+`ADMIN_EMAILS` concede acesso ao ADM pelo e-mail, mesmo antes de existir um
+perfil no banco. Depois de criar e acessar a conta uma vez, tambem e possivel
+fixar a funcao no banco:
 
 ```sql
 update public.profiles
 set role = 'admin'
-where email = 'your-email@example.com';
+where lower(email) = lower('seu-email@exemplo.com');
 ```
 
-During testing, Supabase may block login with `Email not confirmed`. You have two options:
+## Google Login
 
-- Confirm the user through the email sent by Supabase.
-- Or disable email confirmation in `Authentication > Providers > Email > Confirm email`.
+Login por e-mail e senha funciona com o Neon Auth habilitado. O botao Google
+exige que o provedor Google esteja configurado na area de Auth do Neon. Use as
+URLs de callback mostradas pelo proprio painel do Neon ao configurar o cliente
+OAuth.
 
-Use the hidden admin URL:
+## Desenvolvimento
 
-```text
-https://your-domain.com/ADM
+```bash
+pnpm install
+pnpm dev
 ```
 
-The admin link is intentionally not shown in the public navigation.
-The `/ADM` page is forced dynamic so it always checks the current login session and admin role.
+Validacao de producao:
 
-If the project database already existed before the signed activation API, run this migration too:
-
-```text
-supabase/migrations/20260706_license_activation_contract.sql
+```bash
+pnpm build
 ```
 
-To store login method metadata, run:
+## Banco de dados
 
-```text
-supabase/migrations/20260711_auth_login_methods.sql
-```
+O schema oficial esta em `neon/schema.sql`. O portal acessa o banco somente no
+servidor por meio de `DATABASE_URL`; a connection string nunca e exposta ao
+navegador. Autorizacao de usuario e administrador e verificada antes das
+consultas protegidas.
 
-Equivalent SQL:
+## Ativacao dos aplicativos
 
-```sql
-alter table public.profiles add column if not exists login_method text not null default 'password';
-alter table public.profiles add column if not exists login_provider text;
-alter table public.profiles add column if not exists last_login_at timestamptz;
-
-alter table public.profiles drop constraint if exists profiles_login_method_check;
-alter table public.profiles add constraint profiles_login_method_check
-check (login_method in ('password', 'google', 'sso', 'unknown'));
-```
-
-## Manual license flow
-
-The current customer flow does not charge the user inside the site.
-
-1. Customer gives the purchase email to the administrator.
-2. Admin opens `/ADM`.
-3. Admin creates an official license manually for the customer's email.
-4. The app creates:
-   - one row in `orders`
-   - one row in `licenses`
-   - one row in `license_events`
-5. The generated license key appears in the admin panel.
-6. If email variables are configured, the app emails the key and product page link to the customer.
-7. Customer activates the Windows software with the same email and license key.
-
-Important route:
-
-```text
-/api/admin/licenses/create
-```
-
-## Stripe
-
-Stripe is not required for the current manual license stage. Keep this section for the future paid flow.
-
-1. Create a product and price in Stripe.
-2. Put the price id in `NEXT_PUBLIC_STRIPE_PRICE_ID`.
-3. Create a webhook endpoint:
-
-```text
-https://your-domain.com/api/stripe/webhook
-```
-
-4. Listen to `checkout.session.completed`.
-5. Put the webhook signing secret in `STRIPE_WEBHOOK_SECRET`.
-
-## Important routes
-
-- `/pt` and `/en`: landing page
-- `/pt/login`: login
-- `/pt/cadastro`: signup
-- `/pt/dashboard`: customer license dashboard
-- `/ADM`: hidden admin license management
-- `/api/licenses/fake-purchase`: creates a fake order and license for the logged-in user
-- `/api/auth/logout`: signs out the current user
-- `/api/ativar`: first online activation for the Windows software
-- `/api/revalidar`: later online revalidation for an existing activation
-- `/api/checkout`: creates a Stripe Checkout session for future real payment flow
-- `/api/stripe/webhook`: creates orders and licenses after payment
-- `/api/licenses/validate`: legacy validation endpoint
-- `/api/admin/licenses`: updates license status from admin actions
-
-## License validation payload
-
-Preferred activation endpoints for the Windows client:
+Endpoint de ativacao:
 
 ```text
 POST /api/ativar
+```
+
+Endpoint de revalidacao:
+
+```text
 POST /api/revalidar
 ```
 
-Activation payload:
+O contrato assinado continua contendo `app_id`, `software` e `product_id`.
+A migracao do banco nao altera as chaves criptograficas nem o payload esperado
+pelos aplicativos.
 
-```json
-{
-  "app_id": "com.winportal.windowssoftware",
-  "email": "usuario@empresa.com",
-  "license_key": "WIN-ABCD-1234-EFGH-5678",
-  "machine_id": "stable-machine-id",
-  "machine_name": "DESKTOP-01",
-  "software_version": "1.0.0",
-  "client_utc": "2026-07-06T12:00:00+00:00",
-  "system_info": {
-    "os": "Windows 11",
-    "arch": "x64"
-  }
-}
-```
+## Downloads
 
-Revalidation payload:
-
-```json
-{
-  "license_id": "uuid",
-  "activation_id": "uuid",
-  "email": "usuario@empresa.com",
-  "machine_id": "stable-machine-id",
-  "software_version": "1.0.0",
-  "last_validation_utc": "2026-07-06T12:00:00+00:00",
-  "system_info": {
-    "os": "Windows 11",
-    "arch": "x64"
-  }
-}
-```
-
-Successful response:
-
-```json
-{
-  "ok": true,
-  "status": "ACTIVE",
-  "message": "Licenca valida.",
-  "license": {
-    "license_id": "uuid",
-    "activation_id": "uuid",
-    "app_id": "com.winportal.windowssoftware",
-    "software": "ImageAnalyzer",
-    "product_id": "image-analyzer",
-    "email": "usuario@empresa.com",
-    "license_key_sha256": "hash-da-chave",
-    "machine_id": "stable-machine-id",
-    "software_version": "1.0.0",
-    "issued_at_utc": "2026-07-06T12:00:00+00:00",
-    "expires_at_utc": "2027-07-11T23:59:59.000Z",
-    "last_validation_utc": "2026-07-06T12:00:00.000Z",
-    "last_server_validation_utc": "2026-07-06T12:00:00+00:00",
-    "status": "ACTIVE",
-    "revoked": false,
-    "revoked_at_utc": null,
-    "offline_allowed": true,
-    "offline_max_days": 30,
-    "features": ["core"]
-  },
-  "signature": "assinatura-ed25519-base64"
-}
-```
-
-Error response:
-
-```json
-{
-  "ok": false,
-  "status": "DENIED",
-  "code": "LICENSE_REVOKED",
-  "message": "Licenca revogada."
-}
-```
-
-Legacy endpoint still available:
-
-```json
-{
-  "licenseKey": "WIN-EXAMPLE",
-  "machineFingerprint": "stable-machine-id",
-  "machineName": "DESKTOP-01"
-}
-```
+O endpoint `/api/download/<product-id>` procura primeiro o instalador no GitHub
+Releases e depois usa as URLs diretas configuradas. Consulte `RELEASES.md`.

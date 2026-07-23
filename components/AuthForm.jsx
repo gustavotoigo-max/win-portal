@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/browser";
+import { authClient } from "@/lib/auth/client";
 
 function GoogleIcon() {
   return (
@@ -58,7 +58,7 @@ export default function AuthForm({ locale, dictionary, mode }) {
     return dictionary.auth.genericError;
   }
 
-  async function redirectAfterAuth(supabase, authResult) {
+  async function redirectAfterAuth() {
     try {
       const response = await fetch(`/api/auth/redirect-target?locale=${encodeURIComponent(locale)}`, {
         cache: "no-store"
@@ -72,33 +72,18 @@ export default function AuthForm({ locale, dictionary, mode }) {
         }
       }
     } catch {
-      // Fall through to the client-side profile check below.
-    }
-
-    const userId = authResult.data?.user?.id || authResult.data?.session?.user?.id;
-
-    if (userId) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (profile?.role === "admin") {
-        window.location.href = "/ADM";
-        return;
-      }
+      // Fall through to the regular dashboard.
     }
 
     window.location.href = `/${locale}/dashboard`;
   }
 
-  async function recordLoginMethod(method, provider = method) {
+  async function recordLoginMethod(method, provider = method, profile = {}) {
     try {
       await fetch("/api/auth/login-method", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ method, provider })
+        body: JSON.stringify({ method, provider, ...profile })
       });
     } catch {
       // Login must not fail if profile enrichment is unavailable.
@@ -106,50 +91,12 @@ export default function AuthForm({ locale, dictionary, mode }) {
   }
 
   async function handleOAuth(provider) {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      setMessage(dictionary.auth.demoNotice);
-      return;
-    }
-
     setMessage("");
     setIsLoading(true);
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await authClient.signIn.social({
       provider,
-      options: {
-        redirectTo: authRedirectUrl(provider),
-        queryParams: provider === "google" ? { prompt: "select_account" } : undefined
-      }
-    });
-
-    if (error) {
-      setIsLoading(false);
-      setMessage(friendlyAuthError(error));
-    }
-  }
-
-  async function handleSso() {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      setMessage(dictionary.auth.demoNotice);
-      return;
-    }
-
-    const domain = email.split("@")[1]?.trim().toLowerCase();
-    if (!domain) {
-      setMessage(dictionary.auth.ssoEmailRequired);
-      return;
-    }
-
-    setMessage("");
-    setIsLoading(true);
-
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithSSO({
-      domain,
-      options: {
-        redirectTo: authRedirectUrl("sso")
-      }
+      callbackURL: authRedirectUrl(provider)
     });
 
     if (error) {
@@ -164,29 +111,17 @@ export default function AuthForm({ locale, dictionary, mode }) {
     const formEmail = String(form.get("email") || "").trim().toLowerCase();
     const password = form.get("password");
 
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      setMessage(dictionary.auth.demoNotice);
-      return;
-    }
-
     setIsLoading(true);
     setMessage("");
 
-    const supabase = createClient();
     const result = isSignup
-      ? await supabase.auth.signUp({
+      ? await authClient.signUp.email({
           email: formEmail,
           password,
-          options: {
-            emailRedirectTo: authRedirectUrl("password"),
-            data: {
-              full_name: form.get("name"),
-              company: form.get("company"),
-              preferred_locale: locale
-            }
-          }
+          name: String(form.get("name") || formEmail),
+          callbackURL: authRedirectUrl("password")
         })
-      : await supabase.auth.signInWithPassword({ email: formEmail, password });
+      : await authClient.signIn.email({ email: formEmail, password });
 
     if (result.error) {
       setIsLoading(false);
@@ -194,20 +129,18 @@ export default function AuthForm({ locale, dictionary, mode }) {
       return;
     }
 
-    if (isSignup && result.data.user?.identities && result.data.user.identities.length === 0) {
-      setIsLoading(false);
-      setMessage(dictionary.auth.emailInUse);
-      return;
-    }
-
-    if (isSignup && !result.data.session) {
+    if (isSignup && !result.data?.token && !result.data?.session) {
       setIsLoading(false);
       setMessage(dictionary.auth.confirmEmailNotice);
       return;
     }
 
-    await recordLoginMethod("password", "email");
-    await redirectAfterAuth(supabase, result);
+    await recordLoginMethod("password", "email", {
+      fullName: String(form.get("name") || ""),
+      company: String(form.get("company") || ""),
+      preferredLocale: locale
+    });
+    await redirectAfterAuth();
   }
 
   return (
@@ -283,9 +216,6 @@ export default function AuthForm({ locale, dictionary, mode }) {
           onClick={() => handleOAuth("google")}
         >
           <GoogleIcon />
-        </button>
-        <button type="button" disabled={isLoading} onClick={handleSso}>
-          {dictionary.auth.continueSso}
         </button>
       </div>
 

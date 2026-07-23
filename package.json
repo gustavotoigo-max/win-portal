@@ -2,22 +2,24 @@
   "name": "win-portal",
   "version": "0.2.0",
   "private": true,
+  "packageManager": "pnpm@11.9.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "dependencies": {
-    "@supabase/ssr": "^0.6.1",
-    "@supabase/supabase-js": "^2.45.4",
-    "next": "^15.1.6",
+    "@neondatabase/auth": "0.4.2-beta",
+    "@neondatabase/serverless": "^1.0.0",
+    "next": "^16.2.11",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "stripe": "^17.5.0"
   },
   "devDependencies": {
     "eslint": "^9.18.0",
-    "eslint-config-next": "^15.1.6"
+    "eslint-config-next": "^16.2.11",
+    "typescript": "^5.9.3"
   }
 }

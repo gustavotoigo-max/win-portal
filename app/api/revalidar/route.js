@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { buildLicensePayload, errorResponse, successResponse } from "@/lib/license-crypto";
+import { query, queryOne } from "@/lib/neon/database";
 import { getProductBySoftware } from "@/lib/products";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 function isExpired(expiresAt) {
   return expiresAt && new Date(expiresAt) < new Date();
@@ -38,15 +38,14 @@ export async function POST(request) {
       });
     }
 
-    const admin = createAdminClient();
-    const { data: activation, error: activationError } = await admin
-      .from("activations")
-      .select("id, license_id, machine_id, status")
-      .eq("id", activationId)
-      .eq("license_id", licenseId)
-      .single();
+    const activation = await queryOne(
+      `select id, license_id, machine_id, status
+       from public.activations
+       where id = $1 and license_id = $2`,
+      [activationId, licenseId]
+    );
 
-    if (activationError || !activation) {
+    if (!activation) {
       return NextResponse.json(errorResponse("INVALID_ACTIVATION", "Ativacao nao encontrada."), {
         status: 404
       });
@@ -56,19 +55,24 @@ export async function POST(request) {
       return NextResponse.json(errorResponse("MACHINE_MISMATCH", "Machine ID nao confere."));
     }
 
-    const { data: license, error: licenseError } = await admin
-      .from("licenses")
-      .select("id, user_id, customer_email, product_id, license_key_hash, status, expires_at, created_at, app_id, offline_allowed, offline_max_days, features, revoked_at, profiles(email)")
-      .eq("id", licenseId)
-      .single();
+    const license = await queryOne(
+      `select l.id, l.user_id, l.customer_email, l.product_id, l.license_key_hash,
+              l.status, l.expires_at, l.created_at, l.app_id, l.offline_allowed,
+              l.offline_max_days, l.features, l.revoked_at,
+              p.email as profile_email
+       from public.licenses l
+       left join public.profiles p on p.user_id = l.user_id
+       where l.id = $1`,
+      [licenseId]
+    );
 
-    if (licenseError || !license) {
+    if (!license) {
       return NextResponse.json(errorResponse("INVALID_LICENSE_KEY", "Licenca nao encontrada."), {
         status: 404
       });
     }
 
-    const licenseEmail = license.customer_email || license.profiles?.email;
+    const licenseEmail = license.customer_email || license.profile_email;
     if (licenseEmail && licenseEmail.toLowerCase() !== email.toLowerCase()) {
       return NextResponse.json(errorResponse("INVALID_EMAIL", "E-mail nao pertence a licenca."), {
         status: 403
@@ -96,36 +100,38 @@ export async function POST(request) {
     }
 
     if (isExpired(license.expires_at)) {
-      await admin
-        .from("licenses")
-        .update({ status: "expired" })
-        .eq("id", license.id)
-        .eq("status", "active");
+      await query(
+        "update public.licenses set status = 'expired' where id = $1 and status = 'active'",
+        [license.id]
+      );
       return NextResponse.json(errorResponse("LICENSE_EXPIRED", "Licenca expirada."));
     }
 
     const now = new Date();
     const activationSystemInfo = { ...(systemInfo || {}), software: product.aliases?.[0] || product.name };
-    await admin
-      .from("activations")
-      .update({
-        software_version: softwareVersion,
-        system_info: activationSystemInfo,
-        last_seen_at: now.toISOString(),
-        last_validated_at: now.toISOString()
-      })
-      .eq("id", activationId);
+    await query(
+      `update public.activations
+       set software_version = $1, system_info = $2::jsonb,
+           last_seen_at = $3, last_validated_at = $3
+       where id = $4`,
+      [softwareVersion, JSON.stringify(activationSystemInfo), now.toISOString(), activationId]
+    );
 
-    await admin.from("validation_logs").insert({
-      license_id: licenseId,
-      activation_id: activationId,
-      email,
-      machine_id: machineId,
-      software_version: softwareVersion,
-      ip_address: requestIp(request),
-      user_agent: request.headers.get("user-agent"),
-      result: "ACTIVE"
-    });
+    await query(
+      `insert into public.validation_logs (
+         license_id, activation_id, email, machine_id, software_version,
+         ip_address, user_agent, result
+       ) values ($1, $2, $3, $4, $5, $6, $7, 'ACTIVE')`,
+      [
+        licenseId,
+        activationId,
+        email,
+        machineId,
+        softwareVersion,
+        requestIp(request),
+        request.headers.get("user-agent")
+      ]
+    );
 
     const payload = buildLicensePayload({
       license,

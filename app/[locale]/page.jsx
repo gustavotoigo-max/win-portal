@@ -121,7 +121,7 @@ export default async function HomePage({ params }) {
           <div className="card-grid three">
             {t.home.testimonials.map(([text, author]) => (
               <article className="testimonial-card" key={author}>
-                <p>"{text}"</p>
+                <p>{`"${text}"`}</p>
                 <strong>{author}</strong>
                 <span>WinPortal</span>
               </article>

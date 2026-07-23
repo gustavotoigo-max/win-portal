@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { licenseKeyHash } from "@/lib/license-crypto";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { query, queryOne } from "@/lib/neon/database";
 
 export async function POST(request) {
   try {
@@ -13,23 +13,15 @@ export async function POST(request) {
       );
     }
 
-    const supabase = createAdminClient();
-    const { data: hashedLicense, error: hashError } = await supabase
-      .from("licenses")
-      .select("id, status, max_machines, expires_at")
-      .eq("license_key_hash", licenseKeyHash(licenseKey))
-      .maybeSingle();
-    const { data: plainLicense, error: plainError } = hashedLicense
-      ? { data: null, error: null }
-      : await supabase
-          .from("licenses")
-          .select("id, status, max_machines, expires_at")
-          .eq("license_key", licenseKey)
-          .maybeSingle();
-    const license = hashedLicense || plainLicense;
-    const error = hashError || plainError;
+    const license = await queryOne(
+      `select id, status, max_machines, expires_at
+       from public.licenses
+       where license_key_hash = $1 or license_key = $2
+       limit 1`,
+      [licenseKeyHash(licenseKey), licenseKey]
+    );
 
-    if (error || !license) {
+    if (!license) {
       return NextResponse.json({ valid: false, reason: "not_found" }, { status: 404 });
     }
 
@@ -38,18 +30,17 @@ export async function POST(request) {
     }
 
     if (license.expires_at && new Date(license.expires_at) < new Date()) {
-      await supabase
-        .from("licenses")
-        .update({ status: "expired" })
-        .eq("id", license.id)
-        .eq("status", "active");
+      await query(
+        "update public.licenses set status = 'expired' where id = $1 and status = 'active'",
+        [license.id]
+      );
       return NextResponse.json({ valid: false, reason: "expired" });
     }
 
-    const { data: machines } = await supabase
-      .from("machines")
-      .select("id, machine_fingerprint")
-      .eq("license_id", license.id);
+    const machines = await query(
+      "select id, machine_fingerprint from public.machines where license_id = $1",
+      [license.id]
+    );
 
     const alreadyRegistered = machines?.find(
       (machine) => machine.machine_fingerprint === machineFingerprint
@@ -60,24 +51,24 @@ export async function POST(request) {
     }
 
     if (alreadyRegistered) {
-      await supabase
-        .from("machines")
-        .update({ machine_name: machineName, last_seen_at: new Date().toISOString() })
-        .eq("id", alreadyRegistered.id);
+      await query(
+        "update public.machines set machine_name = $1, last_seen_at = now() where id = $2",
+        [machineName, alreadyRegistered.id]
+      );
     } else {
-      await supabase.from("machines").insert({
-        license_id: license.id,
-        machine_fingerprint: machineFingerprint,
-        machine_name: machineName,
-        last_seen_at: new Date().toISOString()
-      });
+      await query(
+        `insert into public.machines (
+           license_id, machine_fingerprint, machine_name, last_seen_at
+         ) values ($1, $2, $3, now())`,
+        [license.id, machineFingerprint, machineName]
+      );
     }
 
-    await supabase.from("license_events").insert({
-      license_id: license.id,
-      action: "validated",
-      notes: machineName || machineFingerprint
-    });
+    await query(
+      `insert into public.license_events (license_id, action, notes)
+       values ($1, 'validated', $2)`,
+      [license.id, machineName || machineFingerprint]
+    );
 
     return NextResponse.json({ valid: true, licenseId: license.id });
   } catch (error) {

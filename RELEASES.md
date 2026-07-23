@@ -1,13 +1,11 @@
 # Releases dos aplicativos
 
-O WinPortal pode usar Supabase Storage ou GitHub Releases para downloads.
+O WinPortal usa GitHub Releases ou URLs diretas para downloads.
 Para nao ocupar espaco do banco de dados, salve os executaveis em object
 storage ou releases, nunca em tabelas Postgres.
 
-Quando `SUPABASE_INSTALLERS_BUCKET` estiver configurado, o site usa primeiro
-uma URL assinada do Supabase Storage. Se nao houver bucket configurado, ele usa
-GitHub Releases. Cada aplicativo tem sua propria sequencia SemVer e sua propria
-tag:
+O site consulta primeiro os assets publicados no GitHub Releases. Cada
+aplicativo tem sua propria sequencia SemVer e sua propria tag:
 
 ```text
 <product-id>-v<major>.<minor>.<patch>
@@ -69,10 +67,9 @@ criar nada no GitHub.
 ## Atualizacao no site
 
 O site mostra a versao e a data do release na pagina do produto. O endpoint
-`/api/download/<product-id>` redireciona primeiro para Supabase Storage quando
-`SUPABASE_INSTALLERS_BUCKET` existir. Caso contrario, redireciona para o
-`browser_download_url` do asset no GitHub. O cache padrao do GitHub e de cinco
-minutos, configuravel por `GITHUB_RELEASES_CACHE_SECONDS`.
+`/api/download/<product-id>` redireciona para o `browser_download_url` do asset
+no GitHub. O cache padrao do GitHub e de cinco minutos, configuravel por
+`GITHUB_RELEASES_CACHE_SECONDS`.
 
 Se o GitHub estiver indisponivel ou ainda nao houver release valido, o site usa
 as antigas variaveis `DOWNLOAD_URL_*`, `DOWNLOAD_BASE_URL` e

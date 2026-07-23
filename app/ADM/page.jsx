@@ -5,8 +5,8 @@ import { getAdminContext } from "@/lib/admin-auth";
 import { demoLicenses } from "@/lib/demo-data";
 import { getDictionary } from "@/lib/i18n";
 import { decryptLicenseKey } from "@/lib/license-crypto";
+import { isDatabaseConfigured, query } from "@/lib/neon/database";
 import { products } from "@/lib/products";
-import { createAdminClient } from "@/lib/supabase/admin";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -24,7 +24,7 @@ function formatDateTime(value, locale = "pt-BR") {
 }
 
 async function getAdminLicenses() {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  if (!isDatabaseConfigured()) {
     return {
       licenses: demoLicenses,
       adminContext: { isAdmin: true, userEmail: "demo", role: "admin" }
@@ -40,68 +40,63 @@ async function getAdminLicenses() {
     return { licenses: [], adminContext };
   }
 
-  const admin = createAdminClient();
-  await admin
-    .from("licenses")
-    .update({ status: "expired" })
-    .eq("status", "active")
-    .lt("expires_at", new Date().toISOString());
+  await query(
+    `update public.licenses
+     set status = 'expired'
+     where status = 'active' and expires_at < now()`
+  );
 
-  const { data, error } = await admin
-    .from("licenses")
-    .select("id, user_id, customer_email, order_id, product_id, license_key, license_key_ciphertext, license_key_hint, status, max_machines, expires_at, created_at, orders(order_number, customer_email, created_at, product_id), profiles(email)")
-    .order("created_at", { ascending: false });
+  const data = await query(
+    `select l.id, l.user_id, l.customer_email, l.order_id, l.product_id,
+            l.license_key, l.license_key_ciphertext, l.license_key_hint,
+            l.status, l.max_machines, l.expires_at, l.created_at,
+            o.order_number, o.customer_email as order_customer_email,
+            o.product_id as order_product_id,
+            p.email as profile_email,
+            a.machine_id, a.machine_name, a.software_version,
+            a.status as activation_status, a.activated_at, a.last_seen_at,
+            a.last_validated_at,
+            v.ip_address as last_ip, v.created_at as validation_created_at
+     from public.licenses l
+     left join public.orders o on o.id = l.order_id
+     left join public.profiles p on p.user_id = l.user_id
+     left join lateral (
+       select machine_id, machine_name, software_version, status,
+              activated_at, last_seen_at, last_validated_at
+       from public.activations
+       where license_id = l.id
+       order by last_seen_at desc nulls last, activated_at desc
+       limit 1
+     ) a on true
+     left join lateral (
+       select ip_address, created_at
+       from public.validation_logs
+       where license_id = l.id
+       order by created_at desc
+       limit 1
+     ) v on true
+     order by l.created_at desc`
+  );
 
-  if (error || !data?.length) return { licenses: [], adminContext };
-
-  const licenseIds = data.map((license) => license.id);
-  const activationsByLicenseId = new Map();
-  const logsByLicenseId = new Map();
-
-  const { data: activations } = await admin
-    .from("activations")
-    .select("license_id, machine_id, machine_name, software_version, status, activated_at, last_seen_at, last_validated_at")
-    .in("license_id", licenseIds)
-    .order("last_seen_at", { ascending: false, nullsFirst: false });
-
-  activations?.forEach((activation) => {
-    if (!activationsByLicenseId.has(activation.license_id)) {
-      activationsByLicenseId.set(activation.license_id, activation);
-    }
-  });
-
-  const { data: logs } = await admin
-    .from("validation_logs")
-    .select("license_id, ip_address, result, code, created_at")
-    .in("license_id", licenseIds)
-    .order("created_at", { ascending: false });
-
-  logs?.forEach((log) => {
-    if (!logsByLicenseId.has(log.license_id)) {
-      logsByLicenseId.set(log.license_id, log);
-    }
-  });
+  if (!data.length) return { licenses: [], adminContext };
 
   const licenses = data.map((license) => {
-    const activation = activationsByLicenseId.get(license.id);
-    const log = logsByLicenseId.get(license.id);
-
     return {
       id: license.id,
       key: decryptLicenseKey(license.license_key_ciphertext) || license.license_key || `****-${license.license_key_hint || "----"}`,
       status: license.status,
-      product: productNames.get(license.product_id || license.orders?.product_id) || "-",
+      product: productNames.get(license.product_id || license.order_product_id) || "-",
       maxMachines: license.max_machines,
-      machineName: activation?.machine_name || "-",
-      machineId: activation?.machine_id || "-",
-      activationStatus: activation?.status || "-",
-      softwareVersion: activation?.software_version || "-",
-      activatedAt: formatDateTime(activation?.activated_at),
-      lastSeen: formatDateTime(activation?.last_seen_at),
-      lastValidation: formatDateTime(log?.created_at || activation?.last_validated_at),
-      lastIp: log?.ip_address || "-",
-      order: license.orders?.order_number || "-",
-      user: license.customer_email || license.orders?.customer_email || license.profiles?.email || "-",
+      machineName: license.machine_name || "-",
+      machineId: license.machine_id || "-",
+      activationStatus: license.activation_status || "-",
+      softwareVersion: license.software_version || "-",
+      activatedAt: formatDateTime(license.activated_at),
+      lastSeen: formatDateTime(license.last_seen_at),
+      lastValidation: formatDateTime(license.validation_created_at || license.last_validated_at),
+      lastIp: license.last_ip || "-",
+      order: license.order_number || "-",
+      user: license.customer_email || license.order_customer_email || license.profile_email || "-",
       expiresAt: license.expires_at ? formatDateTime(license.expires_at) : "Sem vencimento",
       createdAt: formatDateTime(license.created_at)
     };
