@@ -47,11 +47,35 @@ export default function AuthForm({ locale, dictionary, mode }) {
   }
 
   function friendlyAuthError(error) {
+    const code = error?.code?.toUpperCase() || "";
     const text = error?.message?.toLowerCase() || "";
 
-    if (text.includes("email not confirmed")) return dictionary.auth.emailNotConfirmed;
-    if (text.includes("invalid login credentials")) return dictionary.auth.invalidCredentials;
-    if (text.includes("already") || text.includes("registered")) return dictionary.auth.emailInUse;
+    if (
+      code === "EMAIL_NOT_VERIFIED" ||
+      text.includes("email not confirmed") ||
+      text.includes("email not verified")
+    ) {
+      return dictionary.auth.emailNotConfirmed;
+    }
+
+    if (
+      code === "INVALID_EMAIL_OR_PASSWORD" ||
+      code === "INVALID_PASSWORD" ||
+      text.includes("invalid login credentials") ||
+      text.includes("invalid email or password")
+    ) {
+      return dictionary.auth.invalidCredentials;
+    }
+
+    if (
+      code === "USER_ALREADY_EXISTS" ||
+      code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL" ||
+      text.includes("already") ||
+      text.includes("registered")
+    ) {
+      return dictionary.auth.emailInUse;
+    }
+
     if (text.includes("password")) return dictionary.auth.passwordError;
     if (text.includes("rate limit") || text.includes("too many")) return dictionary.auth.tooManyRequests;
 
@@ -94,14 +118,19 @@ export default function AuthForm({ locale, dictionary, mode }) {
     setMessage("");
     setIsLoading(true);
 
-    const { error } = await authClient.signIn.social({
-      provider,
-      callbackURL: authRedirectUrl(provider)
-    });
+    try {
+      const { error } = await authClient.signIn.social({
+        provider,
+        callbackURL: authRedirectUrl(provider)
+      });
 
-    if (error) {
-      setIsLoading(false);
+      if (error) {
+        setMessage(friendlyAuthError(error));
+      }
+    } catch (error) {
       setMessage(friendlyAuthError(error));
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -114,33 +143,37 @@ export default function AuthForm({ locale, dictionary, mode }) {
     setIsLoading(true);
     setMessage("");
 
-    const result = isSignup
-      ? await authClient.signUp.email({
-          email: formEmail,
-          password,
-          name: String(form.get("name") || formEmail),
-          callbackURL: authRedirectUrl("password")
-        })
-      : await authClient.signIn.email({ email: formEmail, password });
+    try {
+      const result = isSignup
+        ? await authClient.signUp.email({
+            email: formEmail,
+            password,
+            name: String(form.get("name") || formEmail),
+            callbackURL: authRedirectUrl("password")
+          })
+        : await authClient.signIn.email({ email: formEmail, password });
 
-    if (result.error) {
+      if (result.error) {
+        setMessage(friendlyAuthError(result.error));
+        return;
+      }
+
+      if (isSignup && !result.data?.token && !result.data?.session) {
+        setMessage(dictionary.auth.confirmEmailNotice);
+        return;
+      }
+
+      await recordLoginMethod("password", "email", {
+        fullName: String(form.get("name") || ""),
+        company: String(form.get("company") || ""),
+        preferredLocale: locale
+      });
+      await redirectAfterAuth();
+    } catch (error) {
+      setMessage(friendlyAuthError(error));
+    } finally {
       setIsLoading(false);
-      setMessage(friendlyAuthError(result.error));
-      return;
     }
-
-    if (isSignup && !result.data?.token && !result.data?.session) {
-      setIsLoading(false);
-      setMessage(dictionary.auth.confirmEmailNotice);
-      return;
-    }
-
-    await recordLoginMethod("password", "email", {
-      fullName: String(form.get("name") || ""),
-      company: String(form.get("company") || ""),
-      preferredLocale: locale
-    });
-    await redirectAfterAuth();
   }
 
   return (

@@ -40,22 +40,27 @@ export default function ResetPasswordForm({ locale, dictionary, token }) {
     setIsLoading(true);
     setMessage("");
 
-    const { error } = await authClient.resetPassword({
-      newPassword: password,
-      token
-    });
+    try {
+      const { error } = await authClient.resetPassword({
+        newPassword: password,
+        token
+      });
 
-    if (error) {
-      setIsLoading(false);
+      if (error) {
+        setMessage(dictionary.auth.passwordError);
+        return;
+      }
+
+      const response = await fetch(`/api/auth/redirect-target?locale=${encodeURIComponent(locale)}`, {
+        cache: "no-store"
+      });
+      const payload = response.ok ? await response.json() : null;
+      window.location.href = payload?.target || `/${locale}/dashboard`;
+    } catch {
       setMessage(dictionary.auth.passwordError);
-      return;
+    } finally {
+      setIsLoading(false);
     }
-
-    const response = await fetch(`/api/auth/redirect-target?locale=${encodeURIComponent(locale)}`, {
-      cache: "no-store"
-    });
-    const payload = response.ok ? await response.json() : null;
-    window.location.href = payload?.target || `/${locale}/dashboard`;
   }
 
   return (
