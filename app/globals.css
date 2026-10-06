@@ -2724,3 +2724,11 @@ select:focus {
   height: 100%;
   object-fit: contain;
 }
+
+.product-card-top {
+  gap: 12px;
+}
+
+.product-card-top .chip {
+  white-space: nowrap;
+}
