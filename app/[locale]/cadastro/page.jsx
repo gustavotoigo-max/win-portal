@@ -1,18 +1,15 @@
-import Header from "@/components/Header";
-import AuthForm from "@/components/AuthForm";
-import { getDictionary, normalizeLocale } from "@/lib/i18n";
+import AuthForm from "@/components/auth/AuthForm";
+import AuthLayout from "@/components/auth/AuthLayout";
+import { safeNextPath } from "@/lib/session";
 
-export default async function SignupPage({ params }) {
-  const { locale: rawLocale } = await params;
-  const locale = normalizeLocale(rawLocale);
-  const t = getDictionary(locale);
+export const metadata = { title: "Criar conta" };
+
+export default async function SignupPage({ searchParams }) {
+  const { next } = await searchParams;
 
   return (
-    <>
-      <Header locale={locale} active="signup" />
-      <main className="auth-shell">
-        <AuthForm locale={locale} dictionary={t} mode="signup" />
-      </main>
-    </>
+    <AuthLayout>
+      <AuthForm mode="signup" next={next ? safeNextPath(next) : ""} />
+    </AuthLayout>
   );
 }

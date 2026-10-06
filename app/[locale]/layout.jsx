@@ -1,12 +1,12 @@
-import { normalizeLocale } from "@/lib/i18n";
+import { notFound } from "next/navigation";
+
+export function generateStaticParams() {
+  return [{ locale: "pt" }];
+}
 
 export default async function LocaleLayout({ children, params }) {
-  const { locale: rawLocale } = await params;
-  const locale = normalizeLocale(rawLocale);
+  const { locale } = await params;
+  if (locale !== "pt") notFound();
 
-  return (
-    <div data-locale={locale}>
-      {children}
-    </div>
-  );
+  return children;
 }

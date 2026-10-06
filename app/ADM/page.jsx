@@ -1,9 +1,8 @@
-import AdminCreateLicenseForm from "@/components/AdminCreateLicenseForm";
-import AdminLicensePanel from "@/components/AdminLicensePanel";
-import Header from "@/components/Header";
+import AdminCreateLicenseForm from "@/components/admin/AdminCreateLicenseForm";
+import AdminLicensePanel from "@/components/admin/AdminLicensePanel";
+import PageShell from "@/components/site/PageShell";
 import { getAdminContext } from "@/lib/admin-auth";
-import { demoLicenses } from "@/lib/demo-data";
-import { getDictionary } from "@/lib/i18n";
+import { adminTexts as t } from "@/lib/admin-texts";
 import { decryptLicenseKey } from "@/lib/license-crypto";
 import { isDatabaseConfigured, query } from "@/lib/neon/database";
 import { products } from "@/lib/products";
@@ -11,6 +10,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = { title: "Administração", robots: { index: false } };
 
 const productNames = new Map(products.map((product) => [product.id, product.name]));
 
@@ -24,19 +25,12 @@ function formatDateTime(value, locale = "pt-BR") {
 }
 
 async function getAdminLicenses() {
-  if (!isDatabaseConfigured()) {
-    return {
-      licenses: demoLicenses,
-      adminContext: { isAdmin: true, userEmail: "demo", role: "admin" }
-    };
-  }
-
   const adminContext = await getAdminContext();
   if (!adminContext.isAuthenticated) {
-    redirect("/pt/login");
+    redirect(`/pt/login?next=${encodeURIComponent("/ADM")}`);
   }
 
-  if (!adminContext.isAdmin) {
+  if (!adminContext.isAdmin || !isDatabaseConfigured()) {
     return { licenses: [], adminContext };
   }
 
@@ -97,7 +91,7 @@ async function getAdminLicenses() {
       lastIp: license.last_ip || "-",
       order: license.order_number || "-",
       user: license.customer_email || license.order_customer_email || license.profile_email || "-",
-      expiresAt: license.expires_at ? formatDateTime(license.expires_at) : "Sem vencimento",
+      expiresAt: license.expires_at ? formatDateTime(license.expires_at) : t.noExpiration,
       createdAt: formatDateTime(license.created_at)
     };
   });
@@ -122,63 +116,56 @@ async function getAdminLicenses() {
 }
 
 export default async function AdminPage() {
-  const locale = "pt";
-  const t = getDictionary(locale);
   const { licenses, adminContext } = await getAdminLicenses();
+  const counts = licenses.reduce((acc, license) => {
+    acc[license.status] = (acc[license.status] || 0) + 1;
+    return acc;
+  }, {});
 
   return (
-    <>
-      <Header locale={locale} active="admin" />
-      <main className="dashboard-page container admin-page">
-        <section className="dashboard-heading">
+    <PageShell className="account-page admin-page">
+      <div className="container">
+        <header className="account-head">
           <div>
-            <p className="eyebrow">{t.nav.admin}</p>
-            <h1>{t.admin.title}</h1>
-            <p className="muted">{t.admin.subtitle}</p>
+            <span className="eyebrow">Administração</span>
+            <h1 className="page-title">{t.title}</h1>
+            <p className="muted">{t.subtitle}</p>
           </div>
-        </section>
+        </header>
 
         {!adminContext.isAdmin ? (
-          <section className="table-card admin-create-card">
-            <p className="eyebrow">{t.nav.admin}</p>
-            <h2>{t.admin.accessDeniedTitle}</h2>
-            <p className="muted">{t.admin.accessDeniedText}</p>
-            <div className="admin-access-box">
-              <span>{t.admin.currentEmail}</span>
-              <code>{adminContext.userEmail || "-"}</code>
-              <span>{t.admin.currentRole}</span>
-              <code>{adminContext.role}</code>
-            </div>
-            <p className="note">{t.admin.accessDeniedSql}</p>
-            <Link className="btn secondary" href="/pt/dashboard">{t.nav.dashboard}</Link>
+          <section className="panel">
+            <h2>{t.accessDeniedTitle}</h2>
+            <p className="muted">{t.accessDeniedText}</p>
+            <dl className="license-facts">
+              <div><dt>{t.currentEmail}</dt><dd className="mono">{adminContext.userEmail || "-"}</dd></div>
+              <div><dt>{t.currentRole}</dt><dd className="mono">{adminContext.role}</dd></div>
+            </dl>
+            <p className="muted small">{t.accessDeniedSql}</p>
+            <Link className="btn btn-ghost" href="/pt/dashboard">Ir para Minha conta</Link>
           </section>
         ) : (
           <>
-
-        <section className="table-card admin-create-card">
-          <div className="toolbar-row">
-            <div>
-              <p className="eyebrow">{t.admin.createLicense}</p>
-              <h2>{t.admin.manualTitle}</h2>
-              <p className="muted">{t.admin.manualText}</p>
+            <div className="stat-row">
+              <div className="stat"><div><strong>{licenses.length}</strong><span>licenças emitidas</span></div></div>
+              <div className="stat"><div><strong>{counts.active || 0}</strong><span>ativas</span></div></div>
+              <div className="stat"><div><strong>{(counts.revoked || 0) + (counts.blocked || 0)}</strong><span>revogadas ou bloqueadas</span></div></div>
+              <div className="stat"><div><strong>{counts.expired || 0}</strong><span>expiradas</span></div></div>
             </div>
-          </div>
-          <AdminCreateLicenseForm dictionary={t} />
-        </section>
 
-        <section className="table-card admin-table-card">
-          <div className="toolbar-row">
-            <div>
-              <p className="eyebrow">{t.admin.license}</p>
-              <h2>{t.admin.licensesTitle}</h2>
-            </div>
-          </div>
-          <AdminLicensePanel licenses={licenses} dictionary={t} />
-          <p className="note">{t.admin.note}</p>
-        </section>
+            <section className="panel">
+              <h2>{t.manualTitle}</h2>
+              <p className="muted">{t.manualText}</p>
+              <AdminCreateLicenseForm />
+            </section>
+
+            <section className="account-section">
+              <h2>{t.licensesTitle}</h2>
+              <AdminLicensePanel licenses={licenses} />
+            </section>
           </>
         )}
-      </main>
-    </>
+      </div>
+    </PageShell>
   );
 }

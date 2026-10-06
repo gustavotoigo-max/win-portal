@@ -1,156 +1,117 @@
-import Header from "@/components/Header";
-import { LicenseKeyCell } from "@/components/LicenseTableControls";
-import { getAuthSession } from "@/lib/auth/server";
-import { demoLicenses, statusClass } from "@/lib/demo-data";
-import { getDictionary, normalizeLocale } from "@/lib/i18n";
-import { decryptLicenseKey } from "@/lib/license-crypto";
-import { isDatabaseConfigured, query } from "@/lib/neon/database";
-import { getProductById } from "@/lib/products";
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import LicenseCard from "@/components/account/LicenseCard";
+import Icon from "@/components/site/Icon";
+import PageShell from "@/components/site/PageShell";
+import { getCustomerLicenses, getCustomerOrders } from "@/lib/account";
+import { isDatabaseConfigured } from "@/lib/neon/database";
+import { getCurrentUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
-function formatDateTime(value, locale) {
-  if (!value) return "-";
-  return new Intl.DateTimeFormat(locale === "pt" ? "pt-BR" : "en-US", {
-    dateStyle: "medium",
-    timeStyle: "short"
-  }).format(new Date(value));
-}
+export const metadata = {
+  title: "Minha conta",
+  robots: { index: false }
+};
 
-function formatValidity(createdAt, expiresAt, locale, dictionary) {
-  if (!expiresAt) return dictionary.dashboard.noExpiration;
-
-  const created = createdAt ? new Date(createdAt) : new Date();
-  const expires = new Date(expiresAt);
-
-  if (expires < new Date()) return dictionary.dashboard.expired;
-
-  const days = Math.max(1, Math.round((expires.getTime() - created.getTime()) / 86400000));
-  if (days >= 365) {
-    const years = Math.max(1, Math.round(days / 365));
-    return locale === "pt" ? `${years} ${years === 1 ? "ano" : "anos"}` : `${years} ${years === 1 ? "year" : "years"}`;
-  }
-
-  if (days >= 30) {
-    const months = Math.max(1, Math.round(days / 30));
-    return locale === "pt" ? `${months} ${months === 1 ? "mes" : "meses"}` : `${months} ${months === 1 ? "month" : "months"}`;
-  }
-
-  return locale === "pt" ? `${days} ${days === 1 ? "dia" : "dias"}` : `${days} ${days === 1 ? "day" : "days"}`;
-}
-
-async function getLicenses(locale, dictionary) {
-  if (!isDatabaseConfigured()) {
-    return demoLicenses;
-  }
-
-  const session = await getAuthSession();
-  const user = session?.user;
-
+export default async function DashboardPage() {
+  const user = await getCurrentUser();
   if (!user) {
-    redirect(`/${locale}/login`);
+    redirect(`/pt/login?next=${encodeURIComponent("/pt/dashboard")}`);
   }
 
-  const data = await query(
-    `select l.id, l.customer_email, l.product_id, l.license_key,
-            l.license_key_ciphertext, l.license_key_hint, l.status,
-            l.expires_at, l.created_at,
-            o.order_number, o.created_at as order_created_at,
-            coalesce(a.machine_name, a.machine_id, m.machine_name, m.machine_fingerprint) as machine_name,
-            coalesce(
-              a.last_seen_at, a.last_validated_at, a.activated_at,
-              m.last_seen_at, m.registered_at
-            ) as machine_seen_at
-     from public.licenses l
-     left join public.orders o on o.id = l.order_id
-     left join lateral (
-       select machine_id, machine_name, last_seen_at, last_validated_at, activated_at
-       from public.activations
-       where license_id = l.id
-       order by last_seen_at desc nulls last, activated_at desc
-       limit 1
-     ) a on true
-     left join lateral (
-       select machine_fingerprint, machine_name, last_seen_at, registered_at
-       from public.machines
-       where license_id = l.id
-       order by last_seen_at desc nulls last, registered_at desc
-       limit 1
-     ) m on true
-     where l.user_id = $1
-        or lower(l.customer_email) = lower($2)
-     order by l.created_at desc`,
-    [user.id, user.email || ""]
-  );
-
-  return data.map((license) => {
-    return {
-      id: license.id,
-      key: decryptLicenseKey(license.license_key_ciphertext) || license.license_key || `****-${license.license_key_hint || "----"}`,
-      status: license.expires_at && new Date(license.expires_at) < new Date() ? "expired" : license.status,
-      product: getProductById(license.product_id).name,
-      lastMachine: license.machine_name || "-",
-      lastSeen: formatDateTime(license.machine_seen_at, locale),
-      order: license.order_number || "-",
-      date: formatDateTime(license.order_created_at || license.created_at, locale),
-      validity: formatValidity(license.created_at, license.expires_at, locale, dictionary)
-    };
-  });
-}
-
-export default async function DashboardPage({ params, searchParams }) {
-  const { locale: rawLocale } = await params;
-  await searchParams;
-  const locale = normalizeLocale(rawLocale);
-  const t = getDictionary(locale);
-  const licenses = await getLicenses(locale, t);
+  const configured = isDatabaseConfigured();
+  const [licenses, orders] = configured
+    ? await Promise.all([getCustomerLicenses(user), getCustomerOrders(user)])
+    : [[], []];
+  const activeCount = licenses.filter((license) => license.status === "active").length;
+  const machineCount = licenses.reduce((sum, license) => sum + license.activeMachines, 0);
+  const firstName = user.name && user.name !== user.email ? user.name.split(" ")[0] : null;
 
   return (
-    <>
-      <Header locale={locale} active="dashboard" />
-      <main className="dashboard-page container">
-        <section className="dashboard-heading">
+    <PageShell className="account-page">
+      <div className="container">
+        <header className="account-head">
           <div>
-            <p className="eyebrow">{t.nav.dashboard}</p>
-            <h1>{t.dashboard.title}</h1>
-            <p className="muted">{t.dashboard.subtitle}</p>
+            <span className="eyebrow">Minha conta</span>
+            <h1 className="page-title">{firstName ? `Olá, ${firstName}` : "Suas licenças"}</h1>
+            <p className="muted">Conectado como {user.email}</p>
           </div>
-        </section>
+          <Link className="btn btn-primary" href="/pt/solucoes"><Icon name="cart" size={18} /> Comprar outra ferramenta</Link>
+        </header>
 
-        <section className="table-card section-block user-license-panel">
-          <div className="toolbar-row">
-            <div>
-              <p className="eyebrow">{t.dashboard.license}</p>
-              <h2>{t.dashboard.title}</h2>
-            </div>
-          </div>
+        <div className="stat-row">
+          <div className="stat"><Icon name="key" /><div><strong>{activeCount}</strong><span>licenças ativas</span></div></div>
+          <div className="stat"><Icon name="monitor" /><div><strong>{machineCount}</strong><span>computadores vinculados</span></div></div>
+          <div className="stat"><Icon name="receipt" /><div><strong>{orders.length}</strong><span>pedidos</span></div></div>
+        </div>
 
+        {!configured && (
+          <p className="form-message error">Banco de dados não configurado neste ambiente. Defina DATABASE_URL para ver as licenças.</p>
+        )}
+
+        <section className="account-section" id="licencas">
+          <h2>Licenças</h2>
           {licenses.length ? (
-            <div className="user-license-list">
+            <div className="license-list">
               {licenses.map((license) => (
-                <article className="user-license-card" key={license.id}>
-                  <div className="user-license-key">
-                    <span className="field-label">{t.dashboard.license}</span>
-                    <LicenseKeyCell licenseKey={license.key} dictionary={t} />
-                  </div>
-                  <div className="user-license-grid">
-                    <div><span className="field-label">{t.admin.product}</span><strong>{license.product}</strong></div>
-                    <div><span className="field-label">{t.dashboard.status}</span><span className={statusClass(license.status)}>{license.status}</span></div>
-                    <div><span className="field-label">{t.dashboard.lastMachine}</span><strong>{license.lastMachine}</strong></div>
-                    <div><span className="field-label">{t.dashboard.order}</span><strong>{license.order}</strong></div>
-                    <div><span className="field-label">{t.dashboard.purchaseDate}</span><strong>{license.date}</strong></div>
-                    <div><span className="field-label">{t.dashboard.validity}</span><strong>{license.validity}</strong></div>
-                  </div>
-                </article>
+                <LicenseCard key={license.id} license={license} />
               ))}
             </div>
           ) : (
-            <p className="note">{t.dashboard.empty}</p>
+            <div className="empty-state">
+              <Icon name="key" size={28} />
+              <h3>Você ainda não tem licenças</h3>
+              <p>Escolha uma ferramenta na loja. Assim que o pedido for concluído, a chave aparece aqui.</p>
+              <Link className="btn btn-primary" href="/pt/solucoes">Ver produtos</Link>
+            </div>
           )}
-          <p className="note">{t.dashboard.note}</p>
         </section>
-      </main>
-    </>
+
+        <section className="account-section" id="pedidos">
+          <h2>Pedidos</h2>
+          {orders.length ? (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Pedido</th>
+                    <th>Produto</th>
+                    <th>Data</th>
+                    <th>Valor</th>
+                    <th>Desconto</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((order) => (
+                    <tr key={order.id}>
+                      <td className="mono" data-label="Pedido">{order.number}</td>
+                      <td data-label="Produto">{order.product}</td>
+                      <td data-label="Data">{order.date}</td>
+                      <td data-label="Valor">{order.subtotal}</td>
+                      <td data-label="Desconto">{order.discount ? `${order.discount}${order.coupon ? ` (${order.coupon})` : ""}` : "-"}</td>
+                      <td data-label="Total"><strong>{order.total}</strong></td>
+                      <td data-label="Status"><span className="status status-active">{order.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="muted">Nenhum pedido ainda.</p>
+          )}
+        </section>
+
+        <section className="help-strip">
+          <Icon name="support" />
+          <div>
+            <strong>Como ativar</strong>
+            <span>No aplicativo, informe o e-mail <strong>{user.email}</strong> e a chave da licença. Trocou de computador? Desvincule o antigo acima e ative no novo.</span>
+          </div>
+        </section>
+      </div>
+    </PageShell>
   );
 }
