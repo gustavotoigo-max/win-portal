@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import CheckoutForm from "@/components/shop/CheckoutForm";
 import Icon from "@/components/site/Icon";
+import ProductIcon from "@/components/site/ProductIcon";
 import PageShell from "@/components/site/PageShell";
 import { getProductPage } from "@/lib/product-pages";
 import { getCurrentUser } from "@/lib/session";
@@ -47,7 +48,7 @@ export default async function CheckoutPage({ params }) {
 
           <aside className="order-summary-static">
             <div className="summary-product">
-              <span className={`product-icon tone-${product.category}`}><Icon name={product.icon} /></span>
+              <ProductIcon product={product} size={48} />
               <div>
                 <strong>{product.title}</strong>
                 <small>{product.categoryTitle}</small>

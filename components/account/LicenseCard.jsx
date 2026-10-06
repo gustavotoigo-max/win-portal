@@ -2,6 +2,7 @@ import Link from "next/link";
 import { LicenseKey } from "@/components/account/LicenseKey";
 import ReleaseMachineButton from "@/components/account/ReleaseMachineButton";
 import Icon from "@/components/site/Icon";
+import ProductIcon from "@/components/site/ProductIcon";
 
 export default function LicenseCard({ license }) {
   const { product } = license;
@@ -9,7 +10,7 @@ export default function LicenseCard({ license }) {
   return (
     <article className="license-card">
       <header className="license-card-head">
-        <span className={`product-icon tone-${product?.category || "pacote"}`}><Icon name={product?.icon || "bundle"} /></span>
+        {product ? <ProductIcon product={product} size={48} /> : <span className="product-icon tone-pacote"><Icon name="bundle" /></span>}
         <div className="license-card-title">
           <h3>{product?.title || "Produto"}</h3>
           <span>Pedido {license.orderNumber} · {license.purchasedAt}</span>

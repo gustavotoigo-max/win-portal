@@ -1,12 +1,13 @@
 import Link from "next/link";
 import Icon from "@/components/site/Icon";
+import ProductIcon from "@/components/site/ProductIcon";
 
 export default function ProductCard({ product, featured = false }) {
   return (
     <article className={`product-card${featured ? " featured" : ""}`}>
       <Link className="product-card-link" href={`/pt/solucoes/${product.id}`} aria-label={`${product.title}, ${product.priceLabel}`} />
       <div className="product-card-top">
-        <span className={`product-icon tone-${product.category}`}><Icon name={product.icon} /></span>
+        <ProductIcon product={product} size={56} />
         <span className="chip">{product.categoryTitle}</span>
       </div>
       <h3>{product.title}</h3>
