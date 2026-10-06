@@ -2,24 +2,18 @@ import { NextResponse } from "next/server";
 import { recordUserLoginMethod } from "@/lib/auth-profile";
 import { getAdminContext } from "@/lib/admin-auth";
 import { getAuthSession } from "@/lib/auth/server";
-import { normalizeLocale } from "@/lib/i18n";
+import { safeNextPath } from "@/lib/session";
 
-function safeNextPath(next, locale) {
-  if (next?.startsWith("/") && !next.startsWith("//")) return next;
-  return `/${locale}/dashboard`;
-}
-
-async function getRedirectForUser(user, locale, next) {
-  if (next) return safeNextPath(next, locale);
-  if (!user) return `/${locale}/login`;
+async function getRedirectForUser(user, next) {
+  if (next) return safeNextPath(next);
+  if (!user) return "/pt/login";
 
   const adminContext = await getAdminContext();
-  return adminContext.isAdmin ? "/ADM" : `/${locale}/dashboard`;
+  return adminContext.isAdmin ? "/ADM" : "/pt/dashboard";
 }
 
 export async function GET(request) {
   const url = new URL(request.url);
-  const locale = normalizeLocale(url.searchParams.get("locale") || "pt");
   const method = url.searchParams.get("method") || "unknown";
   const next = url.searchParams.get("next");
 
@@ -31,6 +25,6 @@ export async function GET(request) {
     provider: method
   });
 
-  const target = await getRedirectForUser(user, locale, next);
+  const target = await getRedirectForUser(user, next);
   return NextResponse.redirect(new URL(target, request.url));
 }

@@ -1,30 +1,11 @@
-import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getAdminContext } from "@/lib/admin-auth";
 import { buildLicenseEmail } from "@/lib/email/license-email-template";
 import { sendEmail } from "@/lib/email/send-email";
-import { encryptLicenseKey, licenseKeyHash } from "@/lib/license-crypto";
+import { issueLicense, recordLicenseEvent } from "@/lib/licenses/issue";
 import { getProductPage } from "@/lib/product-pages";
 import { getProductById } from "@/lib/products";
-import { query, queryOne } from "@/lib/neon/database";
-
-function createLicenseKey() {
-  const raw = randomUUID().replaceAll("-", "").toUpperCase();
-  return `WIN-${raw.slice(0, 4)}-${raw.slice(4, 8)}-${raw.slice(8, 12)}-${raw.slice(12, 16)}`;
-}
-
-function createOrderNumber(prefix) {
-  const date = new Date();
-  const stamp = [
-    date.getUTCFullYear(),
-    String(date.getUTCMonth() + 1).padStart(2, "0"),
-    String(date.getUTCDate()).padStart(2, "0"),
-    String(date.getUTCHours()).padStart(2, "0"),
-    String(date.getUTCMinutes()).padStart(2, "0"),
-    String(date.getUTCSeconds()).padStart(2, "0")
-  ].join("");
-  return `${prefix}-${stamp}-${Math.floor(Math.random() * 9000 + 1000)}`;
-}
+import { queryOne } from "@/lib/neon/database";
 
 function jsonError(code, message, status = 400) {
   return NextResponse.json({ ok: false, code, message }, { status });
@@ -80,44 +61,14 @@ export async function POST(request) {
     );
 
     const userId = profile?.user_id || null;
-    const order = await queryOne(
-      `insert into public.orders (
-         user_id, order_number, status, amount, currency, customer_email, product_id
-       )
-       values ($1, $2, 'paid', 0, 'brl', $3, $4)
-       returning id, order_number`,
-      [userId, createOrderNumber(product.orderPrefix), customerEmail, product.id]
-    );
-
-    const licenseKey = createLicenseKey();
-    const license = await queryOne(
-      `insert into public.licenses (
-         user_id, customer_email, order_id, license_key, license_key_hash,
-         license_key_hint, license_key_ciphertext, app_id, status, max_machines,
-         expires_at, product_id, offline_allowed, offline_max_days, features
-       )
-       values ($1, $2, $3, null, $4, $5, $6, $7, 'active', $8, $9, $10, true, 30, $11::jsonb)
-       returning id`,
-      [
-        userId,
-        customerEmail,
-        order.id,
-        licenseKeyHash(licenseKey),
-        licenseKey.slice(-4),
-        encryptLicenseKey(licenseKey),
-        process.env.LICENSE_APP_ID || "com.winportal.windowssoftware",
-        maxMachines,
-        expiresAt,
-        product.id,
-        JSON.stringify(["core"])
-      ]
-    );
-
-    await query(
-      `insert into public.license_events (license_id, action, notes)
-       values ($1, 'created', $2)`,
-      [license.id, `Official manual license generated for ${customerEmail}`]
-    );
+    const { order, license, licenseKey } = await issueLicense({
+      customerEmail,
+      userId,
+      product,
+      maxMachines,
+      expiresAt,
+      eventNote: `Official manual license generated for ${customerEmail}`
+    });
 
     const productPage = getProductPage(product.id);
     const downloadUrl = new URL(`/pt/solucoes/${product.id}`, request.url).toString();
@@ -134,14 +85,10 @@ export async function POST(request) {
       ...emailTemplate
     });
 
-    await query(
-      `insert into public.license_events (license_id, action, notes)
-       values ($1, $2, $3)`,
-      [
-        license.id,
-        emailResult.ok ? "email_sent" : "email_failed",
-        emailResult.ok ? `License email sent to ${customerEmail}` : emailResult.message
-      ]
+    await recordLicenseEvent(
+      license.id,
+      emailResult.ok ? "email_sent" : "email_failed",
+      emailResult.ok ? `License email sent to ${customerEmail}` : emailResult.message
     );
 
     return NextResponse.json({

@@ -35,15 +35,18 @@ function EyeIcon({ hidden }) {
   );
 }
 
-export default function AuthForm({ locale, dictionary, mode }) {
+export default function AuthForm({ mode, next = "" }) {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const isSignup = mode === "signup";
+  const nextQuery = next ? `?next=${encodeURIComponent(next)}` : "";
 
   function authRedirectUrl(method) {
-    return `${window.location.origin}/api/auth/callback?locale=${encodeURIComponent(locale)}&method=${encodeURIComponent(method)}`;
+    const params = new URLSearchParams({ locale: "pt", method });
+    if (next) params.set("next", next);
+    return `${window.location.origin}/api/auth/callback?${params.toString()}`;
   }
 
   function friendlyAuthError(error) {
@@ -55,7 +58,7 @@ export default function AuthForm({ locale, dictionary, mode }) {
       text.includes("email not confirmed") ||
       text.includes("email not verified")
     ) {
-      return dictionary.auth.emailNotConfirmed;
+      return "E-mail ainda não confirmado. Abra o link de confirmação enviado para sua caixa de entrada.";
     }
 
     if (
@@ -64,7 +67,7 @@ export default function AuthForm({ locale, dictionary, mode }) {
       text.includes("invalid login credentials") ||
       text.includes("invalid email or password")
     ) {
-      return dictionary.auth.invalidCredentials;
+      return "E-mail ou senha incorretos. Confira os dados e tente novamente.";
     }
 
     if (
@@ -73,20 +76,20 @@ export default function AuthForm({ locale, dictionary, mode }) {
       text.includes("already") ||
       text.includes("registered")
     ) {
-      return dictionary.auth.emailInUse;
+      return "Este e-mail já está cadastrado. Entre na sua conta ou recupere a senha.";
     }
 
-    if (text.includes("password")) return dictionary.auth.passwordError;
-    if (text.includes("rate limit") || text.includes("too many")) return dictionary.auth.tooManyRequests;
+    if (text.includes("password")) return "A senha precisa ter pelo menos 8 caracteres.";
+    if (text.includes("rate limit") || text.includes("too many")) {
+      return "Muitas tentativas em pouco tempo. Aguarde alguns instantes.";
+    }
 
-    return dictionary.auth.genericError;
+    return "Não foi possível concluir o acesso agora. Tente novamente.";
   }
 
   async function redirectAfterAuth() {
     try {
-      const response = await fetch(`/api/auth/redirect-target?locale=${encodeURIComponent(locale)}`, {
-        cache: "no-store"
-      });
+      const response = await fetch(`/api/auth/redirect-target${nextQuery}`, { cache: "no-store" });
 
       if (response.ok) {
         const payload = await response.json();
@@ -96,10 +99,10 @@ export default function AuthForm({ locale, dictionary, mode }) {
         }
       }
     } catch {
-      // Fall through to the regular dashboard.
+      // Segue para o painel padrao.
     }
 
-    window.location.href = `/${locale}/dashboard`;
+    window.location.href = next || "/pt/dashboard";
   }
 
   async function recordLoginMethod(method, provider = method, profile = {}) {
@@ -110,7 +113,7 @@ export default function AuthForm({ locale, dictionary, mode }) {
         body: JSON.stringify({ method, provider, ...profile })
       });
     } catch {
-      // Login must not fail if profile enrichment is unavailable.
+      // O login nao deve falhar se o enriquecimento do perfil falhar.
     }
   }
 
@@ -159,14 +162,14 @@ export default function AuthForm({ locale, dictionary, mode }) {
       }
 
       if (isSignup && !result.data?.token && !result.data?.session) {
-        setMessage(dictionary.auth.confirmEmailNotice);
+        setMessage("Conta criada! Confirme seu e-mail pelo link que enviamos e depois entre.");
         return;
       }
 
       await recordLoginMethod("password", "email", {
         fullName: String(form.get("name") || ""),
         company: String(form.get("company") || ""),
-        preferredLocale: locale
+        preferredLocale: "pt"
       });
       await redirectAfterAuth();
     } catch (error) {
@@ -178,86 +181,90 @@ export default function AuthForm({ locale, dictionary, mode }) {
 
   return (
     <form className="auth-card" onSubmit={handleSubmit}>
-      <h1>{isSignup ? dictionary.auth.signupTitle : dictionary.auth.loginTitle}</h1>
-      <p>{isSignup ? dictionary.auth.signupText : dictionary.auth.loginText}</p>
+      <h1>{isSignup ? "Criar sua conta" : "Entrar na sua conta"}</h1>
+      <p className="muted">
+        {isSignup
+          ? "Cadastre-se para comprar e gerenciar suas licenças."
+          : next
+            ? "Entre para continuar sua compra."
+            : "Acesse suas licenças, computadores e pedidos."}
+      </p>
+
+      <button
+        className="btn btn-social btn-block"
+        type="button"
+        disabled={isLoading}
+        onClick={() => handleOAuth("google")}
+      >
+        <GoogleIcon /> Continuar com Google
+      </button>
+
+      <div className="divider"><span>ou com e-mail</span></div>
 
       {isSignup && (
-        <>
-          <label>
-            {dictionary.auth.name}
-            <input name="name" type="text" placeholder={dictionary.auth.name} autoComplete="name" required />
+        <div className="field-row">
+          <label className="field">
+            <span>Nome completo</span>
+            <input name="name" type="text" autoComplete="name" required />
           </label>
-          <label>
-            {dictionary.auth.companyOptional}
-            <input name="company" type="text" placeholder={dictionary.auth.company} autoComplete="organization" />
+          <label className="field">
+            <span>Empresa <em>(opcional)</em></span>
+            <input name="company" type="text" autoComplete="organization" />
           </label>
-        </>
+        </div>
       )}
 
-      <label>
-        {dictionary.auth.email}
+      <label className="field">
+        <span>E-mail</span>
         <input
           name="email"
           type="email"
-          placeholder="seu@email.com"
+          placeholder="voce@empresa.com.br"
           value={email}
           autoComplete="email"
           onChange={(event) => setEmail(event.target.value)}
           required
         />
       </label>
-      <label>
-        {dictionary.auth.password}
+      <label className="field">
+        <span className="field-label-row">
+          Senha
+          {!isSignup && (
+            <Link className="link-muted" href={`/pt/esqueci-senha${email ? `?email=${encodeURIComponent(email)}` : ""}`}>
+              Esqueci minha senha
+            </Link>
+          )}
+        </span>
         <div className="password-field">
           <input
             name="password"
             type={showPassword ? "text" : "password"}
-            placeholder="********"
             autoComplete={isSignup ? "new-password" : "current-password"}
             required
-            minLength={6}
+            minLength={isSignup ? 8 : undefined}
           />
           <button
             aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
             className="password-toggle"
             type="button"
-            title={showPassword ? "Ocultar senha" : "Mostrar senha"}
             onClick={() => setShowPassword((value) => !value)}
           >
             <EyeIcon hidden={showPassword} />
           </button>
         </div>
+        {isSignup && <small className="hint">Mínimo de 8 caracteres.</small>}
       </label>
-      {!isSignup && (
-        <Link className="forgot-password-link" href={`/${locale}/esqueci-senha${email ? `?email=${encodeURIComponent(email)}` : ""}`}>
-          {dictionary.auth.forgot}
-        </Link>
-      )}
 
-      <button className="btn primary full" type="submit" disabled={isLoading}>
-        {isLoading ? dictionary.auth.processing : isSignup ? dictionary.auth.submitSignup : dictionary.auth.submitLogin}
+      {message && <p className="form-message" role="status">{message}</p>}
+
+      <button className="btn btn-primary btn-lg btn-block" type="submit" disabled={isLoading}>
+        {isLoading ? "Aguarde..." : isSignup ? "Criar conta" : "Entrar"}
       </button>
 
-      <div className="divider">{dictionary.auth.continueWith}</div>
-      <div className="social-row">
-        <button
-          aria-label={dictionary.auth.continueGoogle}
-          className="google-auth-button"
-          title={dictionary.auth.continueGoogle}
-          type="button"
-          disabled={isLoading}
-          onClick={() => handleOAuth("google")}
-        >
-          <GoogleIcon />
-        </button>
-      </div>
-
-      {message && <p className="note">{message}</p>}
-
       <p className="auth-switch">
-        {isSignup ? dictionary.auth.hasAccount : dictionary.auth.noAccount}{" "}
-        <Link href={`/${locale}/${isSignup ? "login" : "cadastro"}`}>
-          {isSignup ? dictionary.auth.submitLogin : dictionary.auth.submitSignup}
+        {isSignup ? "Já tem uma conta?" : "Ainda não tem conta?"}{" "}
+        <Link href={`/pt/${isSignup ? "login" : "cadastro"}${nextQuery}`}>
+          {isSignup ? "Entrar" : "Criar conta"}
         </Link>
       </p>
     </form>

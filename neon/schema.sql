@@ -35,6 +35,12 @@ create table if not exists public.orders (
   created_at timestamptz not null default now()
 );
 
+-- Colunas da compra simulada (tambem em neon/migrations/20261006_simulated_checkout.sql).
+alter table public.orders add column if not exists subtotal integer;
+alter table public.orders add column if not exists discount integer;
+alter table public.orders add column if not exists coupon_code text;
+alter table public.orders add column if not exists payment_method text;
+
 create table if not exists public.licenses (
   id uuid primary key default gen_random_uuid(),
   user_id text references public.profiles(user_id) on delete set null,

@@ -84,7 +84,28 @@ servidor por meio de `DATABASE_URL`; a connection string nunca e exposta ao
 navegador. Autorizacao de usuario e administrador e verificada antes das
 consultas protegidas.
 
+## Loja (compra simulada)
+
+Cada produto tem um preco em `lib/products.js` (campo `price`, em reais). Nao ha
+gateway de pagamento: o pedido so e concluido quando um cupom zera o total. O
+cupom `COMPREAQUI` da 100% de desconto (definido em `lib/coupons.js`, somente no
+servidor). A compra cria pedido e licenca com o mesmo gerador usado pelo ADM
+(`lib/licenses/issue.js`), vinculada ao e-mail da conta, 1 computador, sem
+vencimento.
+
+Antes do primeiro deploy da loja, execute no Neon SQL Editor
+`neon/migrations/20261006_simulated_checkout.sql` (alteracao apenas aditiva na
+tabela `orders`). Sem ela a emissao manual pelo ADM continua funcionando, mas a
+compra pela loja falha.
+
+O cliente pode desvincular um computador em Minha conta; isso remove apenas
+aquela ativacao, como a acao "Limpar ativacao" do ADM.
+
+O site e publicado somente em portugues; `/en/...` redireciona para `/pt/...`.
+
 ## Ativacao dos aplicativos
+
+O contrato completo esta em `docs/CONTRATO-ATIVACAO.md`.
 
 Endpoint de ativacao:
 

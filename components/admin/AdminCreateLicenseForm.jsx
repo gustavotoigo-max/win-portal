@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { adminTexts as t } from "@/lib/admin-texts";
 import { products } from "@/lib/products";
 
-export default function AdminCreateLicenseForm({ dictionary }) {
+export default function AdminCreateLicenseForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [maxMachines, setMaxMachines] = useState(1);
@@ -36,20 +37,20 @@ export default function AdminCreateLicenseForm({ dictionary }) {
       const payload = await response.json();
 
       if (!response.ok || !payload.ok) {
-        setMessage(payload.message || dictionary.admin.createError);
+        setMessage(payload.message || t.createError);
         return;
       }
 
       setMessage(payload.emailSent
-        ? dictionary.admin.createSuccess
-        : `${dictionary.admin.createSuccess} ${payload.emailMessage || dictionary.admin.emailNotSent}`);
+        ? t.createSuccess
+        : `${t.createSuccess} ${payload.emailMessage || t.emailNotSent}`);
       setGeneratedKey(payload.licenseKey);
       setEmail("");
       setMaxMachines(1);
       setValidityAmount("");
       router.refresh();
     } catch {
-      setMessage(dictionary.admin.createError);
+      setMessage(t.createError);
     } finally {
       setIsLoading(false);
     }
@@ -58,7 +59,7 @@ export default function AdminCreateLicenseForm({ dictionary }) {
   return (
     <form className="admin-create-form official-license-form" onSubmit={createLicense}>
       <div>
-        <label htmlFor="license-email">{dictionary.admin.customerEmail}</label>
+        <label htmlFor="license-email">{t.customerEmail}</label>
         <input
           id="license-email"
           type="email"
@@ -69,7 +70,7 @@ export default function AdminCreateLicenseForm({ dictionary }) {
         />
       </div>
       <div>
-        <label htmlFor="license-product">{dictionary.admin.product}</label>
+        <label htmlFor="license-product">{t.product}</label>
         <select
           id="license-product"
           value={productId}
@@ -82,7 +83,7 @@ export default function AdminCreateLicenseForm({ dictionary }) {
         </select>
       </div>
       <div>
-        <label htmlFor="license-machines">{dictionary.admin.maxMachines}</label>
+        <label htmlFor="license-machines">{t.maxMachines}</label>
         <input
           id="license-machines"
           type="number"
@@ -94,37 +95,37 @@ export default function AdminCreateLicenseForm({ dictionary }) {
         />
       </div>
       <div>
-        <label htmlFor="license-validity-amount">{dictionary.admin.validity}</label>
+        <label htmlFor="license-validity-amount">{t.validity}</label>
         <input
           id="license-validity-amount"
           type="number"
           min="1"
           value={validityAmount}
           onChange={(event) => setValidityAmount(event.target.value)}
-          placeholder={dictionary.admin.noExpiration}
-          title={dictionary.admin.validityHint}
+          placeholder={t.noExpiration}
+          title={t.validityHint}
         />
       </div>
       <div>
-        <label htmlFor="license-validity-unit">{dictionary.admin.validityUnit}</label>
+        <label htmlFor="license-validity-unit">{t.validityUnit}</label>
         <select
           id="license-validity-unit"
           value={validityUnit}
           onChange={(event) => setValidityUnit(event.target.value)}
-          title={dictionary.admin.validityHint}
+          title={t.validityHint}
         >
-          <option value="days">{dictionary.admin.days}</option>
-          <option value="months">{dictionary.admin.months}</option>
-          <option value="years">{dictionary.admin.years}</option>
+          <option value="days">{t.days}</option>
+          <option value="months">{t.months}</option>
+          <option value="years">{t.years}</option>
         </select>
       </div>
-      <button className="btn primary generate-license-btn" type="submit" disabled={isLoading}>
-        {isLoading ? dictionary.admin.creating : dictionary.admin.generateLicenseShort}
+      <button className="btn btn-primary generate-license-btn" type="submit" disabled={isLoading}>
+        {isLoading ? t.creating : t.generateLicenseShort}
       </button>
-      {message && <p className="note compact-note">{message}</p>}
+      {message && <p className="form-message">{message}</p>}
       {generatedKey && (
         <div className="generated-key-box">
-          <span>{dictionary.admin.generatedKey}</span>
+          <span>{t.generatedKey}</span>
           <code>{generatedKey}</code>
         </div>
       )}

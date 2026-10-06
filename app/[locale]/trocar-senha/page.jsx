@@ -1,19 +1,14 @@
-import Header from "@/components/Header";
-import ResetPasswordForm from "@/components/ResetPasswordForm";
-import { getDictionary, normalizeLocale } from "@/lib/i18n";
+import AuthLayout from "@/components/auth/AuthLayout";
+import ResetPasswordForm from "@/components/auth/ResetPasswordForm";
 
-export default async function ResetPasswordPage({ params, searchParams }) {
-  const { locale: rawLocale } = await params;
+export const metadata = { title: "Criar nova senha" };
+
+export default async function ResetPasswordPage({ searchParams }) {
   const { token } = await searchParams;
-  const locale = normalizeLocale(rawLocale);
-  const t = getDictionary(locale);
 
   return (
-    <>
-      <Header locale={locale} active="login" />
-      <main className="auth-shell">
-        <ResetPasswordForm locale={locale} dictionary={t} token={token} />
-      </main>
-    </>
+    <AuthLayout>
+      <ResetPasswordForm token={token} />
+    </AuthLayout>
   );
 }

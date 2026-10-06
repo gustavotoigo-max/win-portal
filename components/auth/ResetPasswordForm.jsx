@@ -23,7 +23,7 @@ function EyeIcon({ hidden }) {
   );
 }
 
-export default function ResetPasswordForm({ locale, dictionary, token }) {
+export default function ResetPasswordForm({ token }) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
@@ -33,7 +33,7 @@ export default function ResetPasswordForm({ locale, dictionary, token }) {
     event.preventDefault();
 
     if (!token) {
-      setMessage(dictionary.auth.resetError);
+      setMessage("Link inválido ou expirado. Solicite um novo e-mail de recuperação.");
       return;
     }
 
@@ -47,17 +47,15 @@ export default function ResetPasswordForm({ locale, dictionary, token }) {
       });
 
       if (error) {
-        setMessage(dictionary.auth.passwordError);
+        setMessage("Não foi possível trocar a senha. Use pelo menos 8 caracteres ou solicite um novo link.");
         return;
       }
 
-      const response = await fetch(`/api/auth/redirect-target?locale=${encodeURIComponent(locale)}`, {
-        cache: "no-store"
-      });
+      const response = await fetch("/api/auth/redirect-target", { cache: "no-store" });
       const payload = response.ok ? await response.json() : null;
-      window.location.href = payload?.target || `/${locale}/dashboard`;
+      window.location.href = payload?.target || "/pt/login";
     } catch {
-      setMessage(dictionary.auth.passwordError);
+      setMessage("Não foi possível trocar a senha agora. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -65,18 +63,18 @@ export default function ResetPasswordForm({ locale, dictionary, token }) {
 
   return (
     <form className="auth-card" onSubmit={handleSubmit}>
-      <h1>{dictionary.auth.resetTitle}</h1>
-      <p>{dictionary.auth.resetText}</p>
+      <h1>Criar nova senha</h1>
+      <p className="muted">Escolha uma nova senha para acessar sua conta.</p>
 
-      <label>
-        {dictionary.auth.newPassword}
+      <label className="field">
+        <span>Nova senha</span>
         <div className="password-field">
           <input
             name="password"
             type={showPassword ? "text" : "password"}
             value={password}
             autoComplete="new-password"
-            minLength={6}
+            minLength={8}
             onChange={(event) => setPassword(event.target.value)}
             required
           />
@@ -84,19 +82,19 @@ export default function ResetPasswordForm({ locale, dictionary, token }) {
             aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
             className="password-toggle"
             type="button"
-            title={showPassword ? "Ocultar senha" : "Mostrar senha"}
             onClick={() => setShowPassword((value) => !value)}
           >
             <EyeIcon hidden={showPassword} />
           </button>
         </div>
+        <small className="hint">Mínimo de 8 caracteres.</small>
       </label>
 
-      <button className="btn primary full" type="submit" disabled={isLoading}>
-        {isLoading ? dictionary.auth.processing : dictionary.auth.updatePassword}
-      </button>
+      {message && <p className="form-message error" role="status">{message}</p>}
 
-      {message && <p className="note">{message}</p>}
+      <button className="btn btn-primary btn-lg btn-block" type="submit" disabled={isLoading}>
+        {isLoading ? "Salvando..." : "Salvar nova senha"}
+      </button>
     </form>
   );
 }
