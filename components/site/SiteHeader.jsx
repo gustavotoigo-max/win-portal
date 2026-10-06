@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Icon from "@/components/site/Icon";
+import ProductIcon from "@/components/site/ProductIcon";
 import UserMenu from "@/components/site/UserMenu";
 import { getProductPagesByCategory } from "@/lib/product-pages";
 
@@ -39,7 +40,7 @@ export default function SiteHeader() {
                   <p className="mega-title">{group.title}</p>
                   {group.products.map((product) => (
                     <Link className="mega-item" href={`/pt/solucoes/${product.id}`} key={product.id}>
-                      <span className="mega-icon"><Icon name={product.icon} size={18} /></span>
+                      <ProductIcon product={product} size={32} />
                       <span>
                         <strong>{product.title}</strong>
                         <small>{product.priceLabel}</small>
