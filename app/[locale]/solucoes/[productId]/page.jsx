@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Icon from "@/components/site/Icon";
+import ProductIcon from "@/components/site/ProductIcon";
 import PageShell from "@/components/site/PageShell";
 import ProductCard from "@/components/site/ProductCard";
 import { getLatestProductRelease } from "@/lib/github-releases";
@@ -52,7 +53,7 @@ export default async function ProductPage({ params }) {
               <span>{product.categoryTitle}</span>
             </nav>
             <div className="product-title">
-              <span className={`product-icon product-icon-lg tone-${product.category}`}><Icon name={product.icon} size={30} /></span>
+              <ProductIcon product={product} size="lg" />
               <div>
                 <h1>{product.title}</h1>
                 <p className="lead-dark">{product.tagline}</p>

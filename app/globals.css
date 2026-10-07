@@ -2712,3 +2712,26 @@ select:focus {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------- Ícones ilustrados dos produtos ---------- */
+
+.product-icon-image {
+  background: transparent;
+  padding: 0;
+}
+
+.product-icon-image img,
+.mega-icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.mega-icon {
+  width: 40px;
+  height: 40px;
+  padding: 2px;
+  background: transparent;
+  flex-shrink: 0;
+}
