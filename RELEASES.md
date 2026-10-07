@@ -67,10 +67,11 @@ criar nada no GitHub.
 ## Atualizacao no site
 
 O site mostra a versao e a data do release na pagina do produto. O endpoint
-`/api/download/<product-id>` redireciona para o `browser_download_url` do asset
-no GitHub. O cache padrao do GitHub e de cinco minutos, configuravel por
+`/api/download/<product-id>` redireciona para o `browser_download_url` do instalador
+(`<Exe>-Setup.exe`, ou o `<Exe>.exe` avulso em releases antigos) no GitHub. Esse link
+responde como anexo, entao o navegador baixa o arquivo direto, sem abrir o GitHub. O cache padrao do GitHub e de cinco minutos, configuravel por
 `GITHUB_RELEASES_CACHE_SECONDS`.
 
 Se o GitHub estiver indisponivel ou ainda nao houver release valido, o site usa
-as antigas variaveis `DOWNLOAD_URL_*`, `DOWNLOAD_BASE_URL` e
-`DOWNLOAD_FALLBACK_URL` como fallback.
+as antigas variaveis `DOWNLOAD_URL_*` e `DOWNLOAD_BASE_URL`. Sem nenhuma delas, o
+visitante volta para a pagina do produto com o aviso de download indisponivel.

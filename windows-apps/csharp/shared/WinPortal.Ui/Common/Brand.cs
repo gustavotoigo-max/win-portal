@@ -8,6 +8,6 @@ namespace WinPortal.Ui.Common;
 public static class Brand
 {
     public const string Name = "Nexotool";
-    public const string SiteUrl = "https://nexotool.com.br";
+    public const string SiteUrl = "https://www.nexotool.com.br";
     public const string SiteLabel = "nexotool.com.br";
 }
