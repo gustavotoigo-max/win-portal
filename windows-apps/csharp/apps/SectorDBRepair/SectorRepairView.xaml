@@ -1,7 +1,7 @@
-<UserControl x:Class="WinPortal.Apps.SectorDbRepair.SectorRepairView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:controls="clr-namespace:WinPortal.Ui.Controls;assembly=WinPortal.Ui">
+<controls:ToolView x:Class="WinPortal.Apps.SectorDbRepair.SectorRepairView"
+                   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                   xmlns:controls="clr-namespace:WinPortal.Ui.Controls;assembly=WinPortal.Ui">
     <controls:ToolPage Title="Reparo por setores"
                        Subtitle="Substitui setores preenchidos com marcadores de falha (ex.: BA AD DE AD) pelos setores do arquivo de referência, somente quando a vizinhança é idêntica nos dois arquivos.">
         <Grid>
@@ -12,72 +12,43 @@
             </Grid.RowDefinitions>
 
             <Border Style="{StaticResource Card}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="130" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <TextBlock Text="Danificado" Style="{StaticResource FieldLabelText}" />
-                    <TextBox x:Name="DamagedBox" Grid.Column="1" />
-                    <Button Grid.Column="2" Content="Selecionar" Margin="12,0,0,0" Click="OnSelectDamaged" />
-
-                    <TextBlock Grid.Row="1" Text="Referência" Style="{StaticResource FieldLabelText}" Margin="0,12,0,0" />
-                    <TextBox x:Name="ReferenceBox" Grid.Row="1" Grid.Column="1" Margin="0,12,0,0"
-                             ToolTip="Cópia anterior ou semelhante do mesmo arquivo, usada como gabarito." />
-                    <Button Grid.Row="1" Grid.Column="2" Content="Selecionar" Margin="12,12,0,0" Click="OnSelectReference" />
-
-                    <TextBlock Grid.Row="2" Text="Saída" Style="{StaticResource FieldLabelText}" Margin="0,12,0,0" />
-                    <TextBox x:Name="OutputBox" Grid.Row="2" Grid.Column="1" Margin="0,12,0,0" />
-                    <Button Grid.Row="2" Grid.Column="2" Content="Salvar como" Margin="12,12,0,0" Click="OnSelectOutput" />
-
-                    <TextBlock Grid.Row="3" Text="Parâmetros" Style="{StaticResource FieldLabelText}" Margin="0,12,0,0" />
-                    <Grid Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,12,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="90" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Setor (bytes)" Style="{StaticResource StatusText}" VerticalAlignment="Center" Margin="0,0,8,0" />
-                        <TextBox x:Name="SectorBox" Grid.Column="1" Text="512" HorizontalContentAlignment="Right" />
-                        <TextBlock Grid.Column="2" Text="Marcadores" Style="{StaticResource StatusText}" VerticalAlignment="Center" Margin="16,0,8,0" />
-                        <TextBox x:Name="MarkersBox" Grid.Column="3" Text="BA AD DE AD" Style="{StaticResource MonoTextBox}"
-                                 ToolTip="Bytes em hexadecimal. Separe vários marcadores com ponto e vírgula, ex.: BA AD DE AD; 00" />
-                    </Grid>
-
-                    <StackPanel Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,16,0,0">
-                        <Button x:Name="RepairButton" Content="Iniciar reparo" Style="{StaticResource PrimaryButton}" Click="OnRepair" />
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,16,0,0" Padding="20,16">
                 <StackPanel>
-                    <ProgressBar x:Name="Progress" />
-                    <TextBlock x:Name="StatusText" Style="{StaticResource StatusText}" Margin="0,10,0,0"
-                               Text="Selecione o arquivo danificado, a referência e a saída." />
+                    <controls:PathField x:Name="Damaged" Label="Arquivo danificado" Kind="File" ToolId="sector_db_repair"
+                                        DialogTitle="Selecione o arquivo danificado"
+                                        PathPicked="OnDamagedPicked" TextChanged="OnInputChanged" />
+                    <controls:PathField x:Name="Reference" Label="Referência" Kind="File" ToolId="sector_db_repair"
+                                        DialogTitle="Selecione o arquivo de referência"
+                                        Hint="Cópia anterior ou semelhante do mesmo arquivo, usada como gabarito."
+                                        TextChanged="OnInputChanged" />
+                    <controls:PathField x:Name="Output" Label="Salvar em" Kind="SaveFile" ToolId="sector_db_repair"
+                                        DialogTitle="Salvar arquivo reconstruído" TextChanged="OnInputChanged" />
+                    <controls:FormRow Label="Parâmetros">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="90" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Setor (bytes)" Style="{StaticResource StatusText}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <TextBox x:Name="SectorBox" Grid.Column="1" Text="512" HorizontalContentAlignment="Right" />
+                            <TextBlock Grid.Column="2" Text="Marcadores" Style="{StaticResource StatusText}" VerticalAlignment="Center" Margin="16,0,8,0" />
+                            <TextBox x:Name="MarkersBox" Grid.Column="3" Text="BA AD DE AD" Style="{StaticResource MonoTextBox}"
+                                     ToolTip="Bytes em hexadecimal. Separe vários marcadores com ponto e vírgula, ex.: BA AD DE AD; 00" />
+                        </Grid>
+                    </controls:FormRow>
+                    <controls:ActionBar x:Name="Actions" PrimaryText="Reparar arquivo" CanStart="False"
+                                        PrimaryClick="OnRepair" CancelClick="OnCancel" />
                 </StackPanel>
             </Border>
 
-            <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,16,0,0" Padding="20,16">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <TextBlock Text="LOG" Style="{StaticResource SectionLabelText}" />
-                    <controls:LogConsole x:Name="Log" Grid.Row="1" />
-                </Grid>
-            </Border>
+            <controls:ProgressCard x:Name="Progress" Grid.Row="1" ReadyText="Selecione o arquivo danificado e a referência e clique em Reparar arquivo." />
+
+            <controls:ResultsCard x:Name="ResultsCard" Grid.Row="2"
+                                  Placeholder="O andamento do reparo aparece aqui."
+                                  ExportClick="OnExport" ClearClick="OnClear">
+                <controls:LogConsole x:Name="Log" />
+            </controls:ResultsCard>
         </Grid>
     </controls:ToolPage>
-</UserControl>
+</controls:ToolView>

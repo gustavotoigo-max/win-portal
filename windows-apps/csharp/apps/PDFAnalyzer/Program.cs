@@ -1,5 +1,3 @@
-using WinPortal.Ui.Tools;
-
 namespace WinPortal.Apps.PdfAnalyzer;
 
 internal static class Program
@@ -14,13 +12,5 @@ internal static class Program
         Tagline: "Recuperação e diagnóstico de documentos PDF");
 
     [STAThread]
-    private static int Main() => WinPortalApp.Run(Product, () => new CorruptedFileAnalyzerView(new AnalyzerOptions
-    {
-        Title = "Analisador de PDFs corrompidos",
-        Subtitle = "Abre cada PDF da pasta, confere a estrutura e as páginas e remove os arquivos danificados.",
-        Extensions = [".pdf"],
-        FolderDialogTitle = "Selecione a pasta com os PDFs",
-        EmptyMessage = "Nenhum arquivo PDF encontrado.",
-        IsCorruptFile = PdfValidator.IsCorrupt,
-    }));
+    private static int Main() => WinPortalApp.Run(Product, Tool.Descriptor.Create);
 }

@@ -12,5 +12,5 @@ internal static class Program
         Tagline: "Organização de pastas");
 
     [STAThread]
-    private static int Main() => WinPortalApp.Run(Product, () => new EmptyFoldersView());
+    private static int Main() => WinPortalApp.Run(Product, Tool.Descriptor.Create);
 }

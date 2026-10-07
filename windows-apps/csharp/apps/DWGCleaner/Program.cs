@@ -1,5 +1,3 @@
-using WinPortal.Ui.Tools;
-
 namespace WinPortal.Apps.DwgCleaner;
 
 internal static class Program
@@ -14,13 +12,5 @@ internal static class Program
         Tagline: "Organização de arquivos CAD");
 
     [STAThread]
-    private static int Main() => WinPortalApp.Run(Product, () => new CorruptedFileAnalyzerView(new AnalyzerOptions
-    {
-        Title = "Verificar e apagar DWGs corrompidos",
-        Subtitle = "Confere cabeçalho, tamanho mínimo e conteúdo de cada desenho .dwg e remove os arquivos danificados.",
-        Extensions = [".dwg"],
-        FolderDialogTitle = "Selecione a pasta com os DWGs",
-        EmptyMessage = "Nenhum arquivo .dwg encontrado.",
-        IsCorruptFile = DwgValidator.IsProbablyCorrupted,
-    }));
+    private static int Main() => WinPortalApp.Run(Product, Tool.Descriptor.Create);
 }

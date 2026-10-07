@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Windows;
-using System.Windows.Controls;
 
 namespace WinPortal.Apps.MySqlAnalyzer;
 
@@ -10,86 +10,154 @@ public sealed record FileResult(string Path, bool Ok, string Detail, double Entr
     public string EntropyText => Entropy >= 0 ? Entropy.ToString("0.00") : "—";
 }
 
-public partial class MySqlView : UserControl
+public partial class MySqlView : ToolView
 {
+    private const string ToolId = "mysql_analyzer";
     private readonly ObservableCollection<FileResult> _results = [];
 
     public MySqlView()
     {
         InitializeComponent();
         ResultsGrid.ItemsSource = _results;
+        ResultsCard.ShowPlaceholder(true);
     }
 
-    private Window? Owner => Window.GetWindow(this);
+    private void OnPathChanged(object? sender, EventArgs e) => Actions.CanStart = Folder.Text.Length > 0;
 
-    private void OnSelect(object sender, RoutedEventArgs e)
+    private void OnCancel(object sender, RoutedEventArgs e)
     {
-        var path = Pickers.Folder(Owner, "Selecione a pasta do banco (datadir)", FolderBox.Text);
-        if (path is not null) FolderBox.Text = path;
+        RequestCancel();
+        Progress.Working("Cancelando... aguarde o arquivo atual.");
     }
 
     private async void OnAnalyze(object sender, RoutedEventArgs e)
     {
-        var folder = FolderBox.Text.Trim();
+        if (IsBusy) return;
+        var folder = Folder.Text;
         if (folder.Length == 0 || !Directory.Exists(folder))
         {
             MessageDialog.Error(Owner, "Erro", "Selecione uma pasta válida.");
             return;
         }
 
+        ToolSettings.RememberFolder(ToolId, folder);
         _results.Clear();
-        Progress.Value = 0;
-        StatusText.Text = "Analisando...";
-        SummaryText.Text = "Analisando...";
-        AnalyzeButton.IsEnabled = false;
-        SelectButton.IsEnabled = false;
+        ResultsCard.Summary = "";
+        ResultsCard.ShowPlaceholder(false);
+        var token = BeginWork();
+        Progress.Working("Localizando arquivos...");
 
         var entropies = new List<double>();
         var good = 0;
         var total = 0;
+        Exception? failure = null;
 
         await Task.Run(() =>
         {
-            var paths = FileWalker.AllFiles(folder).ToList();
-            total = paths.Count;
-            var batch = new List<FileResult>();
-            var lastFlush = Environment.TickCount64;
-
-            for (var i = 0; i < paths.Count; i++)
+            try
             {
-                var (ok, detail) = MySqlChecks.ClassifyAndCheck(paths[i]);
-                var entropy = MySqlChecks.ShannonEntropy(paths[i]);
-                if (entropy >= 0) entropies.Add(entropy);
-                if (ok) good++;
-                batch.Add(new FileResult(paths[i], ok, detail, entropy));
+                var paths = FileWalker.AllFiles(folder).ToList();
+                total = paths.Count;
+                var batch = new List<FileResult>();
+                var lastFlush = Environment.TickCount64;
 
-                if (Environment.TickCount64 - lastFlush > 100 || i == paths.Count - 1)
+                for (var i = 0; i < paths.Count; i++)
                 {
-                    lastFlush = Environment.TickCount64;
-                    var items = batch.ToList();
-                    batch.Clear();
-                    var progress = (i + 1.0) / paths.Count;
-                    Dispatcher.BeginInvoke(() =>
+                    if (token.IsCancellationRequested) break;
+                    var (ok, detail) = MySqlChecks.ClassifyAndCheck(paths[i]);
+                    var entropy = MySqlChecks.ShannonEntropy(paths[i]);
+                    if (entropy >= 0) entropies.Add(entropy);
+                    if (ok) good++;
+                    batch.Add(new FileResult(paths[i], ok, detail, entropy));
+
+                    if (Environment.TickCount64 - lastFlush > 100 || i == paths.Count - 1 || token.IsCancellationRequested)
                     {
-                        foreach (var item in items) _results.Add(item);
-                        Progress.Value = progress;
-                    });
+                        lastFlush = Environment.TickCount64;
+                        var items = batch.ToList();
+                        batch.Clear();
+                        var (done, progress) = (i + 1, (i + 1.0) / paths.Count);
+                        Dispatcher.BeginInvoke(() =>
+                        {
+                            foreach (var item in items) _results.Add(item);
+                            ResultsCard.Summary = $"{_results.Count:N0} arquivo(s)";
+                            if (!CancelRequested) Progress.Working($"Analisando {done:N0}/{paths.Count:N0}", progress);
+                        });
+                    }
+                }
+                if (batch.Count > 0)
+                {
+                    var rest = batch.ToList();
+                    Dispatcher.BeginInvoke(() => { foreach (var item in rest) _results.Add(item); });
                 }
             }
+            catch (Exception ex)
+            {
+                failure = ex;
+            }
         });
+        await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Background);
 
-        AnalyzeButton.IsEnabled = true;
-        SelectButton.IsEnabled = true;
+        var cancelled = CancelRequested;
+        EndWork();
+        if (failure is not null)
+        {
+            Progress.Failed("Falha durante a análise.");
+            MessageDialog.Error(Owner, "Erro", failure.Message);
+            return;
+        }
         if (total == 0)
         {
-            StatusText.Text = "Nenhum arquivo encontrado.";
-            SummaryText.Text = "Nenhum arquivo";
+            ResultsCard.ShowPlaceholder(true);
+            Progress.Done("Concluído · nenhum arquivo encontrado.");
+            MessageDialog.Info(Owner, "Análise concluída", "Nenhum arquivo encontrado na pasta.");
             return;
         }
 
+        var analysed = _results.Count;
+        var bad = analysed - good;
         var average = entropies.Count > 0 ? entropies.Average() : 0.0;
-        Progress.Value = 1;
-        StatusText.Text = $"Entropia média: {average:0.00} bits/byte | Íntegros: {good:N0}/{total:N0}";
-        SummaryText.Text = $"Íntegros: {good:N0}/{total:N0}";
+        var summary = $"Íntegros: {good:N0}/{analysed:N0} · Corrompidos: {bad:N0} · Entropia média: {average:0.00} bits/byte";
+        ResultsCard.Summary = $"{analysed:N0} arquivo(s)";
+        if (cancelled)
+        {
+            Progress.Cancelled($"Cancelado · {summary}");
+            return;
+        }
+        if (bad > 0)
+        {
+            Progress.Warn($"Concluído · {summary}");
+            MessageDialog.Warning(Owner, "Análise concluída", $"{analysed:N0} arquivo(s) analisado(s).\n{bad:N0} com indício de corrupção (veja a lista).");
+            return;
+        }
+        Progress.Done($"Concluído · {summary}");
+        MessageDialog.Success(Owner, "Análise concluída", $"{analysed:N0} arquivo(s) analisado(s). Nenhum indício de corrupção.");
+    }
+
+    private void OnClear(object sender, RoutedEventArgs e)
+    {
+        if (IsBusy) return;
+        _results.Clear();
+        ResultsCard.Summary = "";
+        ResultsCard.ShowPlaceholder(true);
+        Progress.Ready("Selecione a pasta de dados do MySQL e clique em Analisar.");
+    }
+
+    private void OnExport(object sender, RoutedEventArgs e)
+    {
+        if (_results.Count == 0)
+        {
+            ReportExport.NothingToExport(this);
+            return;
+        }
+        ReportExport.SaveCsv(this, ToolId, "relatorio_mysql", ["arquivo", "status", "detalhes", "entropia"],
+            _results.Select(r => (IReadOnlyList<string>)[r.Path, r.Status, r.Detail,
+                r.Entropy >= 0 ? r.Entropy.ToString("0.00", CultureInfo.CurrentCulture) : ""]));
+    }
+
+    protected override void OnBusyChanged(bool busy)
+    {
+        Folder.IsEnabled = !busy;
+        Actions.IsBusy = busy;
+        ResultsCard.SetBusy(busy);
     }
 }

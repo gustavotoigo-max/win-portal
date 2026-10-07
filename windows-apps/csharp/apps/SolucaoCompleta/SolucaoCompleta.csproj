@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>SolucaoCompleta</AssemblyName>
+    <RootNamespace>WinPortal.Apps.SolucaoCompleta</RootNamespace>
+    <Description>Solução Completa - todas as ferramentas WinPortal em um só aplicativo</Description>
+  </PropertyGroup>
+
+  <!-- As ferramentas são as mesmas dos aplicativos avulsos: o código é compartilhado, não copiado. -->
+  <ItemGroup>
+    <Compile Include="..\ImageAnalyzer\*.cs" Exclude="..\ImageAnalyzer\Program.cs" Link="Tools\ImageAnalyzer\%(Filename)%(Extension)" />
+    <Page Include="..\ImageAnalyzer\*.xaml" Link="Tools\ImageAnalyzer\%(Filename)%(Extension)" />
+    <Resource Include="..\ImageAnalyzer\Assets\logo.png" Link="Assets\Tools\image_analyzer.png" />
+    <Compile Include="..\PDFAnalyzer\*.cs" Exclude="..\PDFAnalyzer\Program.cs" Link="Tools\PDFAnalyzer\%(Filename)%(Extension)" />
+    <Page Include="..\PDFAnalyzer\*.xaml" Link="Tools\PDFAnalyzer\%(Filename)%(Extension)" />
+    <Resource Include="..\PDFAnalyzer\Assets\logo.png" Link="Assets\Tools\pdf_analyzer.png" />
+    <Compile Include="..\OfficeCleaner\*.cs" Exclude="..\OfficeCleaner\Program.cs" Link="Tools\OfficeCleaner\%(Filename)%(Extension)" />
+    <Page Include="..\OfficeCleaner\*.xaml" Link="Tools\OfficeCleaner\%(Filename)%(Extension)" />
+    <Resource Include="..\OfficeCleaner\Assets\logo.png" Link="Assets\Tools\office_cleaner.png" />
+    <Compile Include="..\FirebirdAnalyzer\*.cs" Exclude="..\FirebirdAnalyzer\Program.cs" Link="Tools\FirebirdAnalyzer\%(Filename)%(Extension)" />
+    <Page Include="..\FirebirdAnalyzer\*.xaml" Link="Tools\FirebirdAnalyzer\%(Filename)%(Extension)" />
+    <Resource Include="..\FirebirdAnalyzer\Assets\logo.png" Link="Assets\Tools\firebird_analyzer.png" />
+    <Compile Include="..\MySQLAnalyzer\*.cs" Exclude="..\MySQLAnalyzer\Program.cs" Link="Tools\MySQLAnalyzer\%(Filename)%(Extension)" />
+    <Page Include="..\MySQLAnalyzer\*.xaml" Link="Tools\MySQLAnalyzer\%(Filename)%(Extension)" />
+    <Resource Include="..\MySQLAnalyzer\Assets\logo.png" Link="Assets\Tools\mysql_analyzer.png" />
+    <Compile Include="..\MDBIntegrity\*.cs" Exclude="..\MDBIntegrity\Program.cs" Link="Tools\MDBIntegrity\%(Filename)%(Extension)" />
+    <Page Include="..\MDBIntegrity\*.xaml" Link="Tools\MDBIntegrity\%(Filename)%(Extension)" />
+    <Resource Include="..\MDBIntegrity\Assets\logo.png" Link="Assets\Tools\mdb_integrity.png" />
+    <Compile Include="..\SectorDBRepair\*.cs" Exclude="..\SectorDBRepair\Program.cs" Link="Tools\SectorDBRepair\%(Filename)%(Extension)" />
+    <Page Include="..\SectorDBRepair\*.xaml" Link="Tools\SectorDBRepair\%(Filename)%(Extension)" />
+    <Resource Include="..\SectorDBRepair\Assets\logo.png" Link="Assets\Tools\sector_db_repair.png" />
+    <Compile Include="..\DWGCleaner\*.cs" Exclude="..\DWGCleaner\Program.cs" Link="Tools\DWGCleaner\%(Filename)%(Extension)" />
+    <Page Include="..\DWGCleaner\*.xaml" Link="Tools\DWGCleaner\%(Filename)%(Extension)" />
+    <Resource Include="..\DWGCleaner\Assets\logo.png" Link="Assets\Tools\dwg_cleaner.png" />
+    <Compile Include="..\RenameFolder\*.cs" Exclude="..\RenameFolder\Program.cs" Link="Tools\RenameFolder\%(Filename)%(Extension)" />
+    <Page Include="..\RenameFolder\*.xaml" Link="Tools\RenameFolder\%(Filename)%(Extension)" />
+    <Resource Include="..\RenameFolder\Assets\logo.png" Link="Assets\Tools\rename_folder.png" />
+    <Compile Include="..\EmptyFolders\*.cs" Exclude="..\EmptyFolders\Program.cs" Link="Tools\EmptyFolders\%(Filename)%(Extension)" />
+    <Page Include="..\EmptyFolders\*.xaml" Link="Tools\EmptyFolders\%(Filename)%(Extension)" />
+    <Resource Include="..\EmptyFolders\Assets\logo.png" Link="Assets\Tools\empty_folders.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OpenMcdf" Version="3.3.0" />
+    <PackageReference Include="PdfPig" Version="0.1.16" />
+    <PackageReference Include="System.Data.Odbc" Version="8.0.1" />
+    <PackageReference Include="System.IO.Hashing" Version="8.0.0" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
+  </ItemGroup>
+</Project>

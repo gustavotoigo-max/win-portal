@@ -12,5 +12,5 @@ internal static class Program
         Tagline: "Diagnóstico de bancos de dados Firebird");
 
     [STAThread]
-    private static int Main() => WinPortalApp.Run(Product, () => new FirebirdView());
+    private static int Main() => WinPortalApp.Run(Product, Tool.Descriptor.Create);
 }

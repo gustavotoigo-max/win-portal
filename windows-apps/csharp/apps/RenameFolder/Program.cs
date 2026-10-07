@@ -12,5 +12,5 @@ internal static class Program
         Tagline: "Organização de pastas em lote");
 
     [STAThread]
-    private static int Main() => WinPortalApp.Run(Product, () => new RenameFolderView());
+    private static int Main() => WinPortalApp.Run(Product, Tool.Descriptor.Create);
 }

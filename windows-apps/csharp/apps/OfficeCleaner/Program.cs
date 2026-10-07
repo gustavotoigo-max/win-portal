@@ -1,5 +1,3 @@
-using WinPortal.Ui.Tools;
-
 namespace WinPortal.Apps.OfficeCleaner;
 
 internal static class Program
@@ -15,13 +13,5 @@ internal static class Program
         Tagline: "Diagnóstico de documentos Word e Excel");
 
     [STAThread]
-    private static int Main() => WinPortalApp.Run(Product, () => new CorruptedFileAnalyzerView(new AnalyzerOptions
-    {
-        Title = "Analisador de arquivos Office corrompidos",
-        Subtitle = "Verifica documentos .doc, .docx, .xls e .xlsx e remove os arquivos que não abrem mais.",
-        Extensions = [".doc", ".docx", ".xls", ".xlsx"],
-        FolderDialogTitle = "Selecione a pasta com os arquivos Office",
-        EmptyMessage = "Nenhum arquivo Office suportado foi encontrado.",
-        IsCorruptFile = OfficeValidator.IsCorrupt,
-    }));
+    private static int Main() => WinPortalApp.Run(Product, Tool.Descriptor.Create);
 }

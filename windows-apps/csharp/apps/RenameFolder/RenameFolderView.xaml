@@ -1,9 +1,9 @@
-<UserControl x:Class="WinPortal.Apps.RenameFolder.RenameFolderView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:controls="clr-namespace:WinPortal.Ui.Controls;assembly=WinPortal.Ui">
+<controls:ToolView x:Class="WinPortal.Apps.RenameFolder.RenameFolderView"
+                   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                   xmlns:controls="clr-namespace:WinPortal.Ui.Controls;assembly=WinPortal.Ui">
     <controls:ToolPage Title="Organizador de pastas"
-                       Subtitle="Renomeia, em todas as subpastas, as pastas cujo nome contém o termo informado, usando o novo nome com numeração sequencial: Novo nome (1), Novo nome (2)...">
+                       Subtitle="Renomeia, em todas as subpastas, as pastas cujo nome contém o termo informado, usando o novo nome com numeração sequencial: Novo nome (1), Novo nome (2)... A lista é exibida para conferência antes de renomear.">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -12,53 +12,29 @@
             </Grid.RowDefinitions>
 
             <Border Style="{StaticResource Card}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="130" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <TextBlock Text="Pasta raiz" Style="{StaticResource FieldLabelText}" />
-                    <TextBox x:Name="PathBox" Grid.Column="1" />
-                    <Button x:Name="SelectButton" Grid.Column="2" Content="Selecionar" Margin="12,0,0,0" Click="OnSelect" />
-
-                    <TextBlock Grid.Row="1" Text="Termo de busca" Style="{StaticResource FieldLabelText}" Margin="0,12,0,0" />
-                    <TextBox x:Name="TermBox" Grid.Row="1" Grid.Column="1" Margin="0,12,0,0"
-                             ToolTip="Parte do nome das pastas a renomear (diferencia maiúsculas e minúsculas)." />
-
-                    <TextBlock Grid.Row="2" Text="Novo nome" Style="{StaticResource FieldLabelText}" Margin="0,12,0,0" />
-                    <TextBox x:Name="NewNameBox" Grid.Row="2" Grid.Column="1" Margin="0,12,0,0" />
-
-                    <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,16,0,0">
-                        <Button x:Name="RunButton" Content="Renomear tudo" Style="{StaticResource PrimaryButton}" Click="OnRun" />
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,16,0,0" Padding="20,16">
                 <StackPanel>
-                    <ProgressBar x:Name="Progress" IsIndeterminate="False" />
-                    <TextBlock x:Name="StatusText" Style="{StaticResource StatusText}" Margin="0,10,0,0"
-                               Text="Informe a pasta, o termo e o novo nome." />
+                    <controls:PathField x:Name="Folder" Label="Pasta" Kind="Folder" ToolId="rename_folder"
+                                        DialogTitle="Selecione a pasta" TextChanged="OnInputChanged" />
+                    <controls:FormRow Label="Termo de busca">
+                        <TextBox x:Name="TermBox" TextChanged="OnInputChanged"
+                                 ToolTip="Parte do nome das pastas a renomear (diferencia maiúsculas e minúsculas)." />
+                    </controls:FormRow>
+                    <controls:FormRow Label="Novo nome">
+                        <TextBox x:Name="NewNameBox" TextChanged="OnInputChanged"
+                                 ToolTip="As pastas recebem este nome seguido de (1), (2), (3)..." />
+                    </controls:FormRow>
+                    <controls:ActionBar x:Name="Actions" PrimaryText="Renomear pastas" CanStart="False"
+                                        PrimaryClick="OnStart" CancelClick="OnCancel" />
                 </StackPanel>
             </Border>
 
-            <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,16,0,0" Padding="20,16">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <TextBlock Text="PASTAS RENOMEADAS" Style="{StaticResource SectionLabelText}" />
-                    <controls:LogConsole x:Name="Log" Grid.Row="1" />
-                </Grid>
-            </Border>
+            <controls:ProgressCard x:Name="Progress" Grid.Row="1" ReadyText="Informe a pasta, o termo e o novo nome e clique em Renomear pastas." />
+
+            <controls:ResultsCard x:Name="ResultsCard" Grid.Row="2" Title="PASTAS A RENOMEAR"
+                                  Placeholder="As pastas encontradas aparecem aqui, com o nome atual e o novo nome."
+                                  ExportClick="OnExport" ClearClick="OnClear">
+                <controls:LogConsole x:Name="Log" />
+            </controls:ResultsCard>
         </Grid>
     </controls:ToolPage>
-</UserControl>
+</controls:ToolView>

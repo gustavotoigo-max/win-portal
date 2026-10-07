@@ -1,4 +1,5 @@
-﻿# Publica os 10 aplicativos (.NET 8, executável único self-contained) e,
+﻿# Publica os 10 aplicativos avulsos e a Solução Completa (.NET 8, executável único
+# self-contained) e,
 # se o Inno Setup 6 estiver instalado, gera os instaladores.
 #
 # Uso:  powershell -ExecutionPolicy Bypass -File build_all.ps1 [-SkipInstallers] [-RunTests] [-App MDBIntegrity]

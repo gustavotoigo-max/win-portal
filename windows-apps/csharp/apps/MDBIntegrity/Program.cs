@@ -18,5 +18,5 @@ internal static class Program
     };
 
     [STAThread]
-    private static int Main() => WinPortalApp.Run(Product, () => new MdbView());
+    private static int Main() => WinPortalApp.Run(Product, Tool.Descriptor.Create);
 }

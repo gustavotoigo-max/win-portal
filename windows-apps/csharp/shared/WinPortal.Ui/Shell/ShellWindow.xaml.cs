@@ -163,6 +163,20 @@ public partial class ShellWindow : Window
         MessageDialog.Error(this, "Licença", result.Message);
     }
 
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+    {
+        base.OnClosing(e);
+        if (e.Cancel || _tool is not Controls.IToolView { IsBusy: true } busyTool) return;
+        if (!MessageDialog.Confirm(this, "Operação em andamento",
+                "Uma operação ainda está em andamento.\n\nDeseja interromper e fechar o aplicativo?",
+                yes: "Interromper e fechar", no: "Continuar", destructive: true))
+        {
+            e.Cancel = true;
+            return;
+        }
+        busyTool.RequestCancel();
+    }
+
     private void OnLicenseClick(object sender, RoutedEventArgs e) => OpenActivation();
     private void OnBuyClick(object sender, RoutedEventArgs e) => Browser.Open(LicensingConfig.ProductUrl(_product.Identity.ProductId));
     private void OnAccountClick(object sender, RoutedEventArgs e) => Browser.Open(LicensingConfig.AccountUrl);

@@ -1,14 +1,9 @@
-<UserControl x:Class="WinPortal.Apps.MySqlAnalyzer.MySqlView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:controls="clr-namespace:WinPortal.Ui.Controls;assembly=WinPortal.Ui">
+<controls:ToolView x:Class="WinPortal.Apps.MySqlAnalyzer.MySqlView"
+                   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                   xmlns:controls="clr-namespace:WinPortal.Ui.Controls;assembly=WinPortal.Ui">
     <controls:ToolPage Title="Analisador de banco MySQL"
                        Subtitle="Análise heurística dos arquivos da pasta de dados (datadir): páginas InnoDB, redo logs, metadados .sdi/.frm e entropia de cada arquivo.">
-        <controls:ToolPage.HeaderContent>
-            <Border Style="{StaticResource Pill}">
-                <TextBlock x:Name="SummaryText" Text="Nenhuma análise" FontSize="12.5" FontWeight="SemiBold" Foreground="{StaticResource BlueBrush}" />
-            </Border>
-        </controls:ToolPage.HeaderContent>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -17,34 +12,20 @@
             </Grid.RowDefinitions>
 
             <Border Style="{StaticResource Card}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="130" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <TextBlock Text="Pasta do banco" Style="{StaticResource FieldLabelText}" />
-                    <TextBox x:Name="FolderBox" Grid.Column="1" />
-                    <Button x:Name="SelectButton" Grid.Column="2" Content="Selecionar" Margin="12,0,0,0" Click="OnSelect" />
-                    <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,16,0,0">
-                        <Button x:Name="AnalyzeButton" Content="Analisar" Style="{StaticResource PrimaryButton}" Click="OnAnalyze" />
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,16,0,0" Padding="20,16">
                 <StackPanel>
-                    <ProgressBar x:Name="Progress" />
-                    <TextBlock x:Name="StatusText" Style="{StaticResource StatusText}" Margin="0,10,0,0" Text="Entropia média: —" />
+                    <controls:PathField x:Name="Folder" Label="Pasta" Kind="Folder" ToolId="mysql_analyzer"
+                                        DialogTitle="Selecione a pasta do banco (datadir)" TextChanged="OnPathChanged" />
+                    <controls:ActionBar x:Name="Actions" PrimaryText="Analisar" CanStart="False"
+                                        PrimaryClick="OnAnalyze" CancelClick="OnCancel" />
                 </StackPanel>
             </Border>
 
-            <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,16,0,0" Padding="0">
-                <DataGrid x:Name="ResultsGrid" Margin="1">
+            <controls:ProgressCard x:Name="Progress" Grid.Row="1" ReadyText="Selecione a pasta de dados do MySQL e clique em Analisar." />
+
+            <controls:ResultsCard x:Name="ResultsCard" Grid.Row="2"
+                                  Placeholder="O resultado de cada arquivo aparece aqui."
+                                  ExportClick="OnExport" ClearClick="OnClear">
+                <DataGrid x:Name="ResultsGrid">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Arquivo" Binding="{Binding Path}" Width="3*" />
                         <DataGridTemplateColumn Header="Status" Width="110" SortMemberPath="Status">
@@ -68,7 +49,7 @@
                         <DataGridTextColumn Header="Entropia" Binding="{Binding EntropyText}" Width="90" SortMemberPath="Entropy" />
                     </DataGrid.Columns>
                 </DataGrid>
-            </Border>
+            </controls:ResultsCard>
         </Grid>
     </controls:ToolPage>
-</UserControl>
+</controls:ToolView>

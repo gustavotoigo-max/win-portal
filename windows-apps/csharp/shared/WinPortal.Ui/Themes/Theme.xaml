@@ -221,6 +221,12 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Foreground" Value="{StaticResource TextSubtleBrush}" />
+                <Setter Property="Cursor" Value="Arrow" />
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <!-- ============================== Campos ============================== -->

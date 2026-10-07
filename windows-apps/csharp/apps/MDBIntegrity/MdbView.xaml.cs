@@ -2,8 +2,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
@@ -78,15 +76,16 @@ public sealed class FileRow(string path) : INotifyPropertyChanged
     private void Notify([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 
-public partial class MdbView : UserControl
+public partial class MdbView : ToolView
 {
-    private static readonly string SettingsFile =
+    private const string ToolId = "mdb_integrity";
+
+    // Preferência da versão Python; usada só se ainda não houver pasta lembrada.
+    private static readonly string LegacySettingsFile =
         System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".mdb_integrity_checker.json");
 
     private readonly ObservableCollection<FileRow> _rows = [];
-    private readonly JsonObject _settings = LoadSettings();
-    private CancellationTokenSource? _cancel;
-    private bool _running;
+    private bool _initialLogged;
 
     public MdbView()
     {
@@ -96,54 +95,36 @@ public partial class MdbView : UserControl
         UpdateCounters();
     }
 
-    private Window? Owner => Window.GetWindow(this);
+    private static string InitialDir =>
+        ToolSettings.LastFolder(ToolId) ?? LegacyLastDir() ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
-    private string InitialDir =>
-        _settings["last_dir"]?.GetValue<string>() is { Length: > 0 } dir && Directory.Exists(dir)
-            ? dir
-            : Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-
-    private void WriteLog(string message) => Log.AppendLine($"[{DateTime.Now:HH:mm:ss}] {message}");
-
-    private bool _initialLogged;
-
-    private void InitialLog()
-    {
-        if (_initialLogged) return;
-        _initialLogged = true;
-        WriteLog($"{Program.Product.AppName} v{Program.Product.Version}");
-        WriteLog("Adicione arquivos .mdb/.accdb (ou arraste para a lista) e clique em 'Verificar bancos'.");
-        var driver = MdbChecker.FindAccessDriver();
-        WriteLog(driver is not null
-            ? $"Driver Access encontrado: {driver}"
-            : "Atenção: nenhum driver ODBC do Access de 64 bits foi encontrado.");
-    }
-
-    private static JsonObject LoadSettings()
+    private static string? LegacyLastDir()
     {
         try
         {
-            if (File.Exists(SettingsFile) && JsonNode.Parse(File.ReadAllText(SettingsFile)) is JsonObject obj) return obj;
+            if (File.Exists(LegacySettingsFile) && JsonNode.Parse(File.ReadAllText(LegacySettingsFile)) is JsonObject obj &&
+                obj["last_dir"]?.GetValue<string>() is { Length: > 0 } dir && Directory.Exists(dir))
+                return dir;
         }
         catch
         {
             // Configuração inválida é ignorada, como na versão Python.
         }
-        return [];
+        return null;
     }
 
-    private void SaveLastDir(string? dir)
+    private void WriteLog(string message) => Log.AppendLine($"[{DateTime.Now:HH:mm:ss}] {message}");
+
+    private void InitialLog()
     {
-        if (string.IsNullOrEmpty(dir)) return;
-        _settings["last_dir"] = dir;
-        try
-        {
-            File.WriteAllText(SettingsFile, _settings.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
-        }
-        catch
-        {
-            // Falha ao salvar preferências não impede o uso.
-        }
+        if (_initialLogged) return;
+        _initialLogged = true;
+        WriteLog("MDB Integrity");
+        WriteLog("Adicione arquivos .mdb/.accdb (ou arraste para a lista) e clique em 'Verificar bancos'.");
+        var driver = MdbChecker.FindAccessDriver();
+        WriteLog(driver is not null
+            ? $"Driver Access encontrado: {driver}"
+            : "Atenção: nenhum driver ODBC do Access de 64 bits foi encontrado.");
     }
 
     private void OnAddFiles(object sender, RoutedEventArgs e)
@@ -152,23 +133,25 @@ public partial class MdbView : UserControl
             "Access Database (*.mdb;*.accdb)|*.mdb;*.accdb|MDB (*.mdb)|*.mdb|ACCDB (*.accdb)|*.accdb|Todos os arquivos (*.*)|*.*",
             InitialDir);
         if (paths.Length == 0) return;
-        SaveLastDir(System.IO.Path.GetDirectoryName(paths[0]));
+        ToolSettings.RememberFolder(ToolId, System.IO.Path.GetDirectoryName(paths[0]));
         AddPaths(paths);
     }
 
     private async void OnAddFolder(object sender, RoutedEventArgs e)
     {
-        var folder = Pickers.Folder(Owner, "Selecione uma pasta", InitialDir);
+        var folder = Pickers.Folder(Owner, "Selecione a pasta com os bancos", InitialDir);
         if (folder is null) return;
-        SaveLastDir(folder);
+        ToolSettings.RememberFolder(ToolId, folder);
+        Progress.Working($"Procurando bancos em {folder}...");
         var paths = await Task.Run(() => FileWalker.AllFiles(folder).Where(MdbChecker.HasValidExtension).ToList());
         AddPaths(paths);
         WriteLog($"Pasta adicionada: {folder} ({paths.Count} arquivo(s) encontrado(s))");
+        Progress.Ready($"{paths.Count:N0} banco(s) encontrado(s) na pasta. Clique em Verificar bancos.");
     }
 
     private void AddPaths(IEnumerable<string> paths)
     {
-        if (_running) return;
+        if (IsBusy) return;
         var existing = new HashSet<string>(_rows.Select(r => r.Path), StringComparer.OrdinalIgnoreCase);
         int added = 0, ignored = 0;
         foreach (var raw in paths)
@@ -192,29 +175,31 @@ public partial class MdbView : UserControl
 
     private void OnDragOver(object sender, DragEventArgs e)
     {
-        e.Effects = !_running && e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
+        e.Effects = !IsBusy && e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
         e.Handled = true;
     }
 
     private async void OnDrop(object sender, DragEventArgs e)
     {
-        if (_running || e.Data.GetData(DataFormats.FileDrop) is not string[] dropped) return;
+        if (IsBusy || e.Data.GetData(DataFormats.FileDrop) is not string[] dropped) return;
         // Pastas soltas na lista são varridas, arquivos entram diretamente.
         var paths = await Task.Run(() => dropped
             .SelectMany(p => Directory.Exists(p) ? FileWalker.AllFiles(p).Where(MdbChecker.HasValidExtension) : [p])
             .ToList());
+        if (dropped.Length > 0)
+            ToolSettings.RememberFolder(ToolId, Directory.Exists(dropped[0]) ? dropped[0] : System.IO.Path.GetDirectoryName(dropped[0]));
         AddPaths(paths);
     }
 
     private void OnRemove(object sender, RoutedEventArgs e)
     {
-        if (_running)
+        if (IsBusy) return;
+        var selected = ResultsGrid.SelectedItems.Cast<FileRow>().ToList();
+        if (selected.Count == 0)
         {
-            MessageDialog.Warning(Owner, "Atenção", "Não remova arquivos durante a verificação.");
+            MessageDialog.Info(Owner, "Remover", "Selecione na lista os arquivos que deseja remover.");
             return;
         }
-        var selected = ResultsGrid.SelectedItems.Cast<FileRow>().ToList();
-        if (selected.Count == 0) return;
         foreach (var row in selected) _rows.Remove(row);
         UpdateCounters();
         WriteLog($"{selected.Count} item(ns) removido(s).");
@@ -222,23 +207,24 @@ public partial class MdbView : UserControl
 
     private void OnClear(object sender, RoutedEventArgs e)
     {
-        if (_running)
-        {
-            MessageDialog.Warning(Owner, "Atenção", "Não limpe a lista durante a verificação.");
-            return;
-        }
+        if (IsBusy) return;
         _rows.Clear();
-        Progress.Value = 0;
-        StatusText.Text = "Lista limpa";
+        Log.Clear();
         UpdateCounters();
-        WriteLog("Lista limpa.");
+        Progress.Ready("Adicione os bancos .mdb/.accdb e clique em Verificar bancos.");
     }
 
-    private void OnClearLog(object sender, RoutedEventArgs e) => Log.Clear();
+    private void OnCancel(object sender, RoutedEventArgs e)
+    {
+        if (!IsBusy) return;
+        RequestCancel();
+        WriteLog("Cancelamento solicitado. Aguardando a etapa atual terminar...");
+        Progress.Working("Cancelando... aguarde a etapa atual terminar.");
+    }
 
     private async void OnCheck(object sender, RoutedEventArgs e)
     {
-        if (_running) return;
+        if (IsBusy) return;
         if (_rows.Count == 0)
         {
             MessageDialog.Info(Owner, "Nenhum arquivo", "Adicione pelo menos um arquivo .mdb ou .accdb.");
@@ -254,11 +240,9 @@ public partial class MdbView : UserControl
 
         var rows = _rows.ToList();
         foreach (var row in rows) row.Reset();
-        _cancel = new CancellationTokenSource();
-        var token = _cancel.Token;
-        SetRunning(true);
-        Progress.Value = 0;
-        StatusText.Text = "Verificação em andamento...";
+        UpdateCounters();
+        var token = BeginWork();
+        Progress.Working($"Verificando 0/{rows.Count:N0}", 0);
         WriteLog("Iniciando verificação...");
 
         var done = 0;
@@ -267,10 +251,12 @@ public partial class MdbView : UserControl
             foreach (var row in rows)
             {
                 if (token.IsCancellationRequested) break;
+                var index = done + 1;
                 Dispatcher.Invoke(() =>
                 {
                     row.MarkRunning(System.IO.Path.GetDirectoryName(row.Path) ?? "");
-                    StatusText.Text = $"Verificando: {row.FileName}";
+                    if (!CancelRequested)
+                        Progress.Working($"Verificando {index:N0}/{rows.Count:N0}: {row.FileName}", (double)done / rows.Count);
                 });
 
                 var result = MdbChecker.Check(row.Path, options, token,
@@ -282,7 +268,7 @@ public partial class MdbView : UserControl
                 Dispatcher.Invoke(() =>
                 {
                     row.Apply(result);
-                    Progress.Value = progress;
+                    if (!CancelRequested) Progress.Report(progress);
                     UpdateCounters();
                     WriteLog(result.Ok
                         ? $"OK: {result.FileName} | tabelas={result.Tables} | registros={result.Records} | tempo={MdbChecker.FormatSeconds(result.Elapsed)}"
@@ -300,50 +286,52 @@ public partial class MdbView : UserControl
         // Arquivos que não chegaram a ser verificados voltam para "Aguardando".
         foreach (var row in rows.Where(r => r.State == RowState.Running)) row.Reset();
 
-        var cancelled = token.IsCancellationRequested;
-        SetRunning(false);
+        var cancelled = CancelRequested;
+        EndWork();
         var ok = _rows.Count(r => r.State == RowState.Ok);
         var errors = _rows.Count(r => r.State == RowState.Error);
-        StatusText.Text = cancelled
-            ? $"Verificação cancelada. OK: {ok} | Erros: {errors}"
-            : $"Concluído. OK: {ok} | Erros: {errors}";
+        var pending = _rows.Count - ok - errors;
         WriteLog(cancelled ? "Verificação cancelada." : "Verificação concluída.");
         UpdateCounters();
+
+        var summary = $"OK: {ok:N0} · Erros: {errors:N0}" + (pending > 0 ? $" · Não verificados: {pending:N0}" : "");
+        if (cancelled)
+        {
+            Progress.Cancelled($"Cancelado · {summary}");
+            return;
+        }
+        if (errors > 0)
+        {
+            Progress.Warn($"Concluído · {summary}");
+            MessageDialog.Warning(Owner, "Verificação concluída",
+                $"{ok:N0} banco(s) íntegro(s) e {errors:N0} com erro.\nClique duas vezes em um arquivo para ver os detalhes.");
+            return;
+        }
+        Progress.Done($"Concluído · {summary}");
+        MessageDialog.Success(Owner, "Verificação concluída", $"{ok:N0} banco(s) verificado(s) sem erros.");
     }
 
-    private void OnCancel(object sender, RoutedEventArgs e)
+    protected override void OnBusyChanged(bool busy)
     {
-        if (!_running || _cancel is null) return;
-        _cancel.Cancel();
-        CancelButton.IsEnabled = false;
-        WriteLog("Cancelamento solicitado. Aguardando a etapa atual terminar...");
-        StatusText.Text = "Cancelando...";
-    }
-
-    private void SetRunning(bool running)
-    {
-        _running = running;
-        CheckButton.IsEnabled = !running;
-        CancelButton.IsEnabled = running;
-        AddFilesButton.IsEnabled = !running;
-        AddFolderButton.IsEnabled = !running;
-        RemoveButton.IsEnabled = !running;
-        ClearButton.IsEnabled = !running;
-        ExportButton.IsEnabled = !running;
-        DeepHashCheck.IsEnabled = SystemTablesCheck.IsEnabled = StopOnErrorCheck.IsEnabled = !running;
+        Actions.IsBusy = busy;
+        Actions.CanStart = _rows.Count > 0;
+        ResultsCard.SetBusy(busy);
+        AddFilesButton.IsEnabled = AddFolderButton.IsEnabled = RemoveButton.IsEnabled = !busy;
+        DeepHashCheck.IsEnabled = SystemTablesCheck.IsEnabled = StopOnErrorCheck.IsEnabled = !busy;
     }
 
     private void UpdateCounters()
     {
         var total = _rows.Count;
+        Actions.CanStart = total > 0;
         if (total == 0)
         {
-            CounterText.Text = "Aguardando arquivos";
+            ResultsCard.Summary = "Nenhum arquivo na lista";
             return;
         }
         var ok = _rows.Count(r => r.State == RowState.Ok);
         var errors = _rows.Count(r => r.State == RowState.Error);
-        CounterText.Text = $"Total: {total}  ·  OK: {ok}  ·  Erro: {errors}  ·  Pendentes: {total - ok - errors}";
+        ResultsCard.Summary = $"Total: {total}  ·  OK: {ok}  ·  Erro: {errors}  ·  Pendentes: {total - ok - errors}";
     }
 
     private void OnGridDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -367,32 +355,15 @@ public partial class MdbView : UserControl
     {
         if (_rows.Count == 0)
         {
-            MessageDialog.Info(Owner, "Sem resultados", "Não há resultados para exportar.");
+            ReportExport.NothingToExport(this);
             return;
         }
-        var path = Pickers.SaveFile(Owner, "Exportar relatório CSV", "CSV (*.csv)|*.csv|Todos os arquivos (*.*)|*.*",
-            $"mdb_integrity_report_{DateTime.Now:yyyyMMdd_HHmmss}.csv", InitialDir, ".csv");
-        if (path is null) return;
-
-        try
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine(Csv("arquivo", "caminho", "status", "tabelas", "registros", "tempo_segundos", "driver",
-                "sha256_leitura", "verificado_em", "detalhe"));
-            foreach (var r in _rows.Select(x => x.Result))
-                sb.AppendLine(Csv(r.FileName, r.Path, r.Status, r.Tables.ToString(CultureInfo.InvariantCulture),
-                    r.Records.ToString(CultureInfo.InvariantCulture), r.Elapsed.ToString("0.0000", CultureInfo.InvariantCulture),
-                    r.Driver, r.ContentHash, r.CheckedAt, r.Detail.Replace("\r", " ").Replace("\n", " | ")));
-            File.WriteAllText(path, sb.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
-            WriteLog($"Relatório exportado: {path}");
-            MessageDialog.Success(Owner, "Exportado", $"Relatório salvo em:\n{path}");
-        }
-        catch (Exception ex)
-        {
-            MessageDialog.Error(Owner, "Erro ao exportar", ex.Message);
-        }
+        var path = ReportExport.SaveCsv(this, ToolId, "mdb_integrity_report",
+            ["arquivo", "caminho", "status", "tabelas", "registros", "tempo_segundos", "driver", "sha256_leitura", "verificado_em", "detalhe"],
+            _rows.Select(x => x.Result).Select(r => (IReadOnlyList<string>)[r.FileName, r.Path, r.Status,
+                r.Tables.ToString(CultureInfo.InvariantCulture), r.Records.ToString(CultureInfo.InvariantCulture),
+                r.Elapsed.ToString("0.0000", CultureInfo.InvariantCulture), r.Driver, r.ContentHash, r.CheckedAt,
+                r.Detail.Replace("\r", " ").Replace("\n", " | ")]));
+        if (path is not null) WriteLog($"Relatório exportado: {path}");
     }
-
-    private static string Csv(params string[] fields) => string.Join(";", fields.Select(f =>
-        f.IndexOfAny([';', '"', '\n', '\r']) >= 0 ? "\"" + f.Replace("\"", "\"\"") + "\"" : f));
 }
