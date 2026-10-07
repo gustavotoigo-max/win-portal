@@ -7,6 +7,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="64" />
             <RowDefinition Height="3" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="34" />
         </Grid.RowDefinitions>
@@ -26,22 +27,56 @@
                     <TextBlock x:Name="TaglineText" FontSize="12" Margin="0,1,0,0" Foreground="{StaticResource TextOnNavyMutedBrush}"
                                TextTrimming="CharacterEllipsis" />
                 </StackPanel>
-                <Button x:Name="LicenseButton" Grid.Column="2" Style="{StaticResource NavyButton}" Click="OnLicenseClick"
-                        ToolTip="Ver ou alterar a ativação deste computador">
-                    <StackPanel Orientation="Horizontal">
-                        <Ellipse x:Name="LicenseDot" Width="8" Height="8" VerticalAlignment="Center"
-                                 Fill="{StaticResource TextOnNavyMutedBrush}" />
-                        <TextBlock x:Name="LicenseText" Margin="8,0,0,0" Text="Verificando..." VerticalAlignment="Center" />
-                    </StackPanel>
-                </Button>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="SettingsButton" Style="{StaticResource NavyButton}" Click="OnSettingsClick" Margin="0,0,10,0"
+                            ToolTip="Tema e atualizações">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE713;" FontFamily="{StaticResource IconFont}" FontSize="14" VerticalAlignment="Center" />
+                            <TextBlock Text="Configurações" Margin="8,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="LicenseButton" Style="{StaticResource NavyButton}" Click="OnLicenseClick"
+                            ToolTip="Ver ou alterar a ativação deste computador">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse x:Name="LicenseDot" Width="8" Height="8" VerticalAlignment="Center"
+                                     Fill="{StaticResource TextOnNavyMutedBrush}" />
+                            <TextBlock x:Name="LicenseText" Margin="8,0,0,0" Text="Verificando..." VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
             </Grid>
         </Border>
         <Rectangle Grid.Row="1" Fill="{StaticResource AccentGradientBrush}" />
 
-        <!-- Conteúdo -->
-        <ContentControl x:Name="ToolHost" Grid.Row="2" Focusable="False" />
+        <!-- Aviso de nova versão -->
+        <Border x:Name="UpdateBanner" Grid.Row="2" Visibility="Collapsed" Background="{StaticResource BlueSoftBrush}"
+                BorderBrush="{StaticResource BlueSelectionBrush}" BorderThickness="0,0,0,1" Padding="24,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="&#xE896;" FontFamily="{StaticResource IconFont}" FontSize="16" VerticalAlignment="Center"
+                           Foreground="{StaticResource BlueBrush}" />
+                <StackPanel Grid.Column="1" Margin="12,0,16,0" VerticalAlignment="Center">
+                    <TextBlock x:Name="UpdateTitle" FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource TextBrush}" />
+                    <TextBlock x:Name="UpdateDetail" FontSize="12" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" />
+                    <ProgressBar x:Name="UpdateProgress" Margin="0,6,0,0" Visibility="Collapsed" MaxWidth="420" HorizontalAlignment="Left" Width="420" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="UpdateNotesButton" Style="{StaticResource LinkButton}" Content="O que mudou" Margin="0,0,16,0"
+                            VerticalAlignment="Center" Click="OnUpdateNotes" />
+                    <Button x:Name="UpdateLaterButton" Content="Depois" Margin="0,0,10,0" Click="OnUpdateLater" />
+                    <Button x:Name="UpdateNowButton" Content="Atualizar agora" Style="{StaticResource PrimaryButton}" Click="OnUpdateNow" />
+                </StackPanel>
+            </Grid>
+        </Border>
 
-        <Grid x:Name="LockedPanel" Grid.Row="2">
+        <!-- Conteúdo -->
+        <ContentControl x:Name="ToolHost" Grid.Row="3" Focusable="False" />
+
+        <Grid x:Name="LockedPanel" Grid.Row="3">
             <Border Style="{StaticResource Card}" Width="440" HorizontalAlignment="Center" VerticalAlignment="Center"
                     Padding="32,30">
                 <StackPanel>
@@ -59,7 +94,7 @@
         </Grid>
 
         <!-- Rodapé azul-marinho -->
-        <Border Grid.Row="3" Background="{StaticResource NavyBrush}" Padding="24,0">
+        <Border Grid.Row="4" Background="{StaticResource NavyBrush}" Padding="24,0">
             <DockPanel VerticalAlignment="Center" LastChildFill="False">
                 <TextBlock x:Name="FooterText" DockPanel.Dock="Left" FontSize="12" Foreground="{StaticResource TextOnNavyMutedBrush}" />
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">

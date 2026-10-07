@@ -51,7 +51,13 @@ public static class ToolSettings
         Set(toolId, "last_dir", folder);
     }
 
-    private static void Set(string? section, string name, string value)
+    /// <summary>Lê uma preferência (seção "interface" para tema e atualizações).</summary>
+    public static string? Get(string section, string name)
+    {
+        lock (Gate) return Str((Load()[section] as JsonObject)?[name]);
+    }
+
+    public static void Set(string? section, string name, string value)
     {
         if (string.IsNullOrEmpty(section)) return;
         lock (Gate)

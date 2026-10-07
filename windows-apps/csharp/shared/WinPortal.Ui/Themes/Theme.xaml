@@ -45,6 +45,14 @@
     <SolidColorBrush x:Key="DangerSoftBrush" Color="#FEE2E2" />
     <SolidColorBrush x:Key="WarningBrush" Color="#D97706" />
     <SolidColorBrush x:Key="WarningSoftBrush" Color="#FEF3C7" />
+    <SolidColorBrush x:Key="SuccessTextBrush" Color="#166534" />
+    <SolidColorBrush x:Key="SuccessBorderBrush" Color="#BBF7D0" />
+    <SolidColorBrush x:Key="DangerTextBrush" Color="#991B1B" />
+    <SolidColorBrush x:Key="DangerBorderBrush" Color="#FCA5A5" />
+    <SolidColorBrush x:Key="WarningTextBrush" Color="#92400E" />
+    <SolidColorBrush x:Key="BorderHoverBrush" Color="#94A3B8" />
+    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#94A3B8" />
+    <!-- As cores acima são as do tema claro; o tema escuro troca os valores em ThemeManager. -->
 
     <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,0">
         <GradientStop Color="{StaticResource BlueColor}" Offset="0" />
@@ -180,7 +188,7 @@
     <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
         <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
         <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
-        <Setter Property="BorderBrush" Value="#FCA5A5" />
+        <Setter Property="BorderBrush" Value="{StaticResource DangerBorderBrush}" />
         <Setter Property="Tag" Value="{StaticResource DangerSoftBrush}" />
     </Style>
 
@@ -258,7 +266,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Frame" Property="BorderBrush" Value="#94A3B8" />
+                            <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource BorderHoverBrush}" />
                         </Trigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource BlueBrush}" />
@@ -307,7 +315,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Frame" Property="BorderBrush" Value="#94A3B8" />
+                            <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource BorderHoverBrush}" />
                         </Trigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource BlueBrush}" />
@@ -389,7 +397,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Thumb">
-                    <Border x:Name="ThumbBorder" Background="#94A3B8" CornerRadius="4" Opacity="0.7" />
+                    <Border x:Name="ThumbBorder" Background="{StaticResource ScrollThumbBrush}" CornerRadius="4" Opacity="0.7" />
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="ThumbBorder" Property="Opacity" Value="1" />

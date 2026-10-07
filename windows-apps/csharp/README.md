@@ -90,6 +90,18 @@ A biblioteca `WinPortal.Licensing` reproduz exatamente o contrato de
 `tests\WinPortal.Licensing.Tests` confere isso lendo e gravando licenças junto com o
 código Python original e com um assinador idêntico ao do portal (28 verificações).
 
+## Configurações: tema e atualizações
+
+O botão **Configurações** no cabeçalho de todos os aplicativos tem:
+
+- **Tema**: Automático (segue o modo de cor dos aplicativos do Windows), Claro ou Escuro.
+  Vale para todos os aplicativos do computador e é aplicado ao reabrir (o aplicativo
+  oferece reabrir na hora). As cores ficam em `Themes/Theme.xaml` (claro) e
+  `Common/ThemeManager.cs` (escuro).
+- **Atualizações**: versão instalada, busca automática ligada ou desligada e
+  "Procurar agora". O fluxo completo e como publicar versões estão em
+  [docs/ATUALIZACOES.md](docs/ATUALIZACOES.md).
+
 ## Diferenças de comportamento em relação ao Python
 
 - **DWG Cleaner** pede confirmação antes de apagar (antes apagava automaticamente),

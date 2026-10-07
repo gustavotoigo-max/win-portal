@@ -59,15 +59,15 @@
                                     <DataTemplate.Triggers>
                                         <DataTrigger Binding="{Binding State}" Value="Running">
                                             <Setter TargetName="Badge" Property="Background" Value="{StaticResource WarningSoftBrush}" />
-                                            <Setter TargetName="BadgeText" Property="Foreground" Value="#92400E" />
+                                            <Setter TargetName="BadgeText" Property="Foreground" Value="{StaticResource WarningTextBrush}" />
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding State}" Value="Ok">
                                             <Setter TargetName="Badge" Property="Background" Value="{StaticResource SuccessSoftBrush}" />
-                                            <Setter TargetName="BadgeText" Property="Foreground" Value="#166534" />
+                                            <Setter TargetName="BadgeText" Property="Foreground" Value="{StaticResource SuccessTextBrush}" />
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding State}" Value="Error">
                                             <Setter TargetName="Badge" Property="Background" Value="{StaticResource DangerSoftBrush}" />
-                                            <Setter TargetName="BadgeText" Property="Foreground" Value="#991B1B" />
+                                            <Setter TargetName="BadgeText" Property="Foreground" Value="{StaticResource DangerTextBrush}" />
                                         </DataTrigger>
                                     </DataTemplate.Triggers>
                                 </DataTemplate>

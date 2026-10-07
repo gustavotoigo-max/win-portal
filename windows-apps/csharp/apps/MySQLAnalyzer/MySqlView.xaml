@@ -34,12 +34,12 @@
                                     <Border x:Name="Badge" CornerRadius="10" Padding="8,2" HorizontalAlignment="Left"
                                             Background="{StaticResource SuccessSoftBrush}">
                                         <TextBlock x:Name="BadgeText" Text="{Binding Status}" FontSize="11.5" FontWeight="SemiBold"
-                                                   Foreground="#166534" />
+                                                   Foreground="{StaticResource SuccessTextBrush}" />
                                     </Border>
                                     <DataTemplate.Triggers>
                                         <DataTrigger Binding="{Binding Ok}" Value="False">
                                             <Setter TargetName="Badge" Property="Background" Value="{StaticResource DangerSoftBrush}" />
-                                            <Setter TargetName="BadgeText" Property="Foreground" Value="#991B1B" />
+                                            <Setter TargetName="BadgeText" Property="Foreground" Value="{StaticResource DangerTextBrush}" />
                                         </DataTrigger>
                                     </DataTemplate.Triggers>
                                 </DataTemplate>

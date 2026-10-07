@@ -2,12 +2,15 @@
 # self-contained) e,
 # se o Inno Setup 6 estiver instalado, gera os instaladores.
 #
-# Uso:  powershell -ExecutionPolicy Bypass -File build_all.ps1 [-SkipInstallers] [-RunTests] [-App MDBIntegrity]
+# Uso:  powershell -ExecutionPolicy Bypass -File build_all.ps1 [-SkipInstallers] [-RunTests] [-App MDBIntegrity] [-Version 1.0.1]
+# -Version define a versão dos executáveis e dos instaladores (padrão 2.0.0). Releases oficiais saem
+# pelo GitHub Actions ("Publicar aplicativos Windows"), ver docs/ATUALIZACOES.md.
 # -RunTests confere a licenca contra o codigo Python original (requer Python com "cryptography" e Node.js).
 param(
     [switch]$SkipInstallers,
     [switch]$RunTests,
-    [string]$App = ""
+    [string]$App = "",
+    [string]$Version = "2.0.0"
 )
 
 $ErrorActionPreference = "Stop"
@@ -41,7 +44,7 @@ foreach ($project in $projects) {
     Write-Host "Publicando $name..." -ForegroundColor Cyan
     $output = Join-Path $publishRoot $name
     if (Test-Path $output) { Remove-Item $output -Recurse -Force }
-    & dotnet publish (Join-Path $project.FullName "$name.csproj") -c Release -o $output --nologo
+    & dotnet publish (Join-Path $project.FullName "$name.csproj") -c Release -o $output --nologo "-p:Version=$Version"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "FALHA ao publicar $name." -ForegroundColor Red
         $failures += $name
@@ -60,7 +63,7 @@ if (-not $SkipInstallers) {
             $name = $project.Name
             if ($failures -contains $name) { continue }
             Write-Host "Gerando instalador de $name..." -ForegroundColor Cyan
-            & $iscc /Q (Join-Path $root "installer\$name.iss")
+            & $iscc /Q "/DAppVersion=$Version" (Join-Path $root "installer\$name.iss")
             if ($LASTEXITCODE -ne 0) {
                 Write-Host "FALHA no instalador de $name." -ForegroundColor Red
                 $failures += "$name (instalador)"

@@ -1,5 +1,6 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { themeInitScript } from "@/lib/theme";
 
 const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-sans" });
 
@@ -19,12 +20,19 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: "#0b1324"
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#0b1324" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b1220" }
+  ]
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="pt-BR" className={inter.variable}>
+    <html lang="pt-BR" className={inter.variable} suppressHydrationWarning>
+      <head>
+        {/* Aplica o tema salvo antes da primeira pintura (sem "flash"). */}
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body>{children}</body>
     </html>
   );

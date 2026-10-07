@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import Icon from "@/components/site/Icon";
+import ThemeSwitcher from "@/components/site/ThemeSwitcher";
 import UserMenu from "@/components/site/UserMenu";
 import { getProductPagesByCategory } from "@/lib/product-pages";
 
@@ -56,6 +57,7 @@ export default function SiteHeader() {
         </nav>
 
         <div className="header-actions">
+          <ThemeSwitcher className="hide-sm" />
           <UserMenu />
           <details className="mobile-nav">
             <summary aria-label="Abrir menu"><Icon name="menu" /></summary>
@@ -64,6 +66,10 @@ export default function SiteHeader() {
               <Link href="/pt#como-funciona">Como funciona</Link>
               <Link href="/pt#perguntas">Dúvidas</Link>
               <Link href="/pt/dashboard">Minha conta</Link>
+              <div className="mobile-nav-theme">
+                <span>Tema</span>
+                <ThemeSwitcher variant="full" />
+              </div>
             </div>
           </details>
         </div>

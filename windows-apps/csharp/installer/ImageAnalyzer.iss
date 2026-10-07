@@ -4,7 +4,7 @@
 #define AppName "Image Analyzer"
 #define AppExe "ImageAnalyzer.exe"
 #ifndef AppVersion
-  #define AppVersion "1.0.0"
+  #define AppVersion "2.0.0"
 #endif
 
 [Setup]
@@ -55,6 +55,14 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopico
 
 [Run]
 Filename: "{app}\{#AppExe}"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent
+; Atualização automática: o aplicativo roda o instalador com /SILENT /RELAUNCH e é reaberto no fim.
+Filename: "{app}\{#AppExe}"; Flags: nowait runasoriginaluser; Check: ShouldRelaunch
 
 ; A licença (%LOCALAPPDATA%\WinPortal\CentralScripts\image_analyzer\license.dat) é mantida
 ; na desinstalação de propósito, para que uma reinstalação não peça nova ativação.
+
+[Code]
+function ShouldRelaunch: Boolean;
+begin
+  Result := WizardSilent and (Pos('/RELAUNCH', UpperCase(GetCmdTail)) > 0);
+end;
