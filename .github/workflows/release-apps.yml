@@ -1,0 +1,112 @@
+# Publica uma versão nova de um aplicativo Windows (ou de todos) como release do GitHub.
+# Os aplicativos instalados consultam /api/atualizacoes/<Exe> no portal, que lê estes
+# releases, e oferecem a atualização ao usuário. Veja windows-apps/csharp/docs/ATUALIZACOES.md.
+name: Publicar aplicativos Windows
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "Aplicativo"
+        type: choice
+        required: true
+        options:
+          - todos
+          - SolucaoCompleta
+          - ImageAnalyzer
+          - PDFAnalyzer
+          - OfficeCleaner
+          - FirebirdAnalyzer
+          - MySQLAnalyzer
+          - MDBIntegrity
+          - SectorDBRepair
+          - DWGCleaner
+          - RenameFolder
+          - EmptyFolders
+      version:
+        description: "Versão (ex.: 1.0.1). Precisa ser maior que a publicada."
+        type: string
+        required: true
+      notes:
+        description: "O que mudou (aparece no release)"
+        type: string
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-apps
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: windows-apps/csharp
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Conferir a versão
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if ($env:VERSION -notmatch '^\d+\.\d+\.\d+$') { throw "Versão inválida: use o formato 1.2.3." }
+
+      - name: Instalar o Inno Setup (se faltar)
+        run: |
+          $iscc = @("${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe", "$env:ProgramFiles\Inno Setup 6\ISCC.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $iscc) { choco install innosetup -y --no-progress }
+
+      - name: Compilar e publicar
+        env:
+          APP: ${{ inputs.app }}
+          VERSION: ${{ inputs.version }}
+          NOTES: ${{ inputs.notes }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          # Prefixo da tag = id do produto no portal (o Office Cleaner tem prefixo próprio).
+          $prefixes = [ordered]@{
+            SolucaoCompleta  = "complete-solution-v"
+            ImageAnalyzer    = "image-analyzer-v"
+            PDFAnalyzer      = "pdf-analyzer-v"
+            OfficeCleaner    = "office-cleaner-v"
+            FirebirdAnalyzer = "firebird-analyzer-v"
+            MySQLAnalyzer    = "mysql-analyzer-v"
+            MDBIntegrity     = "mdb-integrity-v"
+            SectorDBRepair   = "sector-dbfb-repair-v"
+            DWGCleaner       = "dwg-cleaner-v"
+            RenameFolder     = "rename-folder-v"
+            EmptyFolders     = "empty-folder-cleaner-v"
+          }
+          $apps = if ($env:APP -eq "todos") { @($prefixes.Keys) } else { @($env:APP) }
+          $iscc = @("${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe", "$env:ProgramFiles\Inno Setup 6\ISCC.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
+          $out = Join-Path $PWD "release-out"
+          New-Item -ItemType Directory -Force $out | Out-Null
+
+          foreach ($app in $apps) {
+            $tag = "$($prefixes[$app])$env:VERSION"
+            gh release view $tag 2>$null | Out-Null
+            if ($LASTEXITCODE -eq 0) { throw "O release $tag já existe." }
+
+            Write-Host "== $app $env:VERSION"
+            dotnet publish "apps/$app/$app.csproj" -c Release -o "publish/$app" -p:Version=$env:VERSION --nologo
+            if ($LASTEXITCODE -ne 0) { throw "Falha ao compilar $app." }
+            & $iscc "/DAppVersion=$env:VERSION" "installer/$app.iss"
+            if ($LASTEXITCODE -ne 0) { throw "Falha ao gerar o instalador de $app." }
+
+            Copy-Item "publish/$app/$app.exe" (Join-Path $out "$app.exe") -Force
+            Copy-Item "dist/instaladores/$app-Setup-$env:VERSION.exe" (Join-Path $out "$app-Setup.exe") -Force
+
+            $notes = if ($env:NOTES) { $env:NOTES } else { "Versão $env:VERSION." }
+            gh release create $tag (Join-Path $out "$app.exe") (Join-Path $out "$app-Setup.exe") `
+              --title "$app $env:VERSION" --notes $notes --target $env:GITHUB_SHA
+            if ($LASTEXITCODE -ne 0) { throw "Falha ao criar o release $tag." }
+          }

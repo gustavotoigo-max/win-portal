@@ -38,7 +38,8 @@ internal static class GfixRunner
         catch { return Encoding.UTF8; }
     }
 
-    public static (int ReturnCode, string Output) Validate(string gfix, string database, string user, string password, int timeoutSeconds)
+    public static (int ReturnCode, string Output) Validate(string gfix, string database, string user, string password, int timeoutSeconds,
+        CancellationToken cancel = default)
     {
         var info = new ProcessStartInfo(gfix)
         {
@@ -66,10 +67,19 @@ internal static class GfixRunner
         {
             var stdout = process.StandardOutput.ReadToEndAsync();
             var stderr = process.StandardError.ReadToEndAsync();
-            if (!process.WaitForExit(TimeSpan.FromSeconds(timeoutSeconds)))
+            var deadline = Environment.TickCount64 + timeoutSeconds * 1000L;
+            while (!process.WaitForExit(200))
             {
-                try { process.Kill(entireProcessTree: true); } catch { }
-                return (124, "Tempo excedido.");
+                if (cancel.IsCancellationRequested)
+                {
+                    try { process.Kill(entireProcessTree: true); } catch { }
+                    return (130, "Cancelado pelo usuário.");
+                }
+                if (Environment.TickCount64 >= deadline)
+                {
+                    try { process.Kill(entireProcessTree: true); } catch { }
+                    return (124, "Tempo excedido.");
+                }
             }
             process.WaitForExit();
             var output = (stdout.Result ?? "") + "\n" + (stderr.Result ?? "");

@@ -1,12 +1,16 @@
-﻿# Publica os 10 aplicativos (.NET 8, executável único self-contained) e,
+﻿# Publica os 10 aplicativos avulsos e a Solução Completa (.NET 8, executável único
+# self-contained) e,
 # se o Inno Setup 6 estiver instalado, gera os instaladores.
 #
-# Uso:  powershell -ExecutionPolicy Bypass -File build_all.ps1 [-SkipInstallers] [-RunTests] [-App MDBIntegrity]
+# Uso:  powershell -ExecutionPolicy Bypass -File build_all.ps1 [-SkipInstallers] [-RunTests] [-App MDBIntegrity] [-Version 1.0.1]
+# -Version define a versão dos executáveis e dos instaladores (padrão 2.0.0). Releases oficiais saem
+# pelo GitHub Actions ("Publicar aplicativos Windows"), ver docs/ATUALIZACOES.md.
 # -RunTests confere a licenca contra o codigo Python original (requer Python com "cryptography" e Node.js).
 param(
     [switch]$SkipInstallers,
     [switch]$RunTests,
-    [string]$App = ""
+    [string]$App = "",
+    [string]$Version = "2.0.0"
 )
 
 $ErrorActionPreference = "Stop"
@@ -31,6 +35,29 @@ if ($RunTests) {
     }
 }
 
+# Deixa o script do Inno Setup pronto na pasta do executável: publish\<App>\<App>.iss,
+# com o ícone e as imagens do assistente em publish\<App>\instalador. Basta abrir o .iss
+# no Inno Setup e compilar; o instalador sai em publish\<App>\Setup.
+function New-InstallerKit([string]$name, [string]$output) {
+    $source = Join-Path $root "installer\$name.iss"
+    if (-not (Test-Path $source)) { return }
+    $kit = Join-Path $output "instalador"
+    New-Item -ItemType Directory -Force -Path $kit | Out-Null
+    Copy-Item (Join-Path $root "apps\$name\Assets\app.ico") $kit -Force
+    Get-ChildItem (Join-Path $root "installer\branding") -Filter "$name-*.bmp" | Copy-Item -Destination $kit -Force
+    $header = @(
+        "; Cópia gerada pelo build_all.ps1 a partir de installer\$name.iss.",
+        "; Abra no Inno Setup e compile; o instalador sai na pasta Setup.",
+        '#define PublishDir "."',
+        '#define AssetsDir "instalador"',
+        '#define BrandingDir "instalador"',
+        '#define OutputFolder "Setup"',
+        ""
+    ) -join "`r`n"
+    $body = [System.IO.File]::ReadAllText($source, [System.Text.Encoding]::UTF8)
+    [System.IO.File]::WriteAllText((Join-Path $output "$name.iss"), $header + $body, (New-Object System.Text.UTF8Encoding $true))
+}
+
 $projects = Get-ChildItem -Path (Join-Path $root "apps") -Directory |
     Where-Object { Test-Path (Join-Path $_.FullName "$($_.Name).csproj") } |
     Where-Object { $App -eq "" -or $_.Name -eq $App }
@@ -40,11 +67,13 @@ foreach ($project in $projects) {
     Write-Host "Publicando $name..." -ForegroundColor Cyan
     $output = Join-Path $publishRoot $name
     if (Test-Path $output) { Remove-Item $output -Recurse -Force }
-    & dotnet publish (Join-Path $project.FullName "$name.csproj") -c Release -o $output --nologo
+    & dotnet publish (Join-Path $project.FullName "$name.csproj") -c Release -o $output --nologo "-p:Version=$Version"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "FALHA ao publicar $name." -ForegroundColor Red
         $failures += $name
+        continue
     }
+    New-InstallerKit $name $output
 }
 
 if (-not $SkipInstallers) {
@@ -59,7 +88,7 @@ if (-not $SkipInstallers) {
             $name = $project.Name
             if ($failures -contains $name) { continue }
             Write-Host "Gerando instalador de $name..." -ForegroundColor Cyan
-            & $iscc /Q (Join-Path $root "installer\$name.iss")
+            & $iscc /Q "/DAppVersion=$Version" (Join-Path $root "installer\$name.iss")
             if ($LASTEXITCODE -ne 0) {
                 Write-Host "FALHA no instalador de $name." -ForegroundColor Red
                 $failures += "$name (instalador)"
@@ -77,4 +106,5 @@ if ($failures.Count -gt 0) {
     exit 1
 }
 Write-Host "Executaveis em: $publishRoot" -ForegroundColor Green
+Write-Host "Script do Inno pronto em cada pasta: publish\<App>\<App>.iss" -ForegroundColor Green
 if (-not $SkipInstallers) { Write-Host "Instaladores em: $(Join-Path $root 'dist\instaladores')" -ForegroundColor Green }

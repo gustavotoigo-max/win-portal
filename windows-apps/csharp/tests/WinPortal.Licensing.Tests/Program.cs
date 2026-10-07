@@ -43,6 +43,13 @@ Check("JSON canônico igual ao do portal", CanonicalJson.Serialize(license) == F
 Check("Assinatura do portal aceita", LicenseCrypto.VerifyEd25519Signature(license, response["signature"]!.GetValue<string>()));
 var tampered = license.DeepClone().AsObject(); tampered["offline_max_days"] = 3650;
 Check("Assinatura recusada após adulteração", !LicenseCrypto.VerifyEd25519Signature(tampered, response["signature"]!.GetValue<string>()));
+// Manifesto de atualização (/api/atualizacoes) assinado pelo portal com a mesma chave.
+Run("node", "sign-update.mjs .");
+var update = JsonNode.Parse(File.ReadAllText(Path.Combine(fixtures, "update.json")))!.AsObject();
+var manifest = update["manifest"]!.AsObject();
+Check("Manifesto de atualização do portal aceito", LicenseCrypto.VerifyEd25519Signature(manifest, update["signature"]!.GetValue<string>()));
+var forged = manifest.DeepClone().AsObject(); forged["latest"]!["installer"]!["url"] = "https://exemplo.com/malicioso.exe";
+Check("Manifesto adulterado recusado", !LicenseCrypto.VerifyEd25519Signature(forged, update["signature"]!.GetValue<string>()));
 LicenseCrypto.PublicKeyOverride = null;
 Check("Chave pública real (DER) carrega", LicenseCrypto.LoadEd25519PublicKey(LicensingConfig.Ed25519PublicKeyBase64) is not null);
 Check("Assinatura de teste recusada com a chave real", !LicenseCrypto.VerifyEd25519Signature(license, response["signature"]!.GetValue<string>()));

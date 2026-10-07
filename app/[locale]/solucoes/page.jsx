@@ -4,7 +4,7 @@ import { getProductPagesByCategory } from "@/lib/product-pages";
 
 export const metadata = {
   title: "Produtos",
-  description: "Conheça todas as ferramentas WinPortal para recuperação de dados, bancos de dados e organização de arquivos."
+  description: "Conheça todas as ferramentas Nexotool para recuperação de dados, bancos de dados e organização de arquivos."
 };
 
 export default function CatalogPage() {

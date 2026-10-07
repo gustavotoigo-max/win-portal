@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Windows.Media.Imaging;
 using WinPortal.Licensing;
 
@@ -22,7 +22,21 @@ public sealed record ProductInfo(ProductIdentity Identity, string Tagline)
     public Uri IconUri => new($"pack://application:,,,/{AssemblyName};component/Assets/app.ico");
 
     public BitmapSource? LoadLogo() => TryLoad(LogoUri);
-    public BitmapSource? LoadIcon() => TryLoad(IconUri);
+    /// <summary>
+    /// Ícone da janela com todos os tamanhos do .ico. Um BitmapImage pegaria só o primeiro
+    /// quadro (16 px), e o Windows ampliava esse quadro na barra de tarefas.
+    /// </summary>
+    public BitmapSource? LoadIcon()
+    {
+        try
+        {
+            return BitmapFrame.Create(IconUri, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+        }
+        catch
+        {
+            return null;
+        }
+    }
 
     private static BitmapSource? TryLoad(Uri uri)
     {

@@ -1,4 +1,4 @@
--- WinPortal schema for Neon PostgreSQL.
+-- Nexotool schema for Neon PostgreSQL.
 -- Run this entire file in Neon Console > SQL Editor.
 
 create extension if not exists pgcrypto;

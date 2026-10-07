@@ -52,7 +52,7 @@ internal static class SectorRepair
     public sealed record Summary(long TotalSectors, int BadSectors, int Replaced, int Ignored, long TailBytes);
 
     public static Summary Run(string damaged, string reference, string output, int sector, List<byte[]> markers,
-        Action<string> log, Action<double> progress)
+        Action<string> log, Action<double> progress, CancellationToken cancel = default)
     {
         var patterns = markers.Select(m => BuildSectorPattern(m, sector)).ToList();
         bool MatchesMarker(ReadOnlySpan<byte> buffer)
@@ -73,6 +73,7 @@ internal static class SectorRepair
         {
             for (long idx = 0; idx < totalSectors; idx++)
             {
+                if ((idx & 0xFFF) == 0) cancel.ThrowIfCancellationRequested();
                 if (scan.ReadAtLeast(buffer, sector, throwOnEndOfStream: false) < sector) break;
                 if (MatchesMarker(buffer)) bad.Add(idx);
                 if (idx % 10000 == 0 && idx > 0)
@@ -112,6 +113,7 @@ internal static class SectorRepair
 
         for (long idx = 0; idx < totalSectors; idx++)
         {
+            if ((idx & 0xFFF) == 0) cancel.ThrowIfCancellationRequested();
             var read = fdan.ReadAtLeast(buffer, sector, throwOnEndOfStream: false);
             var current = buffer.AsSpan(0, read);
 

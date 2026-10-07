@@ -30,7 +30,7 @@ export default function SiteFooter() {
         </div>
       </div>
       <div className="container footer-bottom">
-        <span>© {year} WinPortal. Todos os direitos reservados.</span>
+        <span>© {year} Nexotool. Todos os direitos reservados.</span>
         <span>Compra em modo de demonstração: nenhum pagamento é processado.</span>
       </div>
     </footer>

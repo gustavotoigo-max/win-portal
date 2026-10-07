@@ -1,7 +1,7 @@
-<UserControl x:Class="WinPortal.Apps.FirebirdAnalyzer.FirebirdView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:controls="clr-namespace:WinPortal.Ui.Controls;assembly=WinPortal.Ui">
+<controls:ToolView x:Class="WinPortal.Apps.FirebirdAnalyzer.FirebirdView"
+                   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                   xmlns:controls="clr-namespace:WinPortal.Ui.Controls;assembly=WinPortal.Ui">
     <controls:ToolPage Title="Validador Firebird"
                        Subtitle="Executa gfix -v -full em um banco .fdb/.gdb ou em todos os bancos de uma pasta e gera um relatório CSV.">
         <Grid>
@@ -12,77 +12,44 @@
             </Grid.RowDefinitions>
 
             <Border Style="{StaticResource Card}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="130" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <TextBlock Text="Alvo" Style="{StaticResource FieldLabelText}" />
-                    <TextBox x:Name="TargetBox" Grid.Column="1" ToolTip="Um arquivo .fdb/.gdb ou uma pasta com bancos." />
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="12,0,0,0">
-                        <Button Content="Pasta..." Click="OnSelectFolder" />
-                        <Button Content="Arquivo..." Margin="8,0,0,0" Click="OnSelectFile" />
-                    </StackPanel>
-
-                    <TextBlock Grid.Row="1" Text="Credenciais" Style="{StaticResource FieldLabelText}" Margin="0,12,0,0" />
-                    <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,12,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="90" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Usuário" Style="{StaticResource StatusText}" VerticalAlignment="Center" Margin="0,0,8,0" />
-                        <TextBox x:Name="UserBox" Grid.Column="1" Text="SYSDBA" />
-                        <TextBlock Grid.Column="2" Text="Senha" Style="{StaticResource StatusText}" VerticalAlignment="Center" Margin="16,0,8,0" />
-                        <PasswordBox x:Name="PasswordBox" Grid.Column="3" Password="masterkey" />
-                        <TextBlock Grid.Column="4" Text="Tempo limite (s)" Style="{StaticResource StatusText}" VerticalAlignment="Center" Margin="16,0,8,0" />
-                        <TextBox x:Name="TimeoutBox" Grid.Column="5" Text="300" HorizontalContentAlignment="Right" />
-                    </Grid>
-
-                    <TextBlock Grid.Row="2" Text="Executável gfix" Style="{StaticResource FieldLabelText}" Margin="0,12,0,0" />
-                    <TextBox x:Name="GfixBox" Grid.Row="2" Grid.Column="1" Text="gfix" Margin="0,12,0,0"
-                             ToolTip="Nome no PATH ou caminho completo do gfix.exe." />
-                    <Button Grid.Row="2" Grid.Column="2" Content="Procurar" Margin="12,12,0,0" Click="OnSelectGfix" />
-
-                    <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,16,0,0">
-                        <Button x:Name="RunButton" Content="Executar" Style="{StaticResource PrimaryButton}" Click="OnRun" />
-                        <Button x:Name="OpenReportButton" Content="Abrir relatório" Margin="10,0,0,0" IsEnabled="False" Click="OnOpenReport" />
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,16,0,0" Padding="20,16">
                 <StackPanel>
-                    <ProgressBar x:Name="Progress" />
-                    <TextBlock x:Name="StatusText" Style="{StaticResource StatusText}" Margin="0,10,0,0"
-                               Text="Selecione um banco ou uma pasta e clique em Executar." />
+                    <controls:PathField x:Name="Target" Label="Pasta ou banco" Kind="FolderOrFile" ToolId="firebird_analyzer"
+                                        Filter="Firebird DB (*.fdb;*.gdb)|*.fdb;*.gdb|Todos os arquivos (*.*)|*.*"
+                                        DialogTitle="Selecione a pasta com os bancos ou um arquivo .fdb/.gdb"
+                                        TextChanged="OnInputChanged" />
+                    <controls:PathField x:Name="Gfix" Label="Executável gfix" Kind="File" ToolId="firebird_analyzer.gfix"
+                                        Filter="gfix.exe|gfix.exe|Executáveis (*.exe)|*.exe" DialogTitle="Localize o gfix.exe"
+                                        Hint="Nome no PATH ou caminho completo do gfix.exe." TextChanged="OnInputChanged" />
+                    <controls:FormRow Label="Credenciais">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="90" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Usuário" Style="{StaticResource StatusText}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <TextBox x:Name="UserBox" Grid.Column="1" Text="SYSDBA" />
+                            <TextBlock Grid.Column="2" Text="Senha" Style="{StaticResource StatusText}" VerticalAlignment="Center" Margin="16,0,8,0" />
+                            <PasswordBox x:Name="PasswordBox" Grid.Column="3" Password="masterkey" />
+                            <TextBlock Grid.Column="4" Text="Tempo limite (s)" Style="{StaticResource StatusText}" VerticalAlignment="Center" Margin="16,0,8,0" />
+                            <TextBox x:Name="TimeoutBox" Grid.Column="5" Text="300" HorizontalContentAlignment="Right" />
+                        </Grid>
+                    </controls:FormRow>
+                    <controls:ActionBar x:Name="Actions" PrimaryText="Validar bancos" CanStart="False"
+                                        PrimaryClick="OnRun" CancelClick="OnCancel" />
                 </StackPanel>
             </Border>
 
-            <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,16,0,0" Padding="20,16">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <DockPanel Margin="0,0,0,8">
-                        <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="Limpar log" Click="OnClearLog" />
-                        <TextBlock Text="LOG" Style="{StaticResource SectionLabelText}" Margin="0" />
-                    </DockPanel>
-                    <controls:LogConsole x:Name="Log" Grid.Row="1" />
-                </Grid>
-            </Border>
+            <controls:ProgressCard x:Name="Progress" Grid.Row="1" ReadyText="Selecione uma pasta ou um banco e clique em Validar bancos." />
+
+            <controls:ResultsCard x:Name="ResultsCard" Grid.Row="2"
+                                  Placeholder="O resultado de cada banco aparece aqui."
+                                  ExportClick="OnExport" ClearClick="OnClear">
+                <controls:LogConsole x:Name="Log" />
+            </controls:ResultsCard>
         </Grid>
     </controls:ToolPage>
-</UserControl>
+</controls:ToolView>

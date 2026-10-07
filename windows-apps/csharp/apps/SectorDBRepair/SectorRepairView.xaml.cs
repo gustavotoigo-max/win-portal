@@ -1,47 +1,40 @@
 using System.Windows;
-using System.Windows.Controls;
 
 namespace WinPortal.Apps.SectorDbRepair;
 
-public partial class SectorRepairView : UserControl
+public partial class SectorRepairView : ToolView
 {
+    private const string ToolId = "sector_db_repair";
+
     public SectorRepairView()
     {
         InitializeComponent();
+        ResultsCard.ShowPlaceholder(true);
     }
 
-    private Window? Owner => Window.GetWindow(this);
+    private void OnInputChanged(object? sender, EventArgs e) =>
+        Actions.CanStart = Damaged.Text.Length > 0 && Reference.Text.Length > 0 && Output.Text.Length > 0;
 
-    private void OnSelectDamaged(object sender, RoutedEventArgs e)
+    /// <summary>Sugere a saída ao lado do original: nome_reconstruido.ext</summary>
+    private void OnDamagedPicked(object? sender, EventArgs e)
     {
-        var path = Pickers.File(Owner, "Selecione o arquivo danificado");
-        if (path is null) return;
-        DamagedBox.Text = path;
-        // Sugere a saída ao lado do original: nome_reconstruido.ext
+        var path = Damaged.Text;
         var directory = Path.GetDirectoryName(path) ?? "";
-        OutputBox.Text = Path.Combine(directory, Path.GetFileNameWithoutExtension(path) + "_reconstruido" + Path.GetExtension(path));
+        Output.Text = Path.Combine(directory, Path.GetFileNameWithoutExtension(path) + "_reconstruido" + Path.GetExtension(path));
     }
 
-    private void OnSelectReference(object sender, RoutedEventArgs e)
+    private void OnCancel(object sender, RoutedEventArgs e)
     {
-        var path = Pickers.File(Owner, "Selecione o arquivo de referência");
-        if (path is not null) ReferenceBox.Text = path;
-    }
-
-    private void OnSelectOutput(object sender, RoutedEventArgs e)
-    {
-        var current = OutputBox.Text.Trim();
-        var path = Pickers.SaveFile(Owner, "Salvar arquivo reconstruído",
-            fileName: current.Length > 0 ? Path.GetFileName(current) : null,
-            initial: current.Length > 0 ? Path.GetDirectoryName(current) : null);
-        if (path is not null) OutputBox.Text = path;
+        RequestCancel();
+        Progress.Working("Cancelando...");
     }
 
     private async void OnRepair(object sender, RoutedEventArgs e)
     {
-        var damaged = DamagedBox.Text.Trim();
-        var reference = ReferenceBox.Text.Trim();
-        var output = OutputBox.Text.Trim();
+        if (IsBusy) return;
+        var damaged = Damaged.Text;
+        var reference = Reference.Text;
+        var output = Output.Text;
 
         if (!int.TryParse(SectorBox.Text.Trim(), out var sector) || sector <= 0)
         {
@@ -60,7 +53,7 @@ public partial class SectorRepairView : UserControl
         }
         if (output.Length == 0)
         {
-            MessageDialog.Error(Owner, "Erro", "Informe o caminho de saída.");
+            MessageDialog.Error(Owner, "Erro", "Informe onde salvar o arquivo reconstruído.");
             return;
         }
         if (string.Equals(Path.GetFullPath(output), Path.GetFullPath(damaged), StringComparison.OrdinalIgnoreCase) ||
@@ -81,10 +74,15 @@ public partial class SectorRepairView : UserControl
             return;
         }
 
+        if (File.Exists(output) && !MessageDialog.Confirm(Owner, "Confirmar substituição",
+                $"O arquivo de saída já existe:\n{output}\n\nDeseja substituí-lo?", yes: "Substituir", no: "Cancelar", destructive: true))
+            return;
+
         Log.Clear();
-        Progress.Value = 0;
-        RepairButton.IsEnabled = false;
-        StatusText.Text = "Reparando...";
+        ResultsCard.Summary = "";
+        ResultsCard.ShowPlaceholder(false);
+        var token = BeginWork();
+        Progress.Working("Reparando...", 0);
 
         SectorRepair.Summary? summary = null;
         Exception? failure = null;
@@ -97,8 +95,8 @@ public partial class SectorRepairView : UserControl
                 {
                     if (Environment.TickCount64 - lastProgress < 50 && value < 100) return;
                     lastProgress = Environment.TickCount64;
-                    Dispatcher.BeginInvoke(() => Progress.Value = value / 100.0);
-                });
+                    Dispatcher.BeginInvoke(() => { if (!CancelRequested) Progress.Working($"Reparando... {value:0}%", value / 100.0); });
+                }, token);
             }
             catch (Exception ex)
             {
@@ -106,16 +104,23 @@ public partial class SectorRepairView : UserControl
             }
         });
 
-        RepairButton.IsEnabled = true;
+        EndWork();
+        if (failure is OperationCanceledException)
+        {
+            // Um arquivo pela metade não serve para nada: é removido.
+            try { File.Delete(output); } catch { }
+            Log.AppendLine("*** Operação cancelada pelo usuário. O arquivo de saída incompleto foi removido. ***");
+            Progress.Cancelled("Cancelado · nenhum arquivo foi gerado.");
+            return;
+        }
         if (failure is not null)
         {
-            StatusText.Text = "Falha durante o reparo.";
+            Progress.Failed("Falha durante o reparo.");
             MessageDialog.Error(Owner, "Erro", failure.Message);
             return;
         }
 
         var s = summary!;
-        Progress.Value = 1;
         if (s.BadSectors > 0)
         {
             Log.AppendLine("Concluído.");
@@ -123,7 +128,40 @@ public partial class SectorRepairView : UserControl
         }
         if (s.TailBytes > 0)
             Log.AppendLine($"{s.TailBytes:N0} byte(s) finais (setor incompleto) copiados sem alteração.");
-        StatusText.Text = $"Concluído · Setores: {s.TotalSectors:N0} · Defeituosos: {s.BadSectors:N0} · Substituídos: {s.Replaced:N0} · Ignorados: {s.Ignored:N0}";
-        MessageDialog.Success(Owner, "Concluído", "Reparo finalizado.");
+        Log.AppendLine($"Arquivo salvo em: {output}");
+        ResultsCard.Summary = $"{s.Replaced:N0} setor(es) substituído(s)";
+        var text = $"Setores: {s.TotalSectors:N0} · Defeituosos: {s.BadSectors:N0} · Substituídos: {s.Replaced:N0} · Ignorados: {s.Ignored:N0}";
+        if (s.Ignored > 0) Progress.Warn($"Concluído · {text}");
+        else Progress.Done($"Concluído · {text}");
+        if (MessageDialog.Confirm(Owner, "Reparo concluído", $"{text.Replace(" · ", "\n")}\n\nArquivo salvo em:\n{output}",
+                yes: "Abrir pasta", no: "Fechar"))
+            Browser.ShowInExplorer(output);
+    }
+
+    private void OnClear(object sender, RoutedEventArgs e)
+    {
+        if (IsBusy) return;
+        Log.Clear();
+        ResultsCard.Summary = "";
+        ResultsCard.ShowPlaceholder(true);
+        Progress.Ready("Selecione o arquivo danificado e a referência e clique em Reparar arquivo.");
+    }
+
+    private void OnExport(object sender, RoutedEventArgs e)
+    {
+        Log.Flush();
+        if (Log.Text.Length == 0)
+        {
+            ReportExport.NothingToExport(this);
+            return;
+        }
+        ReportExport.SaveText(this, ToolId, "relatorio_reparo", Log.Text);
+    }
+
+    protected override void OnBusyChanged(bool busy)
+    {
+        Damaged.IsEnabled = Reference.IsEnabled = Output.IsEnabled = SectorBox.IsEnabled = MarkersBox.IsEnabled = !busy;
+        Actions.IsBusy = busy;
+        ResultsCard.SetBusy(busy);
     }
 }

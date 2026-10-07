@@ -12,5 +12,5 @@ internal static class Program
         Tagline: "Reparo de bancos e arquivos por setores");
 
     [STAThread]
-    private static int Main() => WinPortalApp.Run(Product, () => new SectorRepairView());
+    private static int Main() => WinPortalApp.Run(Product, Tool.Descriptor.Create);
 }

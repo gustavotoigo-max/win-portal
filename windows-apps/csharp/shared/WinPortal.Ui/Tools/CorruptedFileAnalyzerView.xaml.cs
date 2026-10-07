@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
+using WinPortal.Ui.Controls;
 using WinPortal.Ui.Common;
 using WinPortal.Ui.Shell;
 
@@ -10,6 +11,8 @@ namespace WinPortal.Ui.Tools;
 /// <summary>Configuração de um analisador de arquivos corrompidos.</summary>
 public sealed class AnalyzerOptions
 {
+    /// <summary>Identificador da ferramenta (slug), usado para lembrar a última pasta.</summary>
+    public required string ToolId { get; init; }
     public required string Title { get; init; }
     public required string Subtitle { get; init; }
     public required IEnumerable<string> Extensions { get; init; }
@@ -23,7 +26,7 @@ public sealed class AnalyzerOptions
 /// Interface e fluxo comuns aos analisadores (core/analyzer_base.py): localiza os
 /// arquivos, analisa, lista os corrompidos, pede confirmação e apaga.
 /// </summary>
-public partial class CorruptedFileAnalyzerView : UserControl
+public partial class CorruptedFileAnalyzerView : ToolView
 {
     private const int PreviewLimit = 2_000;
 
@@ -36,10 +39,12 @@ public partial class CorruptedFileAnalyzerView : UserControl
 
     private (Phase Phase, int Current, int Total, int Count, int Failures) _snapshot = (Phase.Idle, 0, 0, 0, 0);
     private (Phase, int, int, int, int)? _lastSnapshot;
-    private CancellationTokenSource? _cts;
-    private bool _running;
     private int _analysisTotal;
     private int _analysisCorrupted;
+
+    // Resultado da última execução, para exportar: arquivo -> situação.
+    private List<string> _corrupted = [];
+    private Dictionary<string, string> _outcome = new(StringComparer.OrdinalIgnoreCase);
 
     public CorruptedFileAnalyzerView(AnalyzerOptions options)
     {
@@ -48,40 +53,25 @@ public partial class CorruptedFileAnalyzerView : UserControl
         _extensions = new HashSet<string>(options.Extensions, StringComparer.OrdinalIgnoreCase);
         Page.Title = options.Title;
         Page.Subtitle = options.Subtitle;
+        Folder.ToolId = options.ToolId;
+        Folder.DialogTitle = options.FolderDialogTitle;
         _poll = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
         _poll.Tick += (_, _) => RefreshProgress();
-        Unloaded += (_, _) => _cts?.Cancel();
+        ClearResults();
     }
-
-    private Window? Owner => Window.GetWindow(this);
 
     private void SetSnapshot(Phase phase, int current, int total, int count, int failures)
     {
         lock (_gate) _snapshot = (phase, current, total, count, failures);
     }
 
-    private void OnPathChanged(object sender, TextChangedEventArgs e)
-    {
-        if (!_running) StartButton.IsEnabled = PathBox.Text.Trim().Length > 0;
-    }
-
-    private void OnSelect(object sender, RoutedEventArgs e)
-    {
-        if (_running) return;
-        var folder = Pickers.Folder(Owner, _options.FolderDialogTitle, PathBox.Text);
-        if (folder is null) return;
-        PathBox.Text = folder;
-        StartButton.IsEnabled = true;
-        Progress.Value = 0;
-        StatusText.Text = $"Pasta selecionada: {folder}. Clique em Iniciar.";
-        ClearResults();
-    }
+    private void OnPathChanged(object? sender, EventArgs e) => Actions.CanStart = Folder.Text.Length > 0;
 
     private void OnStart(object sender, RoutedEventArgs e)
     {
-        if (_running) return;
+        if (IsBusy) return;
 
-        var folder = PathBox.Text.Trim();
+        var folder = Folder.Text;
         if (folder.Length == 0 || !Directory.Exists(folder))
         {
             MessageDialog.Error(Owner, "Erro", "Selecione uma pasta válida.");
@@ -94,24 +84,21 @@ public partial class CorruptedFileAnalyzerView : UserControl
             return;
         }
 
+        ToolSettings.RememberFolder(_options.ToolId, folder);
         ClearResults();
-        _cts = new CancellationTokenSource();
+        var token = BeginWork();
         SetSnapshot(Phase.Discover, 0, 0, 0, 0);
         _lastSnapshot = null;
-        Progress.Value = 0;
-        StatusText.Text = "Localizando arquivos: 0";
-        SetRunning(true);
-
-        var token = _cts.Token;
+        Progress.Working("Localizando arquivos: 0", 0);
+        _poll.Start();
         StartWorker(() => AnalysisWorker(folder, token));
     }
 
     private void OnStop(object sender, RoutedEventArgs e)
     {
-        if (!_running) return;
-        _cts?.Cancel();
-        StopButton.IsEnabled = false;
-        StatusText.Text = "Parando... aguarde o arquivo atual.";
+        if (!IsBusy) return;
+        RequestCancel();
+        Progress.Working("Cancelando... aguarde o arquivo atual.");
     }
 
     /// <summary>Thread STA dedicada: os decodificadores de imagem do Windows exigem COM.</summary>
@@ -199,6 +186,7 @@ public partial class CorruptedFileAnalyzerView : UserControl
     private void DeleteWorker(IReadOnlyList<string> files, CancellationToken token)
     {
         int processed = 0, deleted = 0, failures = 0;
+        var outcome = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         try
         {
             var clock = Stopwatch.StartNew();
@@ -209,12 +197,21 @@ public partial class CorruptedFileAnalyzerView : UserControl
                 try
                 {
                     File.Delete(path);
-                    if (File.Exists(path)) failures++;
-                    else deleted++;
+                    if (File.Exists(path))
+                    {
+                        failures++;
+                        outcome[path] = "Falha ao apagar";
+                    }
+                    else
+                    {
+                        deleted++;
+                        outcome[path] = "Apagado";
+                    }
                 }
-                catch
+                catch (Exception ex)
                 {
                     failures++;
+                    outcome[path] = $"Falha ao apagar: {ex.Message}";
                 }
                 processed++;
                 if (clock.ElapsedMilliseconds >= next)
@@ -225,7 +222,7 @@ public partial class CorruptedFileAnalyzerView : UserControl
             }
             SetSnapshot(Phase.Delete, processed, files.Count, deleted, failures);
             var cancelled = token.IsCancellationRequested;
-            Post(() => DeleteDone(processed, files.Count, deleted, failures, cancelled));
+            Post(() => DeleteDone(processed, files.Count, deleted, failures, cancelled, outcome));
         }
         catch (Exception ex)
         {
@@ -239,128 +236,154 @@ public partial class CorruptedFileAnalyzerView : UserControl
         lock (_gate) snapshot = _snapshot;
         if (_lastSnapshot == snapshot) return;
         _lastSnapshot = snapshot;
+        if (CancelRequested) return;
 
         switch (snapshot.Phase)
         {
             case Phase.Discover:
-                StatusText.Text = $"Localizando arquivos: {snapshot.Current:N0}";
+                Progress.Working($"Localizando arquivos: {snapshot.Current:N0}");
                 break;
             case Phase.Analysis:
                 var denominator = Math.Max(snapshot.Total, snapshot.Current);
-                Progress.Value = denominator > 0 ? (double)snapshot.Current / denominator : 0;
-                StatusText.Text = $"Análise: {snapshot.Current:N0}/{denominator:N0} · {snapshot.Count:N0} corrompido(s)";
+                Progress.Working($"Analisando {snapshot.Current:N0}/{denominator:N0} · {snapshot.Count:N0} corrompido(s)",
+                    denominator > 0 ? (double)snapshot.Current / denominator : 0);
                 break;
             case Phase.Delete:
-                Progress.Value = snapshot.Total > 0 ? (double)snapshot.Current / snapshot.Total : 0;
-                StatusText.Text = $"Análise: {_analysisTotal:N0}/{_analysisTotal:N0} · {_analysisCorrupted:N0} corrompido(s) | " +
-                                  $"Exclusão: {snapshot.Current:N0}/{snapshot.Total:N0} ({snapshot.Failures:N0} falha(s))";
+                Progress.Working($"Apagando {snapshot.Current:N0}/{snapshot.Total:N0} · {snapshot.Failures:N0} falha(s)",
+                    snapshot.Total > 0 ? (double)snapshot.Current / snapshot.Total : 0);
                 break;
         }
     }
 
+    private void Stop()
+    {
+        _poll.Stop();
+        lock (_gate) _lastSnapshot = _snapshot;
+        EndWork();
+    }
+
     private void EmptyFolder()
     {
-        Progress.Value = 0;
-        StatusText.Text = "Análise: 0/0 · 0 corrompido(s)";
-        SetRunning(false);
-        MessageDialog.Info(Owner, "Aviso", _options.EmptyMessage);
+        Stop();
+        Progress.Done("Concluído · nenhum arquivo para analisar.");
+        MessageDialog.Info(Owner, "Análise concluída", _options.EmptyMessage);
     }
 
     private void Cancelled(int checkedCount, int total, IReadOnlyList<string> corrupted)
     {
-        Progress.Value = total > 0 ? (double)checkedCount / total : 0;
-        StatusText.Text = $"Análise: {checkedCount:N0}/{total:N0} · {corrupted.Count:N0} corrompido(s) (cancelada)";
+        Stop();
         ShowResults(corrupted);
-        SetRunning(false);
+        Progress.Cancelled($"Cancelado · {checkedCount:N0}/{total:N0} analisado(s) · {corrupted.Count:N0} corrompido(s)");
     }
 
     private void AnalysisDone(int checkedCount, int total, List<string> corrupted)
     {
         _analysisTotal = total;
         _analysisCorrupted = corrupted.Count;
-        Progress.Value = 1;
-        StatusText.Text = $"Análise: {checkedCount:N0}/{total:N0} · {corrupted.Count:N0} corrompido(s)";
         ShowResults(corrupted);
 
         if (corrupted.Count == 0)
         {
-            SetRunning(false);
-            MessageDialog.Success(Owner, "Análise concluída", "Nenhum arquivo corrompido foi encontrado.");
+            Stop();
+            Progress.Done($"Concluído · {total:N0} arquivo(s) analisado(s) · nenhum corrompido");
+            MessageDialog.Success(Owner, "Análise concluída", $"{total:N0} arquivo(s) analisado(s). Nenhum arquivo corrompido foi encontrado.");
             return;
         }
 
+        Progress.Warn($"{checkedCount:N0} arquivo(s) analisado(s) · {corrupted.Count:N0} corrompido(s). Confira a lista.");
         var confirmed = MessageDialog.Confirm(Owner, "Confirmar exclusão",
-            $"Foram encontrados {corrupted.Count:N0} arquivos corrompidos.\n\nDeseja apagá-los permanentemente?",
-            yes: "Apagar", no: "Manter", destructive: true);
+            $"Foram encontrados {corrupted.Count:N0} arquivo(s) corrompido(s), listados na tela.\n\nDeseja apagá-los permanentemente?",
+            yes: "Apagar", no: "Cancelar", destructive: true);
         if (!confirmed)
         {
-            SetRunning(false);
+            Stop();
+            Progress.Warn($"Concluído · {total:N0} analisado(s) · {corrupted.Count:N0} corrompido(s) mantido(s)");
             return;
         }
 
-        _cts = new CancellationTokenSource();
-        var token = _cts.Token;
-        StopButton.IsEnabled = true;
-        Progress.Value = 0;
+        var token = BeginWork();
         SetSnapshot(Phase.Delete, 0, corrupted.Count, 0, 0);
         _lastSnapshot = null;
+        Progress.Working($"Apagando 0/{corrupted.Count:N0}", 0);
         StartWorker(() => DeleteWorker(corrupted, token));
     }
 
-    private void DeleteDone(int processed, int total, int deleted, int failures, bool cancelled)
+    private void DeleteDone(int processed, int total, int deleted, int failures, bool cancelled,
+        Dictionary<string, string> outcome)
     {
-        Progress.Value = total > 0 ? (double)processed / total : 1;
-        var suffix = cancelled ? " (cancelada)" : "";
-        StatusText.Text = $"Análise: {_analysisTotal:N0}/{_analysisTotal:N0} · {_analysisCorrupted:N0} corrompido(s) | " +
-                          $"Exclusão: {deleted:N0} apagado(s), {failures:N0} falha(s){suffix}";
-        SetRunning(false);
+        foreach (var (path, status) in outcome) _outcome[path] = status;
+        Stop();
+        var summary = $"{_analysisTotal:N0} analisado(s) · {_analysisCorrupted:N0} corrompido(s) · " +
+                      $"{deleted:N0} apagado(s) · {failures:N0} falha(s)";
+        if (cancelled)
+        {
+            Progress.Cancelled($"Cancelado · {summary}");
+            return;
+        }
+        if (failures > 0)
+        {
+            Progress.Warn($"Concluído com falhas · {summary}");
+            MessageDialog.Warning(Owner, "Concluído com falhas",
+                $"{deleted:N0} arquivo(s) apagado(s).\n{failures:N0} não puderam ser apagados (veja Exportar relatório).");
+            return;
+        }
+        Progress.Done($"Concluído · {summary}");
+        MessageDialog.Success(Owner, "Concluído", $"{deleted:N0} arquivo(s) corrompido(s) apagado(s).");
     }
 
     private void Failed(string message)
     {
-        SetRunning(false);
-        StatusText.Text = "Falha durante o processamento.";
+        Stop();
+        Progress.Failed("Falha durante o processamento.");
         MessageDialog.Error(Owner, "Erro", $"Não foi possível concluir a operação:\n{message}");
     }
 
     private void ShowResults(IReadOnlyList<string> corrupted)
     {
-        if (corrupted.Count == 0)
-        {
-            ClearResults();
-            return;
-        }
-
+        _corrupted = corrupted.ToList();
+        _outcome = _corrupted.ToDictionary(p => p, _ => "Corrompido", StringComparer.OrdinalIgnoreCase);
         Results.Clear();
+        ResultsCard.Summary = corrupted.Count > 0 ? $"{corrupted.Count:N0} arquivo(s)" : "";
+        ResultsCard.ShowPlaceholder(corrupted.Count == 0);
         foreach (var path in corrupted.Take(PreviewLimit)) Results.AppendLine(path);
         if (corrupted.Count > PreviewLimit)
         {
             Results.AppendLine("");
-            Results.AppendLine($"... e mais {corrupted.Count - PreviewLimit:N0} arquivos não exibidos para manter o desempenho.");
+            Results.AppendLine($"... e mais {corrupted.Count - PreviewLimit:N0} arquivos não exibidos (use Exportar relatório para a lista completa).");
         }
-        Results.Visibility = Visibility.Visible;
-        EmptyResults.Visibility = Visibility.Collapsed;
     }
 
     private void ClearResults()
     {
+        _corrupted = [];
+        _outcome.Clear();
         Results.Clear();
-        Results.Visibility = Visibility.Collapsed;
-        EmptyResults.Visibility = Visibility.Visible;
+        ResultsCard.Summary = "";
+        ResultsCard.ShowPlaceholder(true);
     }
 
-    private void SetRunning(bool running)
+    private void OnClear(object sender, RoutedEventArgs e)
     {
-        _running = running;
-        PathBox.IsEnabled = !running;
-        SelectButton.IsEnabled = !running;
-        StartButton.IsEnabled = !running && PathBox.Text.Trim().Length > 0;
-        StopButton.IsEnabled = running;
-        if (running) _poll.Start();
-        else
+        if (IsBusy) return;
+        ClearResults();
+        Progress.Ready("Selecione uma pasta e clique em Analisar.");
+    }
+
+    private void OnExport(object sender, RoutedEventArgs e)
+    {
+        if (_corrupted.Count == 0)
         {
-            _poll.Stop();
-            lock (_gate) _lastSnapshot = _snapshot;
+            ReportExport.NothingToExport(this);
+            return;
         }
+        ReportExport.SaveCsv(this, _options.ToolId, $"{_options.ToolId}_relatorio", ["arquivo", "situacao"],
+            _corrupted.Select(p => (IReadOnlyList<string>)[p, _outcome.GetValueOrDefault(p, "Corrompido")]));
+    }
+
+    protected override void OnBusyChanged(bool busy)
+    {
+        Folder.IsEnabled = !busy;
+        Actions.IsBusy = busy;
+        ResultsCard.SetBusy(busy);
     }
 }

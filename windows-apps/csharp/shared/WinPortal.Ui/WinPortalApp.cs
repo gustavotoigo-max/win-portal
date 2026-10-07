@@ -4,6 +4,7 @@ using System.Windows.Markup;
 using System.Windows.Threading;
 using WinPortal.Ui.Common;
 using WinPortal.Ui.Shell;
+using WinPortal.Ui.Updates;
 
 namespace WinPortal.Ui;
 
@@ -21,16 +22,22 @@ public static class WinPortalApp
             typeof(FrameworkElement), new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(culture.IetfLanguageTag)));
 
         var app = new Application { ShutdownMode = ShutdownMode.OnMainWindowClose };
-        app.Resources.MergedDictionaries.Add(new ResourceDictionary
+        var theme = new ResourceDictionary
         {
             Source = new Uri("pack://application:,,,/WinPortal.Ui;component/Themes/Theme.xaml"),
-        });
+        };
+        ThemeManager.Apply(theme);
+        app.Resources.MergedDictionaries.Add(theme);
 
         app.DispatcherUnhandledException += (_, e) =>
         {
             e.Handled = true;
             MessageDialog.Error(app.MainWindow, "Erro", $"Falha inesperada:\n{e.Exception.Message}");
         };
+
+        // A versão vem do executável (publicação com -p:Version), usada na ativação e nas atualizações.
+        product = product with { Identity = product.Identity with { SoftwareVersion = UpdateService.CurrentVersion.ToString(3) } };
+        UpdateService.CleanupPreviousVersion();
 
         var shell = new ShellWindow(product, createTool);
         app.MainWindow = shell;

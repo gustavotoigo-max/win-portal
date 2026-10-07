@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import LicenseCard from "@/components/account/LicenseCard";
 import Icon from "@/components/site/Icon";
 import PageShell from "@/components/site/PageShell";
+import ThemeSwitcher from "@/components/site/ThemeSwitcher";
 import { getCustomerLicenses, getCustomerOrders } from "@/lib/account";
 import { isDatabaseConfigured } from "@/lib/neon/database";
 import { getCurrentUser } from "@/lib/session";
@@ -102,6 +103,17 @@ export default async function DashboardPage() {
           ) : (
             <p className="muted">Nenhum pedido ainda.</p>
           )}
+        </section>
+
+        <section className="account-section" id="aparencia">
+          <h2>Aparência</h2>
+          <div className="preference-card">
+            <div>
+              <strong>Tema do site</strong>
+              <p className="muted small">No modo Automático, o site acompanha o tema claro ou escuro do Windows e do navegador. A escolha fica salva neste navegador.</p>
+            </div>
+            <ThemeSwitcher variant="full" />
+          </div>
         </section>
 
         <section className="help-strip">

@@ -1,5 +1,3 @@
-using WinPortal.Ui.Tools;
-
 namespace WinPortal.Apps.ImageAnalyzer;
 
 internal static class Program
@@ -14,13 +12,5 @@ internal static class Program
         Tagline: "Recuperação e diagnóstico de imagens");
 
     [STAThread]
-    private static int Main() => WinPortalApp.Run(Product, () => new CorruptedFileAnalyzerView(new AnalyzerOptions
-    {
-        Title = "Analisador de imagens corrompidas",
-        Subtitle = "Verifica JPG, PNG, BMP, GIF, TIFF, WebP e ICO e remove os arquivos que não abrem mais.",
-        Extensions = [".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff", ".tif", ".webp", ".ico", ".jfif", ".jpe"],
-        FolderDialogTitle = "Selecione a pasta com as imagens",
-        EmptyMessage = "Nenhuma imagem encontrada.",
-        IsCorruptFile = ImageValidator.IsCorrupt,
-    }));
+    private static int Main() => WinPortalApp.Run(Product, Tool.Descriptor.Create);
 }
