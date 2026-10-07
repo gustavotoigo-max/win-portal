@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>RenameFolder</AssemblyName>
+    <RootNamespace>WinPortal.Apps.RenameFolder</RootNamespace>
+    <Description>Rename Folder - renomeação de pastas em lote</Description>
+  </PropertyGroup>
+</Project>

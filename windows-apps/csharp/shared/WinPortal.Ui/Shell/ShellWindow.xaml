@@ -1,0 +1,73 @@
+<Window x:Class="WinPortal.Ui.Shell.ShellWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStartupLocation="CenterScreen" Background="{StaticResource AppBackgroundBrush}"
+        FontFamily="{StaticResource UiFont}" UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="64" />
+            <RowDefinition Height="3" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="34" />
+        </Grid.RowDefinitions>
+
+        <!-- Topo azul-marinho -->
+        <Border Background="{StaticResource NavyBrush}" Padding="24,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Image x:Name="LogoImage" Width="38" Height="38" VerticalAlignment="Center"
+                       RenderOptions.BitmapScalingMode="HighQuality" />
+                <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                    <TextBlock x:Name="AppNameText" FontSize="16.5" FontWeight="SemiBold" Foreground="{StaticResource TextOnNavyBrush}" />
+                    <TextBlock x:Name="TaglineText" FontSize="12" Margin="0,1,0,0" Foreground="{StaticResource TextOnNavyMutedBrush}"
+                               TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <Button x:Name="LicenseButton" Grid.Column="2" Style="{StaticResource NavyButton}" Click="OnLicenseClick"
+                        ToolTip="Ver ou alterar a ativação deste computador">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse x:Name="LicenseDot" Width="8" Height="8" VerticalAlignment="Center"
+                                 Fill="{StaticResource TextOnNavyMutedBrush}" />
+                        <TextBlock x:Name="LicenseText" Margin="8,0,0,0" Text="Verificando..." VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+        <Rectangle Grid.Row="1" Fill="{StaticResource AccentGradientBrush}" />
+
+        <!-- Conteúdo -->
+        <ContentControl x:Name="ToolHost" Grid.Row="2" Focusable="False" />
+
+        <Grid x:Name="LockedPanel" Grid.Row="2">
+            <Border Style="{StaticResource Card}" Width="440" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Padding="32,30">
+                <StackPanel>
+                    <Image x:Name="LockedLogo" Width="72" Height="72" RenderOptions.BitmapScalingMode="HighQuality" />
+                    <TextBlock x:Name="LockedTitle" Margin="0,16,0,0" FontSize="18" FontWeight="SemiBold"
+                               HorizontalAlignment="Center" TextAlignment="Center" Foreground="{StaticResource TextBrush}" />
+                    <TextBlock x:Name="LockedMessage" Margin="0,6,0,0" FontSize="13" HorizontalAlignment="Center"
+                               TextAlignment="Center" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}" />
+                    <StackPanel x:Name="LockedActions" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,22,0,0">
+                        <Button Content="Comprar licença" Margin="0,0,10,0" Click="OnBuyClick" />
+                        <Button Content="Ativar licença" Style="{StaticResource PrimaryButton}" Click="OnLicenseClick" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Rodapé azul-marinho -->
+        <Border Grid.Row="3" Background="{StaticResource NavyBrush}" Padding="24,0">
+            <DockPanel VerticalAlignment="Center" LastChildFill="False">
+                <TextBlock x:Name="FooterText" DockPanel.Dock="Left" FontSize="12" Foreground="{StaticResource TextOnNavyMutedBrush}" />
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Style="{StaticResource NavyLinkButton}" Content="Minhas licenças" Click="OnAccountClick" />
+                    <TextBlock Text="·" Margin="10,0" Foreground="{StaticResource TextOnNavyMutedBrush}" />
+                    <Button Style="{StaticResource NavyLinkButton}" Content="win-portal.vercel.app" Click="OnSiteClick" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

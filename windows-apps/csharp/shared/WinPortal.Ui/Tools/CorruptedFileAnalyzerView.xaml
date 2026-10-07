@@ -1,0 +1,60 @@
+<UserControl x:Class="WinPortal.Ui.Tools.CorruptedFileAnalyzerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:WinPortal.Ui.Controls">
+    <controls:ToolPage x:Name="Page">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Pasta e ações -->
+            <Border Style="{StaticResource Card}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="130" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Pasta-alvo" Style="{StaticResource FieldLabelText}" />
+                    <TextBox x:Name="PathBox" Grid.Column="1" TextChanged="OnPathChanged" />
+                    <Button x:Name="SelectButton" Grid.Column="2" Content="Selecionar" Margin="12,0,0,0" Click="OnSelect" />
+                    <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,16,0,0">
+                        <Button x:Name="StartButton" Content="Iniciar" Style="{StaticResource PrimaryButton}" IsEnabled="False" Click="OnStart" />
+                        <Button x:Name="StopButton" Content="Parar" Style="{StaticResource DangerButton}" Margin="10,0,0,0" IsEnabled="False" Click="OnStop" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Progresso -->
+            <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,16,0,0" Padding="20,16">
+                <StackPanel>
+                    <ProgressBar x:Name="Progress" />
+                    <TextBlock x:Name="StatusText" Style="{StaticResource StatusText}" Margin="0,10,0,0"
+                               Text="Selecione uma pasta e clique em Iniciar." />
+                </StackPanel>
+            </Border>
+
+            <!-- Resultados -->
+            <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,16,0,0" Padding="20,16">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="ARQUIVOS CORROMPIDOS" Style="{StaticResource SectionLabelText}" />
+                    <controls:LogConsole x:Name="Results" Grid.Row="1" Visibility="Collapsed" />
+                    <TextBlock x:Name="EmptyResults" Grid.Row="1" Style="{StaticResource StatusText}"
+                               Foreground="{StaticResource TextSubtleBrush}" VerticalAlignment="Center" HorizontalAlignment="Center"
+                               Text="Os arquivos corrompidos encontrados aparecem aqui." />
+                </Grid>
+            </Border>
+        </Grid>
+    </controls:ToolPage>
+</UserControl>

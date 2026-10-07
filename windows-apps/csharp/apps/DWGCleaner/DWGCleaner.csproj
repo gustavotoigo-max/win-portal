@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>DWGCleaner</AssemblyName>
+    <RootNamespace>WinPortal.Apps.DwgCleaner</RootNamespace>
+    <Description>DWG Cleaner - verificação de desenhos DWG corrompidos</Description>
+  </PropertyGroup>
+</Project>

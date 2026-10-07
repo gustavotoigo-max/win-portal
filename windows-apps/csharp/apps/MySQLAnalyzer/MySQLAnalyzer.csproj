@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>MySQLAnalyzer</AssemblyName>
+    <RootNamespace>WinPortal.Apps.MySqlAnalyzer</RootNamespace>
+    <Description>MySQL Analyzer - análise heurística de arquivos de banco MySQL</Description>
+  </PropertyGroup>
+</Project>

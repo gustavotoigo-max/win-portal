@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>FirebirdAnalyzer</AssemblyName>
+    <RootNamespace>WinPortal.Apps.FirebirdAnalyzer</RootNamespace>
+    <Description>Firebird Analyzer - validador de bancos Firebird (gfix -v -full)</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
+  </ItemGroup>
+</Project>
