@@ -3,19 +3,36 @@
 O código do site e dos aplicativos já usa o nome Nexotool. Os itens abaixo ficam em
 painéis externos e só você pode alterar. Faça na ordem.
 
-## 1. Domínio nexotool.com.br (Registro.br + Vercel)
-1. Na Vercel, abra o projeto do site → **Settings → Domains** → **Add** e adicione
-   `nexotool.com.br` e `www.nexotool.com.br`. A Vercel mostra os registros DNS (A/CNAME).
-2. No Registro.br (ou onde o domínio estiver), em **DNS**, crie exatamente esses registros.
-3. De volta na Vercel, marque `nexotool.com.br` como domínio principal e deixe o `www`
-   redirecionando para ele.
-4. **Não remova `win-portal.vercel.app`** e não renomeie o projeto na Vercel: os aplicativos
-   (inclusive os antigos em Python) ativam licenças e procuram atualizações nesse endereço.
+## 1. Domínio www.nexotool.com.br (Registro.br + Vercel)
+O endereço principal é `www.nexotool.com.br`; `nexotool.com.br` (sem www) só redireciona para ele.
+
+**Na Vercel** (vercel.com → projeto `win-portal` → **Settings → Domains**):
+1. Clique em **Add Domain**, digite `www.nexotool.com.br` e confirme.
+2. Quando a Vercel perguntar, aceite também adicionar `nexotool.com.br` redirecionando para o www
+   (ou adicione `nexotool.com.br` à parte e escolha **Redirect to www.nexotool.com.br**, 308).
+3. A Vercel mostra os registros DNS que faltam. Normalmente são:
+   | Tipo | Nome | Valor |
+   | --- | --- | --- |
+   | A | (vazio / `@`) | `76.76.21.21` |
+   | CNAME | `www` | `cname.vercel-dns.com` |
+   Se a tela mostrar valores diferentes, use os da tela.
+
+**No Registro.br** (registro.br → **Meus domínios** → `nexotool.com.br`):
+1. Em **DNS**, confirme que está usando os servidores DNS do Registro.br
+   (se não, clique em **Alterar servidores DNS → Utilizar os DNS do Registro.br**).
+2. Clique em **Configurar zona DNS** / **Editar zona** → **Nova entrada** e crie os dois registros acima.
+3. Salve. A propagação costuma levar de minutos a algumas horas.
+
+**De volta na Vercel**: espere os dois domínios ficarem com **Valid Configuration** (o certificado
+HTTPS é emitido sozinho). Teste `https://www.nexotool.com.br` e `https://nexotool.com.br`.
+
+**Não remova `win-portal.vercel.app`** e não renomeie o projeto na Vercel: os aplicativos
+(inclusive os antigos em Python) ativam licenças e procuram atualizações nesse endereço.
 
 ## 2. Variáveis de ambiente (Vercel → Settings → Environment Variables, Production)
 | Variável | Novo valor |
 | --- | --- |
-| `NEXT_PUBLIC_SITE_URL` | `https://nexotool.com.br` |
+| `NEXT_PUBLIC_SITE_URL` | `https://www.nexotool.com.br` |
 | `LICENSE_EMAIL_FROM` | `Nexotool <licencas@nexotool.com.br>` (depois do passo 4) |
 | `LICENSE_APP_ID` | **não altere** (`com.winportal.windowssoftware`) |
 Depois de salvar, faça **Redeploy** do último deploy de produção.
@@ -39,9 +56,9 @@ Depois de salvar, faça **Redeploy** do último deploy de produção.
 3. Só depois de verificado, troque `LICENSE_EMAIL_FROM` (passo 2) e faça o redeploy.
 
 ## 5. Stripe (se estiver em uso)
-1. **Settings → Business → Public details**: nome "Nexotool", site `https://nexotool.com.br`.
+1. **Settings → Business → Public details**: nome "Nexotool", site `https://www.nexotool.com.br`.
 2. **Developers → Webhooks**: se quiser usar o domínio novo, crie um endpoint
-   `https://nexotool.com.br/api/stripe/webhook` e troque `STRIPE_WEBHOOK_SECRET` pelo segredo dele.
+   `https://www.nexotool.com.br/api/stripe/webhook` e troque `STRIPE_WEBHOOK_SECRET` pelo segredo dele.
    O endpoint atual em vercel.app continua funcionando se preferir não mexer.
 
 ## 6. GitHub
