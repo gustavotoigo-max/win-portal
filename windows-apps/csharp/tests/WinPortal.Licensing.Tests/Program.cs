@@ -138,6 +138,15 @@ if (live)
     Check("Portal real aceitou o formato do pedido (chave inexistente)", real.Code == "SERVER_DENIED" && real.Message.Contains("Licenca nao encontrada"));
 }
 
+// Reabrir a ativação cria um novo cliente sobre o HttpClient compartilhado, que já fez
+// uma requisição; isso não pode lançar exceção.
+LicensingApiClient.HandlerFactoryOverride = null;
+new ActivationService(product).ActivateAndSave("reabrir@exemplo.com", "WIN-0000-0000-0000-0000");
+var reopenError = "";
+try { new ActivationService(product).ActivateAndSave("reabrir@exemplo.com", "WIN-0000-0000-0000-0000"); }
+catch (Exception ex) { reopenError = ex.Message; }
+Check($"Ativação pode ser aberta de novo após uma requisição {reopenError}".TrimEnd(), reopenError.Length == 0);
+
 tempLocal.Delete(true);
 Console.WriteLine(failures == 0 ? "\nTodos os testes passaram." : $"\n{failures} teste(s) falharam.");
 return failures == 0 ? 0 : 1;
