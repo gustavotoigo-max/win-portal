@@ -13,10 +13,10 @@
   --line: #e3e7ee;
   --line-strong: #cfd6e1;
 
-  --brand: #0e8f8a;
-  --brand-600: #0b7773;
-  --brand-50: #e6f6f5;
-  --brand-ink: #064e4b;
+  --brand: #2563eb;
+  --brand-600: #1d4ed8;
+  --brand-50: #eaf1fe;
+  --brand-ink: #1e3a8a;
 
   --navy: #0b1324;
   --navy-2: #111d35;
@@ -37,16 +37,16 @@
 
   /* Tokens adicionados para o tema escuro (valores do tema claro inalterados) */
   --surface-3: #e8edf4;
-  --brand-hover: #0b7773;
-  --brand-glow: rgba(14, 143, 138, 0.25);
-  --focus-ring: rgba(14, 143, 138, 0.15);
+  --brand-hover: #1d4ed8;
+  --brand-glow: rgba(37, 99, 235, 0.25);
+  --focus-ring: rgba(37, 99, 235, 0.15);
   --danger-solid: #c2352f;
   --danger-solid-hover: #a42a25;
   --header-bg: rgba(255, 255, 255, 0.86);
   --backdrop: rgba(11, 19, 36, 0.55);
   --step-bg: var(--navy);
   --avatar-bg: var(--navy);
-  --bundle-end: #064e4b;
+  --bundle-end: #1e3a8a;
   --switch-active-bg: #ffffff;
 
   --tone-blue-bg: #eaf1ff;
@@ -62,7 +62,7 @@
   --on-navy-muted: #9ba6ba;
   --on-navy-faint: #8e9ab0;
   --on-navy-cta: #b4bed0;
-  --on-navy-accent: #5fd4cc;
+  --on-navy-accent: #7cc4fa;
   --on-navy-line: rgba(255, 255, 255, 0.1);
   --on-navy-line-soft: rgba(255, 255, 255, 0.08);
   --light-btn-bg: #ffffff;
@@ -87,13 +87,13 @@
   --line: #22304a;
   --line-strong: #31415f;
 
-  --brand: #0e8f8a;
-  --brand-600: #3cc6bc;
-  --brand-50: #0f2c33;
-  --brand-ink: #8fe3dc;
-  --brand-hover: #0b7773;
-  --brand-glow: rgba(14, 143, 138, 0.3);
-  --focus-ring: rgba(60, 198, 188, 0.25);
+  --brand: #2563eb;
+  --brand-600: #7aa7ff;
+  --brand-50: #13213f;
+  --brand-ink: #b6ccff;
+  --brand-hover: #1d4ed8;
+  --brand-glow: rgba(37, 99, 235, 0.3);
+  --focus-ring: rgba(96, 165, 250, 0.25);
 
   --navy: #070c18;
   --navy-2: #0f1b33;
@@ -115,7 +115,7 @@
   --backdrop: rgba(2, 6, 14, 0.7);
   --step-bg: #1d2b47;
   --avatar-bg: #1d2b47;
-  --bundle-end: #064e4b;
+  --bundle-end: #1e3a8a;
   --switch-active-bg: #26365a;
 
   --tone-blue-bg: #16264a;
@@ -140,13 +140,13 @@
     --line: #22304a;
     --line-strong: #31415f;
 
-    --brand: #0e8f8a;
-    --brand-600: #3cc6bc;
-    --brand-50: #0f2c33;
-    --brand-ink: #8fe3dc;
-    --brand-hover: #0b7773;
-    --brand-glow: rgba(14, 143, 138, 0.3);
-    --focus-ring: rgba(60, 198, 188, 0.25);
+    --brand: #2563eb;
+    --brand-600: #7aa7ff;
+    --brand-50: #13213f;
+    --brand-ink: #b6ccff;
+    --brand-hover: #1d4ed8;
+    --brand-glow: rgba(37, 99, 235, 0.3);
+    --focus-ring: rgba(96, 165, 250, 0.25);
 
     --navy: #070c18;
     --navy-2: #0f1b33;
@@ -168,7 +168,7 @@
     --backdrop: rgba(2, 6, 14, 0.7);
     --step-bg: #1d2b47;
     --avatar-bg: #1d2b47;
-    --bundle-end: #064e4b;
+    --bundle-end: #1e3a8a;
     --switch-active-bg: #26365a;
 
     --tone-blue-bg: #16264a;
@@ -545,33 +545,47 @@ p {
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
+  gap: 9px;
   border-radius: 8px;
   line-height: 0;
 }
 
-.brand-logo {
+.brand-symbol {
   display: block;
-  width: auto;
-  height: 36px;
+  width: 30px;
+  height: 30px;
 }
 
-/* Em fundos escuros o contorno navy do logotipo some no fundo; um halo
-   suave mantem a silhueta legivel. */
-:root[data-theme="dark"] .brand-logo,
-.site-footer .brand-logo,
-.auth-aside .brand-logo {
-  filter: drop-shadow(0 0 0.75px rgba(205, 238, 255, 0.85)) drop-shadow(0 0 8px rgba(56, 189, 248, 0.14));
+.brand-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  color: var(--ink);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .brand-logo {
-    filter: drop-shadow(0 0 0.75px rgba(205, 238, 255, 0.85)) drop-shadow(0 0 8px rgba(56, 189, 248, 0.14));
-  }
+.brand-name-accent {
+  color: var(--brand);
+}
+
+.site-footer .brand-name,
+.auth-aside .brand-name {
+  color: var(--on-navy);
+}
+
+.site-footer .brand-name-accent,
+.auth-aside .brand-name-accent {
+  color: var(--on-navy-accent);
 }
 
 @media (max-width: 480px) {
-  .brand-logo {
-    height: 30px;
+  .brand-symbol {
+    width: 26px;
+    height: 26px;
+  }
+
+  .brand-name {
+    font-size: 1.125rem;
   }
 }
 
@@ -914,7 +928,7 @@ p {
   overflow: hidden;
   padding: 88px 0 40px;
   background:
-    radial-gradient(900px 480px at 85% -10%, rgba(14, 143, 138, 0.35), transparent 60%),
+    radial-gradient(900px 480px at 85% -10%, rgba(37, 99, 235, 0.35), transparent 60%),
     radial-gradient(700px 400px at -10% 110%, rgba(47, 95, 208, 0.25), transparent 60%),
     var(--navy);
   color: var(--on-navy);
@@ -1047,7 +1061,7 @@ p {
   display: block;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, var(--brand), #3fc6bd);
+  background: linear-gradient(90deg, var(--brand), #38bdf8);
   animation: fill 2.4s ease-out both;
 }
 
@@ -1285,7 +1299,7 @@ p {
   padding: 44px 48px;
   border-radius: 24px;
   background:
-    radial-gradient(600px 300px at 100% 0%, rgba(95, 212, 204, 0.3), transparent 60%),
+    radial-gradient(600px 300px at 100% 0%, rgba(56, 189, 248, 0.3), transparent 60%),
     linear-gradient(135deg, var(--navy-2), var(--bundle-end));
   color: var(--on-navy);
 }
@@ -1514,7 +1528,7 @@ p {
   padding: 64px 32px;
   border-radius: 24px;
   background:
-    radial-gradient(500px 260px at 50% 0%, rgba(14, 143, 138, 0.35), transparent 70%),
+    radial-gradient(500px 260px at 50% 0%, rgba(37, 99, 235, 0.35), transparent 70%),
     var(--navy);
   color: var(--on-navy);
   text-align: center;
@@ -1888,7 +1902,7 @@ select:focus {
   gap: 40px;
   padding: 48px;
   background:
-    radial-gradient(500px 360px at 100% 0%, rgba(14, 143, 138, 0.35), transparent 60%),
+    radial-gradient(500px 360px at 100% 0%, rgba(37, 99, 235, 0.35), transparent 60%),
     var(--navy);
   color: var(--on-navy);
 }

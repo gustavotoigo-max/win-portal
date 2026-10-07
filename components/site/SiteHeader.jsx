@@ -5,20 +5,23 @@ import ThemeSwitcher from "@/components/site/ThemeSwitcher";
 import UserMenu from "@/components/site/UserMenu";
 import { getProductPagesByCategory } from "@/lib/product-pages";
 
-// Logotipo Nexotool (simbolo + "Nexo"). O arquivo tem 300x80 px, o dobro do
-// tamanho exibido, para ficar nitido em telas de alta densidade.
+// Logotipo Nexotool: símbolo vetorial plano e o nome em texto, no mesmo peso
+// visual da interface. A arte original (com brilho) fica em brand/nexo-brand-v1.
 export function Brand({ priority = false }) {
   return (
     <Link className="brand" href="/pt" aria-label="Nexotool, página inicial">
       <Image
-        className="brand-logo"
-        src="/brand/nexo-logo.webp"
-        alt="Nexotool, página inicial"
-        width={300}
-        height={80}
+        className="brand-symbol"
+        src="/brand/nexotool-symbol.svg"
+        alt=""
+        width={30}
+        height={30}
         priority={priority}
         unoptimized
       />
+      <span className="brand-name" aria-hidden="true">
+        Nexo<span className="brand-name-accent">tool</span>
+      </span>
     </Link>
   );
 }
