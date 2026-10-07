@@ -122,7 +122,7 @@ e não devem ser renomeados. O valor `software` devolvido no payload é sempre
 | rename-folder | RenameFolder | RenameFolder.exe |
 | mdb-integrity | MDBIntegrity | MDBIntegrity.exe |
 | empty-folder-cleaner | EmptyFolderCleaner | EmptyFolders.exe |
-| complete-solution | SolucaoCompleta | OfficeCleaner.exe |
+| complete-solution | SolucaoCompleta | SolucaoCompleta.exe |
 
 ## Variáveis de ambiente do contrato
 

@@ -57,8 +57,8 @@ export default function LicenseCard({ license }) {
 
       {product && (
         <footer className="license-card-foot">
-          <a className="btn btn-ghost btn-sm" href={product.downloadUrl} download={product.releaseAsset} target="_blank" rel="noopener noreferrer">
-            <Icon name="download" size={16} /> Baixar {product.releaseAsset}
+          <a className="btn btn-ghost btn-sm" href={product.downloadUrl}>
+            <Icon name="download" size={16} /> Baixar instalador
           </a>
           <Link className="link-muted" href={`/pt/solucoes/${product.id}`}>Página do produto</Link>
         </footer>

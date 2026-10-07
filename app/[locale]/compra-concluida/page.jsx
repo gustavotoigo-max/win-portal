@@ -48,8 +48,8 @@ export default async function PurchaseDonePage({ searchParams }) {
               <span className="step-number">1</span>
               <div>
                 <strong>Baixe o instalador</strong>
-                <a className="btn btn-primary btn-sm" href={product.downloadUrl} download={product.releaseAsset} target="_blank" rel="noopener noreferrer">
-                  <Icon name="download" size={16} /> {product.releaseAsset}
+                <a className="btn btn-primary btn-sm" href={product.downloadUrl}>
+                  <Icon name="download" size={16} /> {product.installerName}
                 </a>
               </div>
             </li>

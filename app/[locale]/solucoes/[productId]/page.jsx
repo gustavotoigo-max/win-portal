@@ -1,3 +1,4 @@
+import DownloadNotice from "@/components/site/DownloadNotice";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Icon from "@/components/site/Icon";
@@ -83,13 +84,8 @@ export default async function ProductPage({ params }) {
             <Link className="btn btn-primary btn-lg btn-block" href={`/pt/comprar/${product.id}`}>
               <Icon name="cart" size={18} /> Comprar licença
             </Link>
-            <a
-              className="btn btn-ghost btn-block"
-              download={product.releaseAsset}
-              href={product.downloadUrl}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
+            <DownloadNotice />
+            <a className="btn btn-ghost btn-block" href={product.downloadUrl}>
               <Icon name="download" size={18} /> Baixar instalador
               {release?.size ? <small className="muted-inline">{formatSize(release.size)}</small> : null}
             </a>
@@ -135,7 +131,7 @@ export default async function ProductPage({ params }) {
             <span className="eyebrow">Ativação</span>
             <h3>Como ativar depois da compra</h3>
             <ol className="mini-steps">
-              <li>Baixe e instale o <strong>{product.releaseAsset}</strong>.</li>
+              <li>Baixe e execute o <strong>{product.installerName}</strong>.</li>
               <li>Abra o aplicativo e vá até a tela de ativação.</li>
               <li>Informe o e-mail da sua conta e a chave exibida em <Link href="/pt/dashboard">Minha conta</Link>.</li>
             </ol>
