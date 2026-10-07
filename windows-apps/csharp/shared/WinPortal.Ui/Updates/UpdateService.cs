@@ -30,7 +30,7 @@ public static class UpdateService
     private static readonly Lazy<HttpClient> Http = new(() =>
     {
         var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = true }) { Timeout = Timeout.InfiniteTimeSpan };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("WinPortal-Updater/1.0");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("Nexotool-Updater/1.0");
         return client;
     });
 

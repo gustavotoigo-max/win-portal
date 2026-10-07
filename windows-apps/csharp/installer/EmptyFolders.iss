@@ -1,10 +1,28 @@
 ﻿; Instalador do Empty Folders (versão C#/.NET 8) - gerado para Inno Setup 6.3+
-; Compile depois de publicar o aplicativo com build_all.ps1 (pasta ..\publish\EmptyFolders).
+; Compile depois de publicar o aplicativo com build_all.ps1.
 
 #define AppName "Empty Folders"
 #define AppExe "EmptyFolders.exe"
+; Pastas usadas pelo script. O build_all.ps1 também deixa uma cópia pronta deste script
+; na pasta do executável (publish\EmptyFolders), com o ícone e as imagens em "instalador".
+#ifndef PublishDir
+  #define PublishDir "..\publish\EmptyFolders"
+#endif
+#ifndef AssetsDir
+  #define AssetsDir "..\apps\EmptyFolders\Assets"
+#endif
+#ifndef BrandingDir
+  #define BrandingDir "branding"
+#endif
+#ifndef OutputFolder
+  #define OutputFolder "..\dist\instaladores"
+#endif
+; A versão vem do próprio executável (2.0.0.0 vira 2.0.0); /DAppVersion=x.y.z força outra.
 #ifndef AppVersion
-  #define AppVersion "2.0.0"
+  #define AppVersion RemoveFileExt(GetVersionNumbersString(AddBackslash(SourcePath) + PublishDir + "\" + AppExe))
+#endif
+#if AppVersion == ""
+  #error Executável não encontrado em PublishDir. Rode o build_all.ps1 antes de compilar o instalador.
 #endif
 
 [Setup]
@@ -12,29 +30,29 @@ AppId={{03BA30AC-B7A1-56E8-BD10-ED057E4F17F9}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
-AppPublisher=WinPortal
-AppPublisherURL=https://win-portal.vercel.app
-AppSupportURL=https://win-portal.vercel.app/pt/dashboard
-AppUpdatesURL=https://win-portal.vercel.app/pt/solucoes
+AppPublisher=Nexotool
+AppPublisherURL=https://nexotool.com.br
+AppSupportURL=https://nexotool.com.br/pt/dashboard
+AppUpdatesURL=https://nexotool.com.br/pt/solucoes
 AppComments=Organização de pastas
-VersionInfoCompany=WinPortal
+VersionInfoCompany=Nexotool
 VersionInfoDescription={#AppName} - instalador
 VersionInfoVersion={#AppVersion}
-DefaultDirName={autopf}\WinPortal\{#AppName}
-DefaultGroupName=WinPortal\{#AppName}
+DefaultDirName={autopf}\Nexotool\{#AppName}
+DefaultGroupName=Nexotool\{#AppName}
 DisableProgramGroupPage=yes
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
 PrivilegesRequired=admin
-OutputDir=..\dist\instaladores
+OutputDir={#OutputFolder}
 OutputBaseFilename=EmptyFolders-Setup-{#AppVersion}
-SetupIconFile=..\apps\EmptyFolders\Assets\app.ico
+SetupIconFile={#AssetsDir}\app.ico
 UninstallDisplayIcon={app}\{#AppExe}
 UninstallDisplayName={#AppName}
 WizardStyle=modern
-WizardImageFile=branding\EmptyFolders-wizard.bmp,branding\EmptyFolders-wizard@2x.bmp
-WizardSmallImageFile=branding\EmptyFolders-small.bmp,branding\EmptyFolders-small@2x.bmp
+WizardImageFile={#BrandingDir}\EmptyFolders-wizard.bmp,{#BrandingDir}\EmptyFolders-wizard@2x.bmp
+WizardSmallImageFile={#BrandingDir}\EmptyFolders-small.bmp,{#BrandingDir}\EmptyFolders-small@2x.bmp
 Compression=lzma2/max
 SolidCompression=yes
 CloseApplications=yes
@@ -46,7 +64,7 @@ Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortugue
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
-Source: "..\publish\EmptyFolders\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "*.pdb"
+Source: "{#PublishDir}\{#AppExe}"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"

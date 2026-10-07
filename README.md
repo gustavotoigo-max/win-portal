@@ -1,7 +1,13 @@
-# WinPortal
+# Nexotool
 
 Portal Next.js para cadastro de clientes, administracao de licencas, downloads e
-ativacao dos aplicativos WinPortal. O backend usa Neon PostgreSQL e Neon Auth.
+ativacao dos aplicativos Nexotool (nexotool.com.br). O backend usa Neon PostgreSQL e
+Neon Auth.
+
+O site foi renomeado de WinPortal para Nexotool. Identificadores internos como o
+`app_id` `com.winportal.windowssoftware`, o nome do pacote e o repositorio
+`gustavotoigo-max/win-portal` mantem o nome antigo de proposito: as licencas ja
+emitidas sao assinadas com eles.
 
 ## Configuracao do Neon
 

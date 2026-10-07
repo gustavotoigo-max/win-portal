@@ -7,15 +7,24 @@ const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-san
 export const metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
   title: {
-    default: "WinPortal | Ferramentas para recuperação de dados e organização de arquivos",
-    template: "%s | WinPortal"
+    default: "Nexotool | Ferramentas para recuperação de dados e organização de arquivos",
+    template: "%s | Nexotool"
   },
   description:
     "Ferramentas Windows para recuperação de dados, diagnóstico de bancos e organização de arquivos. Compre, baixe e gerencie suas licenças em um só lugar.",
+  applicationName: "Nexotool",
+  openGraph: {
+    siteName: "Nexotool",
+    locale: "pt_BR",
+    type: "website"
+  },
+  // app/icon.png e app/apple-icon.png (convencao de arquivos do Next) geram as
+  // tags <link rel="icon"> e <link rel="apple-touch-icon">; o favicon.png fica
+  // como atalho para navegadores antigos.
   icons: {
-    icon: "/favicon.png",
+    icon: [{ url: "/icon.png", type: "image/png", sizes: "256x256" }],
     shortcut: "/favicon.png",
-    apple: "/favicon.png"
+    apple: [{ url: "/apple-icon.png", sizes: "180x180" }]
   }
 };
 

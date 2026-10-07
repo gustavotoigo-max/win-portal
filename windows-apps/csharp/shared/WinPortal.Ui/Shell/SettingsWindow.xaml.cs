@@ -33,7 +33,7 @@ public partial class SettingsWindow : Window
         }
         ThemeHint.Text = mode == ThemeMode.Auto
             ? $"Segue o tema do Windows (agora: {(ThemeManager.WindowsPrefersDark() ? "escuro" : "claro")})."
-            : "O mesmo tema vale para todos os aplicativos WinPortal deste computador.";
+            : "O mesmo tema vale para todos os aplicativos Nexotool deste computador.";
     }
 
     private void OnTheme(object sender, RoutedEventArgs e)

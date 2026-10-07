@@ -35,6 +35,29 @@ if ($RunTests) {
     }
 }
 
+# Deixa o script do Inno Setup pronto na pasta do executável: publish\<App>\<App>.iss,
+# com o ícone e as imagens do assistente em publish\<App>\instalador. Basta abrir o .iss
+# no Inno Setup e compilar; o instalador sai em publish\<App>\Setup.
+function New-InstallerKit([string]$name, [string]$output) {
+    $source = Join-Path $root "installer\$name.iss"
+    if (-not (Test-Path $source)) { return }
+    $kit = Join-Path $output "instalador"
+    New-Item -ItemType Directory -Force -Path $kit | Out-Null
+    Copy-Item (Join-Path $root "apps\$name\Assets\app.ico") $kit -Force
+    Get-ChildItem (Join-Path $root "installer\branding") -Filter "$name-*.bmp" | Copy-Item -Destination $kit -Force
+    $header = @(
+        "; Cópia gerada pelo build_all.ps1 a partir de installer\$name.iss.",
+        "; Abra no Inno Setup e compile; o instalador sai na pasta Setup.",
+        '#define PublishDir "."',
+        '#define AssetsDir "instalador"',
+        '#define BrandingDir "instalador"',
+        '#define OutputFolder "Setup"',
+        ""
+    ) -join "`r`n"
+    $body = [System.IO.File]::ReadAllText($source, [System.Text.Encoding]::UTF8)
+    [System.IO.File]::WriteAllText((Join-Path $output "$name.iss"), $header + $body, (New-Object System.Text.UTF8Encoding $true))
+}
+
 $projects = Get-ChildItem -Path (Join-Path $root "apps") -Directory |
     Where-Object { Test-Path (Join-Path $_.FullName "$($_.Name).csproj") } |
     Where-Object { $App -eq "" -or $_.Name -eq $App }
@@ -48,7 +71,9 @@ foreach ($project in $projects) {
     if ($LASTEXITCODE -ne 0) {
         Write-Host "FALHA ao publicar $name." -ForegroundColor Red
         $failures += $name
+        continue
     }
+    New-InstallerKit $name $output
 }
 
 if (-not $SkipInstallers) {
@@ -81,4 +106,5 @@ if ($failures.Count -gt 0) {
     exit 1
 }
 Write-Host "Executaveis em: $publishRoot" -ForegroundColor Green
+Write-Host "Script do Inno pronto em cada pasta: publish\<App>\<App>.iss" -ForegroundColor Green
 if (-not $SkipInstallers) { Write-Host "Instaladores em: $(Join-Path $root 'dist\instaladores')" -ForegroundColor Green }

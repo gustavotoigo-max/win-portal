@@ -46,7 +46,7 @@ public partial class ShellWindow : Window
         LockedLogo.Source = logo;
         AppNameText.Text = product.AppName;
         TaglineText.Text = product.Tagline;
-        FooterText.Text = $"WinPortal · {product.AppName} {product.Version}";
+        FooterText.Text = $"{Brand.Name} · {product.AppName} {product.Version}";
 
         ShowLocked("Verificando ativação...", "Aguarde um instante.", showActions: false);
         SetLicenseBadge("Verificando...", "TextOnNavyMutedBrush");
@@ -322,5 +322,5 @@ public partial class ShellWindow : Window
     private void OnLicenseClick(object sender, RoutedEventArgs e) => OpenActivation();
     private void OnBuyClick(object sender, RoutedEventArgs e) => Browser.Open(LicensingConfig.ProductUrl(_product.Identity.ProductId));
     private void OnAccountClick(object sender, RoutedEventArgs e) => Browser.Open(LicensingConfig.AccountUrl);
-    private void OnSiteClick(object sender, RoutedEventArgs e) => Browser.Open(LicensingConfig.LicenseServerBaseUrl);
+    private void OnSiteClick(object sender, RoutedEventArgs e) => Browser.Open(Brand.SiteUrl);
 }

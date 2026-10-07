@@ -1,10 +1,28 @@
 ﻿; Instalador do Office Cleaner (versão C#/.NET 8) - gerado para Inno Setup 6.3+
-; Compile depois de publicar o aplicativo com build_all.ps1 (pasta ..\publish\OfficeCleaner).
+; Compile depois de publicar o aplicativo com build_all.ps1.
 
 #define AppName "Office Cleaner"
 #define AppExe "OfficeCleaner.exe"
+; Pastas usadas pelo script. O build_all.ps1 também deixa uma cópia pronta deste script
+; na pasta do executável (publish\OfficeCleaner), com o ícone e as imagens em "instalador".
+#ifndef PublishDir
+  #define PublishDir "..\publish\OfficeCleaner"
+#endif
+#ifndef AssetsDir
+  #define AssetsDir "..\apps\OfficeCleaner\Assets"
+#endif
+#ifndef BrandingDir
+  #define BrandingDir "branding"
+#endif
+#ifndef OutputFolder
+  #define OutputFolder "..\dist\instaladores"
+#endif
+; A versão vem do próprio executável (2.0.0.0 vira 2.0.0); /DAppVersion=x.y.z força outra.
 #ifndef AppVersion
-  #define AppVersion "2.0.0"
+  #define AppVersion RemoveFileExt(GetVersionNumbersString(AddBackslash(SourcePath) + PublishDir + "\" + AppExe))
+#endif
+#if AppVersion == ""
+  #error Executável não encontrado em PublishDir. Rode o build_all.ps1 antes de compilar o instalador.
 #endif
 
 [Setup]
@@ -12,29 +30,29 @@ AppId={{8457915C-9334-5802-9668-34520BE9CDCC}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
-AppPublisher=WinPortal
-AppPublisherURL=https://win-portal.vercel.app
-AppSupportURL=https://win-portal.vercel.app/pt/dashboard
-AppUpdatesURL=https://win-portal.vercel.app/pt/solucoes
+AppPublisher=Nexotool
+AppPublisherURL=https://nexotool.com.br
+AppSupportURL=https://nexotool.com.br/pt/dashboard
+AppUpdatesURL=https://nexotool.com.br/pt/solucoes
 AppComments=Diagnóstico de documentos Word e Excel
-VersionInfoCompany=WinPortal
+VersionInfoCompany=Nexotool
 VersionInfoDescription={#AppName} - instalador
 VersionInfoVersion={#AppVersion}
-DefaultDirName={autopf}\WinPortal\{#AppName}
-DefaultGroupName=WinPortal\{#AppName}
+DefaultDirName={autopf}\Nexotool\{#AppName}
+DefaultGroupName=Nexotool\{#AppName}
 DisableProgramGroupPage=yes
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
 PrivilegesRequired=admin
-OutputDir=..\dist\instaladores
+OutputDir={#OutputFolder}
 OutputBaseFilename=OfficeCleaner-Setup-{#AppVersion}
-SetupIconFile=..\apps\OfficeCleaner\Assets\app.ico
+SetupIconFile={#AssetsDir}\app.ico
 UninstallDisplayIcon={app}\{#AppExe}
 UninstallDisplayName={#AppName}
 WizardStyle=modern
-WizardImageFile=branding\OfficeCleaner-wizard.bmp,branding\OfficeCleaner-wizard@2x.bmp
-WizardSmallImageFile=branding\OfficeCleaner-small.bmp,branding\OfficeCleaner-small@2x.bmp
+WizardImageFile={#BrandingDir}\OfficeCleaner-wizard.bmp,{#BrandingDir}\OfficeCleaner-wizard@2x.bmp
+WizardSmallImageFile={#BrandingDir}\OfficeCleaner-small.bmp,{#BrandingDir}\OfficeCleaner-small@2x.bmp
 Compression=lzma2/max
 SolidCompression=yes
 CloseApplications=yes
@@ -46,7 +64,7 @@ Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortugue
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
-Source: "..\publish\OfficeCleaner\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "*.pdb"
+Source: "{#PublishDir}\{#AppExe}"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"

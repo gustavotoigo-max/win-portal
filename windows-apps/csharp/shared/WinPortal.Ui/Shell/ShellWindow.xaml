@@ -100,7 +100,7 @@
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                     <Button Style="{StaticResource NavyLinkButton}" Content="Minhas licenças" Click="OnAccountClick" />
                     <TextBlock Text="·" Margin="10,0" Foreground="{StaticResource TextOnNavyMutedBrush}" />
-                    <Button Style="{StaticResource NavyLinkButton}" Content="win-portal.vercel.app" Click="OnSiteClick" />
+                    <Button Style="{StaticResource NavyLinkButton}" Content="nexotool.com.br" Click="OnSiteClick" />
                 </StackPanel>
             </DockPanel>
         </Border>

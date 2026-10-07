@@ -12,7 +12,7 @@ internal static class Program
             ExecutableName: "SolucaoCompleta",
             Software: "SolucaoCompleta",
             ProductId: "complete-solution"),
-        Tagline: "Todas as ferramentas WinPortal em um só aplicativo")
+        Tagline: "Todas as ferramentas Nexotool em um só aplicativo")
     {
         WindowWidth = 1380,
         WindowHeight = 860,

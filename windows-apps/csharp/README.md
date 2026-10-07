@@ -1,4 +1,4 @@
-# Aplicativos WinPortal em C# (.NET 8 / WPF)
+# Aplicativos Nexotool em C# (.NET 8 / WPF)
 
 Tradução dos 10 aplicativos Python da pasta `aplicativos` para C#, com a identidade
 visual nova do site (azul `#2563EB`, ciano `#22D3EE` nos detalhes, cabeçalho e rodapé
@@ -107,7 +107,7 @@ O botão **Configurações** no cabeçalho de todos os aplicativos tem:
 - **DWG Cleaner** pede confirmação antes de apagar (antes apagava automaticamente),
   igual aos outros analisadores.
 - **Firebird Analyzer** salva o relatório CSV em
-  `Documentos\WinPortal\Firebird Analyzer` (antes ia para a pasta de trabalho atual)
+  `Documentos\Nexotool\Firebird Analyzer` (antes ia para a pasta de trabalho atual)
   e ganhou o botão "Abrir relatório".
 - **Sector DB Repair**: corrigido o erro de nome de função que derrubava o reparo no
   original; os bytes finais que não completam um setor agora são copiados (antes eram

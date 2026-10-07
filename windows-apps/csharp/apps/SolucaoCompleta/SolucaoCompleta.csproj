@@ -2,7 +2,7 @@
   <PropertyGroup>
     <AssemblyName>SolucaoCompleta</AssemblyName>
     <RootNamespace>WinPortal.Apps.SolucaoCompleta</RootNamespace>
-    <Description>Solução Completa - todas as ferramentas WinPortal em um só aplicativo</Description>
+    <Description>Solução Completa - todas as ferramentas Nexotool em um só aplicativo</Description>
   </PropertyGroup>
 
   <!-- As ferramentas são as mesmas dos aplicativos avulsos: o código é compartilhado, não copiado. -->

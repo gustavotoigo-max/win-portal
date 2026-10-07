@@ -3,9 +3,9 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Company>WinPortal</Company>
-    <Authors>WinPortal</Authors>
-    <Copyright>© WinPortal</Copyright>
+    <Company>Nexotool</Company>
+    <Authors>Nexotool</Authors>
+    <Copyright>© Nexotool</Copyright>
     <Version>2.0.0</Version>
     <!-- Permite compilar os projetos WPF fora do Windows (CI/nuvem). -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>

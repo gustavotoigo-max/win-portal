@@ -5,16 +5,20 @@ import ThemeSwitcher from "@/components/site/ThemeSwitcher";
 import UserMenu from "@/components/site/UserMenu";
 import { getProductPagesByCategory } from "@/lib/product-pages";
 
-export function Brand() {
+// Logotipo Nexotool (simbolo + "Nexo"). O arquivo tem 300x80 px, o dobro do
+// tamanho exibido, para ficar nitido em telas de alta densidade.
+export function Brand({ priority = false }) {
   return (
-    <Link className="brand" href="/pt" aria-label="WinPortal, página inicial">
-      <span className="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 32 32" width="30" height="30">
-          <rect width="32" height="32" rx="8" fill="currentColor" />
-          <path d="M8 10.5 11 22l3.5-8 3.5 8 3-11.5" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </span>
-      <span className="brand-name">WinPortal</span>
+    <Link className="brand" href="/pt" aria-label="Nexotool, página inicial">
+      <Image
+        className="brand-logo"
+        src="/brand/nexo-logo.webp"
+        alt="Nexotool, página inicial"
+        width={300}
+        height={80}
+        priority={priority}
+        unoptimized
+      />
     </Link>
   );
 }
@@ -27,7 +31,7 @@ export default function SiteHeader() {
   return (
     <header className="site-header">
       <div className="container header-row">
-        <Brand />
+        <Brand priority />
 
         <nav className="main-nav" aria-label="Navegação principal">
           <div className="mega">

@@ -1,4 +1,4 @@
-/* WinPortal — design system */
+/* Nexotool — design system */
 
 :root {
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -544,14 +544,35 @@ p {
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  font-weight: 800;
-  font-size: 1.12rem;
-  letter-spacing: -0.02em;
+  flex-shrink: 0;
+  border-radius: 8px;
+  line-height: 0;
 }
 
-.brand-mark {
-  color: var(--brand);
+.brand-logo {
+  display: block;
+  width: auto;
+  height: 36px;
+}
+
+/* Em fundos escuros o contorno navy do logotipo some no fundo; um halo
+   suave mantem a silhueta legivel. */
+:root[data-theme="dark"] .brand-logo,
+.site-footer .brand-logo,
+.auth-aside .brand-logo {
+  filter: drop-shadow(0 0 0.75px rgba(205, 238, 255, 0.85)) drop-shadow(0 0 8px rgba(56, 189, 248, 0.14));
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .brand-logo {
+    filter: drop-shadow(0 0 0.75px rgba(205, 238, 255, 0.85)) drop-shadow(0 0 8px rgba(56, 189, 248, 0.14));
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-logo {
+    height: 30px;
+  }
 }
 
 .main-nav {
@@ -1870,10 +1891,6 @@ select:focus {
     radial-gradient(500px 360px at 100% 0%, rgba(14, 143, 138, 0.35), transparent 60%),
     var(--navy);
   color: var(--on-navy);
-}
-
-.auth-aside .brand-mark {
-  color: var(--brand);
 }
 
 .auth-aside h2 {

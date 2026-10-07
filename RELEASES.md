@@ -1,6 +1,6 @@
 # Releases dos aplicativos
 
-O WinPortal usa GitHub Releases ou URLs diretas para downloads.
+O Nexotool usa GitHub Releases ou URLs diretas para downloads.
 Para nao ocupar espaco do banco de dados, salve os executaveis em object
 storage ou releases, nunca em tabelas Postgres.
 

@@ -30,7 +30,7 @@ public partial class FirebirdView : ToolView
 
     private static string ReportPath(string timestamp)
     {
-        var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "WinPortal", "Firebird Analyzer");
+        var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Nexotool", "Firebird Analyzer");
         Directory.CreateDirectory(folder);
         return Path.Combine(folder, $"relatorio_firebird_{timestamp}.csv");
     }
