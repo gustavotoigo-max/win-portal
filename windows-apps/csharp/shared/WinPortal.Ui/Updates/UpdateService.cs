@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Reflection;
@@ -69,6 +69,19 @@ public static class UpdateService
         if (name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) return null;
         return new UpdateAsset(name, url, size, sha.ToLowerInvariant());
     }
+
+    /// <summary>Mensagem para o usuário: falhas de rede e HTTP viram texto simples em português.</summary>
+    public static string Describe(Exception ex) => ex switch
+    {
+        InvalidDataException => ex.Message,
+        HttpRequestException { StatusCode: not null } =>
+            "O servidor de atualizações não respondeu como esperado. Tente mais tarde.",
+        HttpRequestException => "Sem conexão com o servidor de atualizações. Verifique a internet e tente de novo.",
+        TaskCanceledException or OperationCanceledException =>
+            "O servidor de atualizações demorou demais para responder. Tente mais tarde.",
+        IOException or UnauthorizedAccessException => $"Não foi possível gravar o arquivo da atualização: {ex.Message}",
+        _ => "Ocorreu um erro inesperado. Tente mais tarde.",
+    };
 
     /// <summary>Consulta o portal. Retorna a versão nova, ou null se este executável já está atualizado.</summary>
     public static async Task<UpdateInfo?> CheckAsync(string executable, CancellationToken cancel = default)

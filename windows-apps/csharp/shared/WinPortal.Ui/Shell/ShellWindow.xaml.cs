@@ -1,4 +1,4 @@
-using System.Text.Json.Nodes;
+﻿using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Media;
 using WinPortal.Licensing;
@@ -287,7 +287,7 @@ public partial class ShellWindow : Window
         catch (Exception ex)
         {
             ShowUpdateBanner(update);
-            MessageDialog.Error(this, "Atualização", $"Não foi possível baixar a atualização:\n{ex.Message}");
+            MessageDialog.Error(this, "Atualização", $"Não foi possível baixar a atualização.\n{UpdateService.Describe(ex)}");
             return;
         }
         finally

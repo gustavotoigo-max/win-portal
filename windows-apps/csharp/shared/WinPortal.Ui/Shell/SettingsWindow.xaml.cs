@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using WinPortal.Ui.Common;
 using WinPortal.Ui.Updates;
@@ -83,7 +83,7 @@ public partial class SettingsWindow : Window
         }
         catch (Exception ex)
         {
-            UpdateStatus.Text = $"Não foi possível procurar atualizações agora: {ex.Message}";
+            UpdateStatus.Text = $"Não foi possível procurar atualizações agora. {UpdateService.Describe(ex)}";
             UpdateStatus.SetResourceReference(TextBlock.ForegroundProperty, "DangerBrush");
         }
         finally

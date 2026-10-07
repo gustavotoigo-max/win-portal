@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 using Microsoft.Win32;
 
@@ -92,9 +92,11 @@ public static class ThemeManager
         if (!IsDark) return;
         foreach (var (key, hex) in DarkPalette)
         {
-            var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
-            brush.Freeze();
-            theme[key] = brush;
+            // Trocar a entrada do dicionário quebra os estilos já ligados a ela no WPF;
+            // por isso a cor do pincel existente é alterada no lugar.
+            var color = (Color)ColorConverter.ConvertFromString(hex);
+            if (theme[key] is SolidColorBrush { IsFrozen: false } existing) existing.Color = color;
+            else theme[key] = new SolidColorBrush(color);
         }
     }
 }
