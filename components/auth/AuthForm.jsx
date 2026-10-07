@@ -221,7 +221,7 @@ export default function AuthForm({ mode, next = "" }) {
           type="email"
           placeholder="voce@empresa.com.br"
           value={email}
-          autoComplete="email"
+          autoComplete={isSignup ? "email" : "username"}
           onChange={(event) => setEmail(event.target.value)}
           required
         />

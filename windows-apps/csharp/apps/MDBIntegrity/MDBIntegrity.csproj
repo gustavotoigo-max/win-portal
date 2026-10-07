@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>MDBIntegrity</AssemblyName>
+    <RootNamespace>WinPortal.Apps.MdbIntegrity</RootNamespace>
+    <Description>MDB Integrity - verificação profunda de bancos Microsoft Access</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Data.Odbc" Version="8.0.1" />
+  </ItemGroup>
+</Project>

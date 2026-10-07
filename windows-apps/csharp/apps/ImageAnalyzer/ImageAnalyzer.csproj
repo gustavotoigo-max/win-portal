@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>ImageAnalyzer</AssemblyName>
+    <RootNamespace>WinPortal.Apps.ImageAnalyzer</RootNamespace>
+    <Description>Image Analyzer - analisador de imagens corrompidas</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.IO.Hashing" Version="8.0.0" />
+  </ItemGroup>
+</Project>

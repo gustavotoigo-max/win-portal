@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>WinPortal.Licensing</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ed25519_public_key.local" LogicalName="WinPortal.Licensing.ed25519_public_key.local" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="WinPortal.Licensing.Tests" />
+  </ItemGroup>
+</Project>

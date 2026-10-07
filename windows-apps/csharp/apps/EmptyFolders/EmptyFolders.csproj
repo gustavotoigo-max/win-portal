@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>EmptyFolders</AssemblyName>
+    <RootNamespace>WinPortal.Apps.EmptyFolders</RootNamespace>
+    <Description>Empty Folders - removedor de pastas vazias</Description>
+  </PropertyGroup>
+</Project>

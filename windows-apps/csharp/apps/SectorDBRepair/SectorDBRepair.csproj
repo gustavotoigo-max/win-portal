@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>SectorDBRepair</AssemblyName>
+    <RootNamespace>WinPortal.Apps.SectorDbRepair</RootNamespace>
+    <Description>Sector DB Repair - reparo de arquivos por setores</Description>
+  </PropertyGroup>
+</Project>

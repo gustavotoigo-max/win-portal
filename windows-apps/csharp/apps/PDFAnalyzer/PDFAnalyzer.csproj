@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>PDFAnalyzer</AssemblyName>
+    <RootNamespace>WinPortal.Apps.PdfAnalyzer</RootNamespace>
+    <Description>PDF Analyzer - analisador de PDFs corrompidos</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="PdfPig" Version="0.1.16" />
+  </ItemGroup>
+</Project>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Icon from "@/components/site/Icon";
+import ProductIcon from "@/components/site/ProductIcon";
 import PageShell from "@/components/site/PageShell";
 import ProductCard from "@/components/site/ProductCard";
 import { formatPrice, getAllProductPages, getProductPage, getProductPagesByCategory } from "@/lib/product-pages";
@@ -72,7 +73,7 @@ export default function HomePage() {
               <div className="window-bar"><span /><span /><span /><em>Ativação</em></div>
               <div className="window-body">
                 <div className="activation-row">
-                  <span className="product-icon tone-recuperacao"><Icon name="image" /></span>
+                  <ProductIcon product={{ iconImage: "/product-icons/image_analyzer.webp" }} />
                   <div>
                     <strong>Image Analyzer</strong>
                     <small>Versão 1.2.0</small>
@@ -187,7 +188,7 @@ export default function HomePage() {
           <div className="account-preview" aria-hidden="true">
             <div className="preview-license">
               <div className="preview-license-head">
-                <span className="product-icon tone-bancos"><Icon name="database" /></span>
+                <ProductIcon product={{ iconImage: "/product-icons/firebird_analyzer.webp" }} />
                 <div>
                   <strong>Firebird Analyzer</strong>
                   <small>Pedido FIREBIRDANALYZER-2026…</small>
@@ -202,7 +203,7 @@ export default function HomePage() {
             </div>
             <div className="preview-license dim">
               <div className="preview-license-head">
-                <span className="product-icon tone-organizacao"><Icon name="folder" /></span>
+                <ProductIcon product={{ iconImage: "/product-icons/empty_folders.webp" }} />
                 <div>
                   <strong>Empty Folder Cleaner</strong>
                   <small>Nenhum computador ativo</small>
