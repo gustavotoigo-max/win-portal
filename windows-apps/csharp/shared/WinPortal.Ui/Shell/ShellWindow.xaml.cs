@@ -104,10 +104,23 @@ public partial class ShellWindow : Window
             return;
         }
 
-        _activationWindow = new ActivationWindow(this, _product, LicensePayload, ActivationMode);
-        var ok = _activationWindow.ShowDialog() == true;
-        var result = _activationWindow.Result;
-        _activationWindow = null;
+        bool ok;
+        ActivationResult? result;
+        try
+        {
+            _activationWindow = new ActivationWindow(this, _product, LicensePayload, ActivationMode);
+            ok = _activationWindow.ShowDialog() == true;
+            result = _activationWindow.Result;
+        }
+        catch (Exception ex)
+        {
+            MessageDialog.Error(this, "Ativação", $"Não foi possível abrir a ativação: {ex.Message}");
+            return;
+        }
+        finally
+        {
+            _activationWindow = null;
+        }
         if (ok && result is not null) ActivationSucceeded(result);
     }
 

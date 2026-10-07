@@ -24,8 +24,12 @@ public sealed class LicensingApiClient
     public LicensingApiClient(ProductIdentity product)
     {
         _product = product;
-        _http = HandlerFactoryOverride is null ? SharedClient.Value : new HttpClient(HandlerFactoryOverride());
-        _http.Timeout = TimeSpan.FromSeconds(LicensingConfig.RequestTimeoutSeconds);
+        // O HttpClient compartilhado já nasce com o timeout definido. Alterar propriedades
+        // dele depois da primeira requisição lança InvalidOperationException, o que
+        // impedia reabrir a janela de ativação.
+        _http = HandlerFactoryOverride is null
+            ? SharedClient.Value
+            : new HttpClient(HandlerFactoryOverride()) { Timeout = TimeSpan.FromSeconds(LicensingConfig.RequestTimeoutSeconds) };
     }
 
     private static HttpClient CreateClient()
