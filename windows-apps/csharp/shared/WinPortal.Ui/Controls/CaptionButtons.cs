@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Shell;
 
@@ -28,6 +29,9 @@ public class CaptionButtons : StackPanel
         HorizontalAlignment = HorizontalAlignment.Right;
         VerticalAlignment = VerticalAlignment.Top;
         WindowChrome.SetIsHitTestVisibleInChrome(this, true);
+        AutomationProperties.SetName(_minimize, "Minimizar");
+        AutomationProperties.SetName(_maximize, "Maximizar");
+        AutomationProperties.SetName(_close, "Fechar");
 
         _minimize.Click += (_, _) => { if (_window is not null) _window.WindowState = WindowState.Minimized; };
         _maximize.Click += (_, _) => ToggleMaximize();
@@ -69,5 +73,6 @@ public class CaptionButtons : StackPanel
         var maximized = _window?.WindowState == WindowState.Maximized;
         _maximize.Content = maximized ? "" : "";
         _maximize.ToolTip = maximized ? "Restaurar" : "Maximizar";
+        AutomationProperties.SetName(_maximize, (string)_maximize.ToolTip);
     }
 }
