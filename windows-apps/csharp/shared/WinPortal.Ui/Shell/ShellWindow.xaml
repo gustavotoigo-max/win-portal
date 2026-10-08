@@ -6,15 +6,15 @@
         FontFamily="{StaticResource UiFont}" UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="64" />
-            <RowDefinition Height="3" />
+            <RowDefinition Height="36" />
+            <RowDefinition Height="2" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="34" />
         </Grid.RowDefinitions>
 
-        <!-- Topo azul-marinho: também é a barra da janela (arrastar, duplo clique, botões) -->
-        <Border Background="{StaticResource NavyBrush}" Padding="24,0,0,0">
+        <!-- Barra fina azul-marinho: é também a barra da janela (arrastar, duplo clique, botões) -->
+        <Border Background="{StaticResource NavyBrush}" Padding="14,0,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -22,32 +22,31 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <Image x:Name="LogoImage" Width="38" Height="38" VerticalAlignment="Center"
+                <Image x:Name="LogoImage" Width="20" Height="20" VerticalAlignment="Center"
                        RenderOptions.BitmapScalingMode="HighQuality" />
-                <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
-                    <TextBlock x:Name="AppNameText" FontSize="16.5" FontWeight="SemiBold" Foreground="{StaticResource TextOnNavyBrush}" />
-                    <TextBlock x:Name="TaglineText" FontSize="12" Margin="0,1,0,0" Foreground="{StaticResource TextOnNavyMutedBrush}"
-                               TextTrimming="CharacterEllipsis" />
-                </StackPanel>
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0"
+                <DockPanel Grid.Column="1" Margin="10,0,12,0" VerticalAlignment="Center">
+                    <TextBlock x:Name="AppNameText" DockPanel.Dock="Left" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextOnNavyBrush}"
+                               VerticalAlignment="Center" />
+                    <TextBlock Text="·" DockPanel.Dock="Left" Margin="8,0" FontSize="12" Foreground="{StaticResource TextOnNavyMutedBrush}" VerticalAlignment="Center" />
+                    <TextBlock x:Name="TaglineText" FontSize="12" Foreground="{StaticResource TextOnNavyMutedBrush}"
+                               TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                </DockPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0"
                             WindowChrome.IsHitTestVisibleInChrome="True">
-                    <Button x:Name="SettingsButton" Style="{StaticResource NavyButton}" Click="OnSettingsClick" Margin="0,0,10,0"
-                            ToolTip="Tema e atualizações">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE713;" FontFamily="{StaticResource IconFont}" FontSize="14" VerticalAlignment="Center" />
-                            <TextBlock Text="Configurações" Margin="8,0,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
+                    <Button x:Name="SettingsButton" Style="{StaticResource NavyCompactButton}" Click="OnSettingsClick" Margin="0,0,6,0"
+                            ToolTip="Configurações: tema e atualizações" AutomationProperties.Name="Configurações">
+                        <TextBlock Text="&#xE713;" FontFamily="{StaticResource IconFont}" FontSize="13" VerticalAlignment="Center" />
                     </Button>
-                    <Button x:Name="LicenseButton" Style="{StaticResource NavyButton}" Click="OnLicenseClick"
+                    <Button x:Name="LicenseButton" Style="{StaticResource NavyCompactButton}" Click="OnLicenseClick"
                             ToolTip="Ver ou alterar a ativação deste computador">
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse x:Name="LicenseDot" Width="8" Height="8" VerticalAlignment="Center"
+                            <Ellipse x:Name="LicenseDot" Width="7" Height="7" VerticalAlignment="Center"
                                      Fill="{StaticResource TextOnNavyMutedBrush}" />
-                            <TextBlock x:Name="LicenseText" Margin="8,0,0,0" Text="Verificando..." VerticalAlignment="Center" />
+                            <TextBlock x:Name="LicenseText" Margin="7,0,0,0" Text="Verificando..." VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
-                <controls:CaptionButtons Grid.Column="3" />
+                <controls:CaptionButtons Grid.Column="3" ButtonHeight="36" />
             </Grid>
         </Border>
         <Rectangle Grid.Row="1" Fill="{StaticResource AccentGradientBrush}" />

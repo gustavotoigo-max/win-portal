@@ -30,7 +30,7 @@ public partial class ShellWindow : Window
     public ShellWindow(ProductInfo product, Func<FrameworkElement> createTool)
     {
         InitializeComponent();
-        NativeWindow.UseBorderless(this, captionHeight: 64);
+        NativeWindow.UseBorderless(this, captionHeight: 36);
         _product = product;
         _createTool = createTool;
 

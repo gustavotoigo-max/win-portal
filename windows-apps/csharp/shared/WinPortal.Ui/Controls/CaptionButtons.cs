@@ -23,6 +23,9 @@ public class CaptionButtons : StackPanel
     /// <summary>Janelas de diálogo mostram só o botão de fechar.</summary>
     public bool CloseOnly { get; set; }
 
+    /// <summary>Altura dos botões; o padrão (32) segue o Windows.</summary>
+    public double ButtonHeight { get; set; } = 32;
+
     public CaptionButtons()
     {
         Orientation = Orientation.Horizontal;
@@ -55,10 +58,12 @@ public class CaptionButtons : StackPanel
         {
             button.SetResourceReference(StyleProperty, style);
             button.Focusable = false;
+            button.Height = ButtonHeight;
             if (!CloseOnly) Children.Add(button);
         }
         _close.SetResourceReference(StyleProperty, OnNavy ? "CaptionCloseButtonOnNavy" : "CaptionCloseButton");
         _close.Focusable = false;
+        _close.Height = ButtonHeight;
         Children.Add(_close);
     }
 
