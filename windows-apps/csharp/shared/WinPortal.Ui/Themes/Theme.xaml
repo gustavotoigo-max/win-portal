@@ -685,6 +685,26 @@
         </Style.Triggers>
     </Style>
 
+    <!-- Ícone clicável no rodapé (sino de atualização) -->
+    <Style x:Key="FooterIconButton" TargetType="Button">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Chrome" Background="Transparent" CornerRadius="4" Padding="5,3">
+                        <ContentPresenter VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Chrome" Property="Background" Value="{StaticResource Navy3Brush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- ============================== Página de ferramenta ============================== -->
     <Style TargetType="controls:ToolPage">
         <Setter Property="Focusable" Value="False" />

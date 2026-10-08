@@ -15,7 +15,8 @@ public class ActionBar : StackPanel
     public ActionBar()
     {
         Orientation = Orientation.Horizontal;
-        Margin = new Thickness(PathField.LabelWidth, 4, 0, 0);
+        Margin = new Thickness(0, 4, 0, 0);
+        LayoutUpdated += (_, _) => AlignWithFields();
         Primary.SetResourceReference(StyleProperty, "PrimaryButton");
         Cancel.SetResourceReference(StyleProperty, "DangerButton");
         Cancel.IsEnabled = false;
@@ -68,6 +69,19 @@ public class ActionBar : StackPanel
         if (!Children.Contains(Cancel)) Children.Add(Cancel);
         for (var i = 1; i < Children.Count; i++)
             if (Children[i] is FrameworkElement element) element.Margin = new Thickness(10, 0, 0, 0);
+    }
+
+    /// <summary>
+    /// Alinha o botão principal com o início dos campos: a coluna de rótulos tem a
+    /// largura do rótulo mais longo da tela, então a margem acompanha essa largura.
+    /// </summary>
+    private void AlignWithFields()
+    {
+        if (Parent is not Panel panel) return;
+        var field = panel.Children.OfType<Grid>().FirstOrDefault(g => g is PathField or FormRow);
+        if (field is null || field.ColumnDefinitions.Count == 0) return;
+        var left = field.ColumnDefinitions[0].ActualWidth;
+        if (Math.Abs(Margin.Left - left) > 0.5) Margin = new Thickness(left, Margin.Top, Margin.Right, Margin.Bottom);
     }
 
     private void Refresh()

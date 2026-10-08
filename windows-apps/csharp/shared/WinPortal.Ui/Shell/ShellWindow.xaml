@@ -14,7 +14,7 @@
         </Grid.RowDefinitions>
 
         <!-- Barra fina azul-marinho: é também a barra da janela (arrastar, duplo clique, botões) -->
-        <Border Background="{StaticResource NavyBrush}" Padding="14,0,0,0">
+        <Border Background="{StaticResource NavyBrush}" Padding="12,0,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -22,7 +22,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <Image x:Name="LogoImage" Width="20" Height="20" VerticalAlignment="Center"
+                <Image x:Name="LogoImage" Width="24" Height="24" VerticalAlignment="Center"
                        RenderOptions.BitmapScalingMode="HighQuality" />
                 <DockPanel Grid.Column="1" Margin="10,0,12,0" VerticalAlignment="Center">
                     <TextBlock x:Name="AppNameText" DockPanel.Dock="Left" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextOnNavyBrush}"
@@ -100,7 +100,14 @@
         <!-- Rodapé azul-marinho -->
         <Border Grid.Row="4" Background="{StaticResource NavyBrush}" Padding="24,0">
             <DockPanel VerticalAlignment="Center" LastChildFill="False">
-                <TextBlock x:Name="FooterText" DockPanel.Dock="Left" FontSize="12" Foreground="{StaticResource TextOnNavyMutedBrush}" />
+                <TextBlock x:Name="FooterText" DockPanel.Dock="Left" FontSize="12" VerticalAlignment="Center"
+                           Foreground="{StaticResource TextOnNavyMutedBrush}" />
+                <!-- Sino discreto: aparece quando a verificação encontrou uma versão nova -->
+                <Button x:Name="UpdateBell" DockPanel.Dock="Left" Margin="8,0,0,0" Visibility="Collapsed"
+                        Style="{StaticResource FooterIconButton}" Click="OnUpdateBell" AutomationProperties.Name="Nova versão disponível">
+                    <TextBlock Text="&#xEA8F;" FontFamily="{StaticResource IconFont}" FontSize="12"
+                               Foreground="{StaticResource CyanBrush}" VerticalAlignment="Center" />
+                </Button>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                     <Button Style="{StaticResource NavyLinkButton}" Content="Minhas licenças" Click="OnAccountClick" />
                     <TextBlock Text="·" Margin="10,0" Foreground="{StaticResource TextOnNavyMutedBrush}" />
