@@ -18,7 +18,7 @@
                             <Button x:Name="AddFolderButton" Content="Selecionar pasta…" Click="OnAddFolder"
                                     ToolTip="Adiciona todos os .mdb/.accdb da pasta e das subpastas." />
                             <Button x:Name="AddFilesButton" Content="Selecionar arquivos…" Margin="8,0,0,0" Click="OnAddFiles" />
-                            <Button x:Name="RemoveButton" Content="Remover selecionados" Margin="8,0,0,0" Click="OnRemove" />
+                            <Button x:Name="RemoveButton" Content="Remover da lista" ToolTip="Tira os itens selecionados da lista; nenhum arquivo é apagado" Margin="8,0,0,0" Click="OnRemove" />
                             <TextBlock Text="ou arraste arquivos e pastas para a lista" Style="{StaticResource StatusText}"
                                        Foreground="{StaticResource TextSubtleBrush}" VerticalAlignment="Center" Margin="14,0,0,0" />
                         </StackPanel>

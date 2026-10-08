@@ -56,7 +56,7 @@ public partial class MySqlView : ToolView
         {
             try
             {
-                var paths = FileWalker.AllFiles(folder).ToList();
+                var paths = FileWalker.AllFiles(folder, token).ToList();
                 total = paths.Count;
                 var batch = new List<FileResult>();
                 var lastFlush = Environment.TickCount64;
@@ -90,6 +90,10 @@ public partial class MySqlView : ToolView
                     Dispatcher.BeginInvoke(() => { foreach (var item in rest) _results.Add(item); });
                 }
             }
+            catch (OperationCanceledException)
+            {
+                // Cancelado ainda na coleta dos arquivos.
+            }
             catch (Exception ex)
             {
                 failure = ex;
@@ -103,6 +107,12 @@ public partial class MySqlView : ToolView
         {
             Progress.Failed("Falha durante a análise.");
             MessageDialog.Error(Owner, "Erro", failure.Message);
+            return;
+        }
+        if (cancelled && _results.Count == 0)
+        {
+            ResultsCard.ShowPlaceholder(true);
+            Progress.Cancelled("Cancelado · busca interrompida.");
             return;
         }
         if (total == 0)

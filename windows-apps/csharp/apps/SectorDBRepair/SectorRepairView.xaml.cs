@@ -84,6 +84,11 @@ public partial class SectorRepairView : ToolView
         var token = BeginWork();
         Progress.Working("Reparando...", 0);
 
+        // A gravação vai para um arquivo temporário desta execução. A saída escolhida
+        // só é substituída depois do sucesso: cancelar ou falhar nunca apaga um
+        // arquivo que já existia.
+        var partial = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(output)) ?? "",
+            $".{Path.GetFileName(output)}.{Guid.NewGuid():N}.parcial");
         SectorRepair.Summary? summary = null;
         Exception? failure = null;
         var lastProgress = 0L;
@@ -91,26 +96,27 @@ public partial class SectorRepairView : ToolView
         {
             try
             {
-                summary = SectorRepair.Run(damaged, reference, output, sector, markers, Log.AppendLine, value =>
+                summary = SectorRepair.Run(damaged, reference, partial, sector, markers, Log.AppendLine, value =>
                 {
                     if (Environment.TickCount64 - lastProgress < 50 && value < 100) return;
                     lastProgress = Environment.TickCount64;
                     Dispatcher.BeginInvoke(() => { if (!CancelRequested) Progress.Working($"Reparando... {value:0}%", value / 100.0); });
                 }, token);
+                File.Move(partial, output, overwrite: true);
             }
             catch (Exception ex)
             {
                 failure = ex;
+                // Remove somente o temporário criado nesta execução.
+                try { if (File.Exists(partial)) File.Delete(partial); } catch { }
             }
         });
 
         EndWork();
         if (failure is OperationCanceledException)
         {
-            // Um arquivo pela metade não serve para nada: é removido.
-            try { File.Delete(output); } catch { }
-            Log.AppendLine("*** Operação cancelada pelo usuário. O arquivo de saída incompleto foi removido. ***");
-            Progress.Cancelled("Cancelado · nenhum arquivo foi gerado.");
+            Log.AppendLine("*** Operação cancelada pelo usuário. Nenhum arquivo foi gravado ou alterado. ***");
+            Progress.Cancelled("Cancelado · nenhum arquivo foi gerado ou alterado.");
             return;
         }
         if (failure is not null)

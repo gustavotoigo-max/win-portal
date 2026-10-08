@@ -22,7 +22,7 @@
 
             <controls:ResultsCard x:Name="ResultsCard" Grid.Row="2" Title="ARQUIVOS CORROMPIDOS"
                                   Placeholder="Os arquivos corrompidos encontrados aparecem aqui."
-                                  ExportClick="OnExport" ClearClick="OnClear">
+                                  ExportClick="OnExport" ClearClick="OnClear" DeleteClick="OnDelete">
                 <controls:LogConsole x:Name="Results" />
             </controls:ResultsCard>
         </Grid>

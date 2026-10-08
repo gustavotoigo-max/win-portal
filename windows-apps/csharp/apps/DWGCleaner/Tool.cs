@@ -14,7 +14,7 @@ internal static class Tool
         {
             ToolId = "dwg_cleaner",
             Title = "Analisador de DWGs corrompidos",
-            Subtitle = "Confere cabeçalho, tamanho mínimo e conteúdo de cada desenho .dwg e remove os arquivos danificados.",
+            Subtitle = "Confere cabeçalho, tamanho mínimo e conteúdo de cada desenho .dwg e lista os danificados. Nada é apagado sem você clicar em Apagar e confirmar.",
             Extensions = [".dwg"],
             FolderDialogTitle = "Selecione a pasta com os DWGs",
             EmptyMessage = "Nenhum arquivo .dwg encontrado.",

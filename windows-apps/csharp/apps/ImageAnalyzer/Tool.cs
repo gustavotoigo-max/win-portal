@@ -14,7 +14,7 @@ internal static class Tool
         {
             ToolId = "image_analyzer",
             Title = "Analisador de imagens corrompidas",
-            Subtitle = "Verifica JPG, PNG, BMP, GIF, TIFF, WebP e ICO e remove os arquivos que não abrem mais.",
+            Subtitle = "Verifica JPG, PNG, BMP, GIF, TIFF, WebP e ICO e lista os arquivos que não abrem mais. Nada é apagado sem você clicar em Apagar e confirmar.",
             Extensions = [".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff", ".tif", ".webp", ".ico", ".jfif", ".jpe"],
             FolderDialogTitle = "Selecione a pasta com as imagens",
             EmptyMessage = "Nenhuma imagem encontrada.",

@@ -14,7 +14,7 @@ internal static class Tool
         {
             ToolId = "pdf_analyzer",
             Title = "Analisador de PDFs corrompidos",
-            Subtitle = "Abre cada PDF da pasta, confere a estrutura e as páginas e remove os arquivos danificados.",
+            Subtitle = "Abre cada PDF da pasta, confere a estrutura e as páginas e lista os danificados. Nada é apagado sem você clicar em Apagar e confirmar.",
             Extensions = [".pdf"],
             FolderDialogTitle = "Selecione a pasta com os PDFs",
             EmptyMessage = "Nenhum arquivo PDF encontrado.",

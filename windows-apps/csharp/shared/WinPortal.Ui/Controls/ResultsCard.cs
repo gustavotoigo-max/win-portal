@@ -6,7 +6,9 @@ namespace WinPortal.Ui.Controls;
 
 /// <summary>
 /// Cartão de resultados padrão: título, resumo e as ações "Exportar relatório" e
-/// "Limpar" no cabeçalho, sempre no mesmo lugar.
+/// "Limpar" no cabeçalho, sempre no mesmo lugar. Ferramentas que apagam algo mostram
+/// o botão "Apagar" no rodapé (ShowDelete): nada é apagado sem o usuário clicar nele
+/// e confirmar.
 /// </summary>
 [ContentProperty(nameof(Body))]
 public class ResultsCard : Border
@@ -30,6 +32,7 @@ public class ResultsCard : Border
 
         _grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         _grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+        _grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
         _title.SetResourceReference(StyleProperty, "SectionLabelText");
         _title.Margin = new Thickness(0);
@@ -59,13 +62,24 @@ public class ResultsCard : Border
         _placeholder.Visibility = Visibility.Collapsed;
         Grid.SetRow(_placeholder, 1);
         _grid.Children.Add(_placeholder);
+
+        DeleteButton.SetResourceReference(StyleProperty, "DangerButton");
+        DeleteButton.HorizontalAlignment = HorizontalAlignment.Right;
+        DeleteButton.Margin = new Thickness(0, 12, 0, 0);
+        DeleteButton.Visibility = Visibility.Collapsed;
+        DeleteButton.Click += (s, e) => DeleteClick?.Invoke(s, e);
+        Grid.SetRow(DeleteButton, 2);
+        _grid.Children.Add(DeleteButton);
         Child = _grid;
     }
 
     public Button ExportButton { get; } = new() { Content = "Exportar relatório", ToolTip = "Salvar os resultados em um arquivo" };
     public Button ClearButton { get; } = new() { Content = "Limpar", ToolTip = "Limpar os resultados exibidos" };
 
+    public Button DeleteButton { get; } = new() { ToolTip = "Apaga os itens listados, depois de pedir confirmação" };
+
     public event RoutedEventHandler? ExportClick;
+    public event RoutedEventHandler? DeleteClick;
     public event RoutedEventHandler? ClearClick;
 
     public string Title
@@ -108,10 +122,18 @@ public class ResultsCard : Border
         if (_body is not null) _body.Visibility = show ? Visibility.Hidden : Visibility.Visible;
     }
 
-    /// <summary>Durante uma execução não se limpa nem se exporta.</summary>
+    /// <summary>Mostra o botão de apagar com o texto informado; vazio ou nulo o esconde.</summary>
+    public void ShowDelete(string? text)
+    {
+        DeleteButton.Content = text ?? "";
+        DeleteButton.Visibility = string.IsNullOrEmpty(text) ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    /// <summary>Durante uma execução não se limpa, não se exporta e não se apaga.</summary>
     public void SetBusy(bool busy)
     {
         ExportButton.IsEnabled = !busy;
         ClearButton.IsEnabled = !busy;
+        DeleteButton.IsEnabled = !busy;
     }
 }

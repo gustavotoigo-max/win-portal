@@ -83,6 +83,8 @@ internal static class MySqlChecks
         }
     }
 
+    private static readonly JsonDocumentOptions SdiJsonOptions = new() { MaxDepth = 1000 };
+
     private static (bool, string) CheckSdi(string path)
     {
         try
@@ -90,7 +92,8 @@ internal static class MySqlChecks
             var data = File.ReadAllBytes(path);
             var text = new UTF8Encoding(false, throwOnInvalidBytes: true).GetString(data);
             if (text.StartsWith('﻿')) return (false, "SDI inválido");
-            using var _ = JsonDocument.Parse(text);
+            // json.loads aceita até ~1000 níveis de aninhamento; o padrão do .NET é 64.
+            using var _ = JsonDocument.Parse(text, SdiJsonOptions);
             return (true, "JSON válido");
         }
         catch
