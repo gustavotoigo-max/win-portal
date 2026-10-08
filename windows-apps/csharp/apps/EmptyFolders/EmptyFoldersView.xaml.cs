@@ -10,6 +10,8 @@ public partial class EmptyFoldersView : ToolView
     // Última lista e o que aconteceu com cada pasta, para exportar.
     private List<string> _folders = [];
     private Dictionary<string, string> _outcome = new(StringComparer.OrdinalIgnoreCase);
+    // Pastas oferecidas ao botão Apagar (última busca concluída).
+    private (string Root, List<string> Folders)? _pending;
 
     public EmptyFoldersView()
     {
@@ -74,17 +76,27 @@ public partial class EmptyFoldersView : ToolView
             return;
         }
 
-        Progress.Warn($"{found.Count:N0} pasta(s) vazia(s) encontrada(s). Confira a lista.");
-        if (!MessageDialog.Confirm(Owner, "Confirmar exclusão",
-                $"Foram encontradas {found.Count:N0} pasta(s) vazia(s), listadas na tela.\n\nDeseja apagá-las? A pasta selecionada será preservada.",
-                yes: "Apagar", no: "Cancelar", destructive: true))
-        {
-            EndWork();
-            Progress.Warn($"Concluído · {found.Count:N0} pasta(s) vazia(s) mantida(s)");
-            return;
-        }
+        EndWork();
+        _pending = (root, found);
+        ResultsCard.ShowDelete($"Apagar {found.Count:N0} pasta(s)...");
+        Progress.Warn($"Concluído · {found.Count:N0} pasta(s) vazia(s) encontrada(s). " +
+                      "Nada foi apagado: confira a lista e, se quiser, use Apagar.");
+    }
 
-        token = BeginWork();
+    private async void OnDelete(object sender, RoutedEventArgs e)
+    {
+        if (IsBusy || _pending is not { } pending || pending.Folders.Count == 0) return;
+        var (root, found) = pending;
+        if (!MessageDialog.Confirm(Owner, "Confirmar exclusão",
+                $"{found.Count:N0} pasta(s) vazia(s), listadas na tela, serão apagadas. " +
+                "Cada pasta é conferida de novo e só é removida se continuar vazia; a pasta selecionada é preservada.\n\nDeseja apagá-las?",
+                yes: "Apagar", no: "Cancelar", destructive: true))
+            return;
+
+        _pending = null;
+        ResultsCard.ShowDelete(null);
+        var token = BeginWork();
+        Progress.Working("Apagando pastas vazias...", 0);
         Log.AppendLine("");
         Log.AppendLine("Iniciando remoção...");
         var (removed, failed, cancelled) = await Task.Run(() => Remove(root, found, token));
@@ -219,6 +231,8 @@ public partial class EmptyFoldersView : ToolView
 
     private void ShowList(List<string> folders)
     {
+        _pending = null;
+        ResultsCard.ShowDelete(null);
         _folders = folders;
         _outcome = folders.ToDictionary(f => f, _ => "Vazia", StringComparer.OrdinalIgnoreCase);
         Log.Clear();

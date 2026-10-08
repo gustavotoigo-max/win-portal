@@ -102,14 +102,14 @@ internal static class GfixRunner
         return returnCode == 0 ? "OK" : "Indeterminado";
     }
 
-    public static IEnumerable<string> DatabaseFiles(string target)
+    public static IEnumerable<string> DatabaseFiles(string target, CancellationToken token = default)
     {
         if (File.Exists(target))
         {
             if (Extensions.Contains(Path.GetExtension(target))) yield return target;
             yield break;
         }
-        foreach (var file in FileWalker.AllFiles(target))
+        foreach (var file in FileWalker.AllFiles(target, token))
             if (Extensions.Contains(Path.GetExtension(file))) yield return file;
     }
 }

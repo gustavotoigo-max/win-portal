@@ -24,7 +24,8 @@ public sealed class AnalyzerOptions
 
 /// <summary>
 /// Interface e fluxo comuns aos analisadores (core/analyzer_base.py): localiza os
-/// arquivos, analisa, lista os corrompidos, pede confirmação e apaga.
+/// arquivos, analisa e lista os corrompidos. Nada é apagado automaticamente: o
+/// usuário escolhe o botão Apagar e confirma.
 /// </summary>
 public partial class CorruptedFileAnalyzerView : ToolView
 {
@@ -44,6 +45,8 @@ public partial class CorruptedFileAnalyzerView : ToolView
 
     // Resultado da última execução, para exportar: arquivo -> situação.
     private List<string> _corrupted = [];
+    // Arquivos oferecidos ao botão Apagar (lista completa da última análise concluída).
+    private List<string> _deletable = [];
     private Dictionary<string, string> _outcome = new(StringComparer.OrdinalIgnoreCase);
 
     public CorruptedFileAnalyzerView(AnalyzerOptions options)
@@ -290,22 +293,31 @@ public partial class CorruptedFileAnalyzerView : ToolView
             return;
         }
 
-        Progress.Warn($"{checkedCount:N0} arquivo(s) analisado(s) · {corrupted.Count:N0} corrompido(s). Confira a lista.");
-        var confirmed = MessageDialog.Confirm(Owner, "Confirmar exclusão",
-            $"Foram encontrados {corrupted.Count:N0} arquivo(s) corrompido(s), listados na tela.\n\nDeseja apagá-los permanentemente?",
-            yes: "Apagar", no: "Cancelar", destructive: true);
-        if (!confirmed)
-        {
-            Stop();
-            Progress.Warn($"Concluído · {total:N0} analisado(s) · {corrupted.Count:N0} corrompido(s) mantido(s)");
-            return;
-        }
+        Stop();
+        _deletable = corrupted;
+        ResultsCard.ShowDelete($"Apagar {corrupted.Count:N0} arquivo(s)...");
+        Progress.Warn($"Concluído · {checkedCount:N0} analisado(s) · {corrupted.Count:N0} corrompido(s). " +
+                      "Nada foi apagado: confira a lista e, se quiser, use Apagar.");
+    }
 
+    private void OnDelete(object sender, RoutedEventArgs e)
+    {
+        if (IsBusy || _deletable.Count == 0) return;
+        var files = _deletable;
+        var confirmed = MessageDialog.Confirm(Owner, "Confirmar exclusão",
+            $"{files.Count:N0} arquivo(s) corrompido(s), listados na tela, serão apagados permanentemente " +
+            "(não vão para a Lixeira).\n\nDeseja apagá-los?",
+            yes: "Apagar", no: "Cancelar", destructive: true);
+        if (!confirmed) return;
+
+        _deletable = [];
+        ResultsCard.ShowDelete(null);
         var token = BeginWork();
-        SetSnapshot(Phase.Delete, 0, corrupted.Count, 0, 0);
+        SetSnapshot(Phase.Delete, 0, files.Count, 0, 0);
         _lastSnapshot = null;
-        Progress.Working($"Apagando 0/{corrupted.Count:N0}", 0);
-        StartWorker(() => DeleteWorker(corrupted, token));
+        Progress.Working($"Apagando 0/{files.Count:N0}", 0);
+        _poll.Start();
+        StartWorker(() => DeleteWorker(files, token));
     }
 
     private void DeleteDone(int processed, int total, int deleted, int failures, bool cancelled,
@@ -356,6 +368,8 @@ public partial class CorruptedFileAnalyzerView : ToolView
     private void ClearResults()
     {
         _corrupted = [];
+        _deletable = [];
+        ResultsCard.ShowDelete(null);
         _outcome.Clear();
         Results.Clear();
         ResultsCard.Summary = "";

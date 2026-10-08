@@ -83,7 +83,7 @@ public partial class FirebirdView : ToolView
             try
             {
                 var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
-                var databases = GfixRunner.DatabaseFiles(resolved).ToList();
+                var databases = GfixRunner.DatabaseFiles(resolved, token).ToList();
                 Log.AppendLine($"{databases.Count:N0} banco(s) encontrado(s).");
                 foreach (var db in databases)
                 {
@@ -111,6 +111,10 @@ public partial class FirebirdView : ToolView
                 reportPath = ReportPath(timestamp);
                 File.WriteAllText(reportPath, csv.ToString(), new UTF8Encoding(false));
             }
+            catch (OperationCanceledException)
+            {
+                // Cancelado ainda na coleta dos arquivos.
+            }
             catch (Exception ex)
             {
                 failure = ex;
@@ -124,6 +128,11 @@ public partial class FirebirdView : ToolView
         {
             Progress.Failed("Falha durante a validação.");
             MessageDialog.Error(Owner, "Erro", failure.Message);
+            return;
+        }
+        if (cancelled && rows.Count == 0)
+        {
+            Progress.Cancelled("Cancelado · nenhum banco foi validado.");
             return;
         }
 

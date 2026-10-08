@@ -86,7 +86,7 @@ internal static class SectorRepair
         {
             using var source = new FileStream(damaged, FileMode.Open, FileAccess.Read, FileShare.Read);
             using var target = new FileStream(output, FileMode.Create, FileAccess.Write);
-            source.CopyTo(target);
+            CopyWithCancel(source, target, cancel);
             progress(100);
             log("Nenhum setor defeituoso. Arquivo copiado sem alterações.");
             return new Summary(totalSectors, 0, 0, 0, tail);
@@ -161,9 +161,22 @@ internal static class SectorRepair
         if (tail > 0)
         {
             fdan.Position = totalSectors * sector;
-            fdan.CopyTo(fout);
+            CopyWithCancel(fdan, fout, cancel);
         }
 
         return new Summary(totalSectors, bad.Count, replaced, ignored, tail);
+    }
+
+    /// <summary>Cópia em blocos que respeita o pedido de cancelamento.</summary>
+    private static void CopyWithCancel(Stream source, Stream target, CancellationToken cancel)
+    {
+        var block = new byte[1 << 20];
+        int read;
+        while ((read = source.Read(block, 0, block.Length)) > 0)
+        {
+            cancel.ThrowIfCancellationRequested();
+            target.Write(block, 0, read);
+        }
+        cancel.ThrowIfCancellationRequested();
     }
 }

@@ -3,7 +3,7 @@
                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                    xmlns:controls="clr-namespace:WinPortal.Ui.Controls;assembly=WinPortal.Ui">
     <controls:ToolPage Title="Removedor de pastas vazias"
-                       Subtitle="Lista as subpastas vazias (inclusive as que só contêm outras pastas vazias) e pede confirmação antes de apagar. A pasta selecionada é sempre preservada.">
+                       Subtitle="Lista as subpastas vazias (inclusive as que só contêm outras pastas vazias). Nada é apagado sem você clicar em Apagar e confirmar. A pasta selecionada é sempre preservada.">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -24,7 +24,7 @@
 
             <controls:ResultsCard x:Name="ResultsCard" Grid.Row="2" Title="PASTAS VAZIAS"
                                   Placeholder="As pastas vazias encontradas aparecem aqui."
-                                  ExportClick="OnExport" ClearClick="OnClear">
+                                  ExportClick="OnExport" ClearClick="OnClear" DeleteClick="OnDelete">
                 <controls:LogConsole x:Name="Log" />
             </controls:ResultsCard>
         </Grid>

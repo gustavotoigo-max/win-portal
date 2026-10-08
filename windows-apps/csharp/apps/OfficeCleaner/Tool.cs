@@ -14,7 +14,7 @@ internal static class Tool
         {
             ToolId = "office_cleaner",
             Title = "Analisador de arquivos Office corrompidos",
-            Subtitle = "Verifica documentos .doc, .docx, .xls e .xlsx e remove os arquivos que não abrem mais.",
+            Subtitle = "Verifica documentos .doc, .docx, .xls e .xlsx e lista os arquivos que não abrem mais. Nada é apagado sem você clicar em Apagar e confirmar.",
             Extensions = [".doc", ".docx", ".xls", ".xlsx"],
             FolderDialogTitle = "Selecione a pasta com os arquivos Office",
             EmptyMessage = "Nenhum arquivo Office suportado foi encontrado.",

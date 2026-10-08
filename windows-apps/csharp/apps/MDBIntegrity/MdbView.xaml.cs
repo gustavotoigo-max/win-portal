@@ -16,13 +16,7 @@ public sealed class FileRow(string path) : INotifyPropertyChanged
     public string Path { get; } = path;
     public string FileName { get; } = System.IO.Path.GetFileName(path);
 
-    public CheckResult Result { get; private set; } = new()
-    {
-        Path = path,
-        FileName = System.IO.Path.GetFileName(path),
-        Status = "Aguardando",
-        Detail = "Arquivo ainda não verificado.",
-    };
+    public CheckResult Result { get; private set; } = Pending(path);
 
     public RowState State { get; private set; } = RowState.Pending;
     public string Status { get; private set; } = "Aguardando";
@@ -36,7 +30,23 @@ public sealed class FileRow(string path) : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public void Reset() => Set(RowState.Pending, "Aguardando", System.IO.Path.GetDirectoryName(Path) ?? "");
+    /// <summary>
+    /// Volta ao estado inicial, descartando o resultado anterior: uma rodada nova
+    /// que pare antes deste arquivo não pode exportar status e hash antigos.
+    /// </summary>
+    public void Reset()
+    {
+        Result = Pending(Path);
+        Set(RowState.Pending, "Aguardando", System.IO.Path.GetDirectoryName(Path) ?? "");
+    }
+
+    private static CheckResult Pending(string path) => new()
+    {
+        Path = path,
+        FileName = System.IO.Path.GetFileName(path),
+        Status = "Aguardando",
+        Detail = "Arquivo ainda não verificado.",
+    };
     public void MarkRunning(string detail) => Set(RowState.Running, "Verificando", detail);
 
     public void Apply(CheckResult result)
@@ -197,12 +207,12 @@ public partial class MdbView : ToolView
         var selected = ResultsGrid.SelectedItems.Cast<FileRow>().ToList();
         if (selected.Count == 0)
         {
-            MessageDialog.Info(Owner, "Remover", "Selecione na lista os arquivos que deseja remover.");
+            MessageDialog.Info(Owner, "Remover", "Selecione na lista os itens que deseja tirar da lista. Nenhum arquivo é apagado.");
             return;
         }
         foreach (var row in selected) _rows.Remove(row);
         UpdateCounters();
-        WriteLog($"{selected.Count} item(ns) removido(s).");
+        WriteLog($"{selected.Count} item(ns) removido(s) da lista.");
     }
 
     private void OnClear(object sender, RoutedEventArgs e)
