@@ -57,6 +57,9 @@ que muda na sua função:
 - **Ações que apagam ou alteram arquivos**: primeiro listam o que será feito, depois
   pedem confirmação e só então executam (analisadores, pastas vazias, renomeação e
   substituição do arquivo de saída do reparo).
+- **Nenhum aplicativo apaga arquivos sozinho**: depois da análise, a lista aparece com
+  o botão "Apagar" no rodapé do cartão de resultados (`ResultsCard.ShowDelete`). Só ao
+  clicar nele e confirmar é que algo é apagado.
 - **Fim**: toda execução termina com uma mensagem de resumo; ao fechar a janela com uma
   operação em andamento, o aplicativo pergunta antes.
 
@@ -104,8 +107,13 @@ O botão **Configurações** no cabeçalho de todos os aplicativos tem:
 
 ## Diferenças de comportamento em relação ao Python
 
-- **DWG Cleaner** pede confirmação antes de apagar (antes apagava automaticamente),
-  igual aos outros analisadores.
+- **Analisadores e Empty Folders** não apagam ao fim da análise: o usuário escolhe o
+  botão "Apagar" e confirma (o DWG Cleaner em Python apagava automaticamente).
+- **Image Analyzer** reconhece o formato pelos bytes, como o Pillow (um JPEG salvo como
+  .png não é corrompido), e decodifica só o primeiro quadro. Sem o codec WebP do
+  Windows, exige blocos RIFF íntegros e um fluxo VP8/VP8L válido.
+- **PDF Analyzer** aceita o %%EOF em qualquer ponto do arquivo ou truncado no final,
+  como o pypdf; sem nenhum marcador o PDF é rejeitado.
 - **Firebird Analyzer** salva o relatório CSV em
   `Documentos\Nexotool\Firebird Analyzer` (antes ia para a pasta de trabalho atual)
   e ganhou o botão "Abrir relatório".
@@ -116,12 +124,12 @@ O botão **Configurações** no cabeçalho de todos os aplicativos tem:
   o valor não é comparável com o calculado pela versão Python. Exige o driver ODBC do
   Access de **64 bits** (Microsoft Access Database Engine), pois o aplicativo é 64 bits.
   Pastas também podem ser arrastadas para a lista.
-- **Empty Folders** tem um botão só, "Procurar pastas vazias": lista as pastas e já pede a
-  confirmação para apagar, como os analisadores (antes eram "Listar" e "Apagar" separados,
-  e a lista era montada automaticamente ao escolher a pasta).
+- **Empty Folders**: "Procurar pastas vazias" só lista; "Apagar" aparece depois, com
+  confirmação (a lista não é mais montada automaticamente ao escolher a pasta).
 - **Rename Folder** mostra a lista "nome atual -> novo nome" e pede confirmação antes de
   renomear; uma pasta que falhar não interrompe as demais.
 - **Firebird Analyzer, MySQL Analyzer, Rename Folder e Sector DB Repair** ganharam o
-  botão "Cancelar" (no reparo, o arquivo de saída incompleto é removido).
+  botão "Cancelar". No reparo, a gravação vai para um temporário e a saída escolhida só
+  é substituída no sucesso: cancelar não apaga nem altera um arquivo que já existia.
 - Todos os aplicativos usam o mesmo cabeçalho, rodapé, botões, cores, diálogos e tela de
   ativação; a barra de título do Windows segue o azul-marinho do cabeçalho.
