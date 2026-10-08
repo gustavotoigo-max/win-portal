@@ -33,11 +33,12 @@ public class PathField : Grid
         Margin = new Thickness(0, 0, 0, 12);
         Background = System.Windows.Media.Brushes.Transparent;
         AllowDrop = true;
-        ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(LabelWidth) });
+        ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto, SharedSizeGroup = LabelColumnGroup });
         ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
         _label.SetResourceReference(StyleProperty, "FieldLabelText");
+        _label.Margin = LabelMargin;
         SetColumn(_box, 1);
         SetColumn(_buttons, 2);
         Children.Add(_label);
@@ -51,8 +52,14 @@ public class PathField : Grid
         BuildButtons();
     }
 
-    /// <summary>Largura da coluna de rótulos, igual em todos os formulários.</summary>
-    public const double LabelWidth = 150;
+    /// <summary>
+    /// Coluna de rótulos compartilhada por todos os campos da mesma tela (ToolView):
+    /// fica com a largura do rótulo mais longo, em vez de uma largura fixa.
+    /// </summary>
+    public const string LabelColumnGroup = "FieldLabel";
+
+    /// <summary>Espaço entre o rótulo e o campo.</summary>
+    public static readonly Thickness LabelMargin = new(0, 0, 14, 0);
 
     public event EventHandler? TextChanged;
 

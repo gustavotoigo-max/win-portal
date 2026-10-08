@@ -14,9 +14,10 @@ public class FormRow : Grid
     public FormRow()
     {
         Margin = new Thickness(0, 0, 0, 12);
-        ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(PathField.LabelWidth) });
+        ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto, SharedSizeGroup = PathField.LabelColumnGroup });
         ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         _label.SetResourceReference(StyleProperty, "FieldLabelText");
+        _label.Margin = PathField.LabelMargin;
         Children.Add(_label);
     }
 

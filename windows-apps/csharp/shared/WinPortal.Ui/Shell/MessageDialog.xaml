@@ -1,6 +1,7 @@
 <Window x:Class="WinPortal.Ui.Shell.MessageDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:WinPortal.Ui.Controls"
         Width="460" SizeToContent="Height" ResizeMode="NoResize" ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner" Background="{StaticResource SurfaceBrush}"
         FontFamily="{StaticResource UiFont}" UseLayoutRounding="True">
@@ -44,5 +45,6 @@
                 <Button x:Name="OkButton" Content="OK" Style="{StaticResource PrimaryButton}" IsDefault="True" Click="OnOk" />
             </StackPanel>
         </Border>
+        <controls:CaptionButtons Grid.RowSpan="4" CloseOnly="True" OnNavy="False" />
     </Grid>
 </Window>

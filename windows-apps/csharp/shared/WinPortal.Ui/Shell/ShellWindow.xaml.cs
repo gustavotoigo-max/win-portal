@@ -30,7 +30,7 @@ public partial class ShellWindow : Window
     public ShellWindow(ProductInfo product, Func<FrameworkElement> createTool)
     {
         InitializeComponent();
-        NativeWindow.UseBrandTitleBar(this);
+        NativeWindow.UseBorderless(this, captionHeight: 36);
         _product = product;
         _createTool = createTool;
 
@@ -96,14 +96,14 @@ public partial class ShellWindow : Window
         ActivationMode = null;
         ShowLocked("Software não ativado",
             $"Ative o {_product.AppName} com o e-mail da compra e a chave da licença para começar a usar.");
-        SetLicenseBadge("Ativar licença", "CyanBrush");
+        SetLicenseBadge("Não ativado", "CyanBrush");
         await Task.Delay(150);
         OpenActivation();
     }
 
     private void UnlockTool()
     {
-        SetLicenseBadge("Licença ativa", "SuccessBrush");
+        SetLicenseBadge("Ativado", "SuccessBrush");
         if (_tool is not null) return;
         LockedPanel.Visibility = Visibility.Collapsed;
         _tool = _createTool();
@@ -173,7 +173,7 @@ public partial class ShellWindow : Window
         LicensePayload = null;
         ActivationMode = null;
         ShowLocked("Licença indisponível", result.Message);
-        SetLicenseBadge("Licença indisponível", "DangerBrush");
+        SetLicenseBadge("Não ativado", "DangerBrush");
         MessageDialog.Error(this, "Licença", result.Message);
     }
 
@@ -212,6 +212,7 @@ public partial class ShellWindow : Window
         {
             var update = await UpdateService.CheckAsync(_product.Identity.ExecutableName);
             _update = update;
+            ShowUpdateBell(update);
             if (update is not null && (manual || update.Version != _dismissedVersion)) ShowUpdateBanner(update);
             return update;
         }
@@ -232,6 +233,18 @@ public partial class ShellWindow : Window
         UpdateLaterButton.Content = "Depois";
         UpdateNotesButton.Visibility = update.NotesUrl is null ? Visibility.Collapsed : Visibility.Visible;
         UpdateBanner.Visibility = Visibility.Visible;
+    }
+
+    /// <summary>Sino no rodapé, ao lado da versão: fica visível enquanto houver versão nova.</summary>
+    private void ShowUpdateBell(UpdateInfo? update)
+    {
+        UpdateBell.Visibility = update is null ? Visibility.Collapsed : Visibility.Visible;
+        UpdateBell.ToolTip = update is null ? null : $"Nova versão disponível: {update.Version.ToString(3)}";
+    }
+
+    private void OnUpdateBell(object sender, RoutedEventArgs e)
+    {
+        if (_update is { } update) ShowUpdateBanner(update);
     }
 
     private void OnUpdateNotes(object sender, RoutedEventArgs e)

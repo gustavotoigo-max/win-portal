@@ -21,7 +21,7 @@ public partial class ActivationWindow : Window
     public ActivationWindow(Window owner, ProductInfo product, JsonObject? licensePayload, string? activationMode)
     {
         InitializeComponent();
-        NativeWindow.UseBrandTitleBar(this);
+        NativeWindow.UseBorderless(this, captionHeight: 76);
         Owner = owner;
         Icon = owner.Icon;
         _product = product;

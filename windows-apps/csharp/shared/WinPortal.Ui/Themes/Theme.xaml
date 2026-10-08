@@ -210,6 +210,61 @@
         <Setter Property="Tag" Value="{StaticResource Navy3Brush}" />
     </Style>
 
+    <Style x:Key="NavyCompactButton" TargetType="Button" BasedOn="{StaticResource NavyButton}">
+        <Setter Property="Height" Value="26" />
+        <Setter Property="Padding" Value="9,0" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <!-- Botões da janela (minimizar, maximizar, fechar) nas janelas sem a barra do Windows -->
+    <Style x:Key="CaptionButton" TargetType="Button">
+        <Setter Property="Width" Value="46" />
+        <Setter Property="Height" Value="32" />
+        <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+        <Setter Property="Tag" Value="{StaticResource DisabledFillBrush}" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Chrome" Background="{TemplateBinding Background}">
+                        <TextBlock x:Name="Glyph" Text="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Foreground="{TemplateBinding Foreground}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Chrome" Property="Background" Value="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Chrome" Property="Opacity" Value="0.8" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="CaptionButtonOnNavy" TargetType="Button" BasedOn="{StaticResource CaptionButton}">
+        <Setter Property="Foreground" Value="{StaticResource TextOnNavyBrush}" />
+        <Setter Property="Tag" Value="{StaticResource Navy3Brush}" />
+    </Style>
+    <Style x:Key="CaptionCloseButton" TargetType="Button" BasedOn="{StaticResource CaptionButton}">
+        <Setter Property="Tag">
+            <Setter.Value>
+                <SolidColorBrush Color="#C42B1C" />
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Foreground" Value="White" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="CaptionCloseButtonOnNavy" TargetType="Button" BasedOn="{StaticResource CaptionCloseButton}">
+        <Setter Property="Foreground" Value="{StaticResource TextOnNavyBrush}" />
+    </Style>
+
     <Style x:Key="LinkButton" TargetType="Button">
         <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
         <Setter Property="FontSize" Value="12.5" />
@@ -628,6 +683,26 @@
                 <Setter Property="Foreground" Value="{StaticResource CyanBrush}" />
             </Trigger>
         </Style.Triggers>
+    </Style>
+
+    <!-- Ícone clicável no rodapé (sino de atualização) -->
+    <Style x:Key="FooterIconButton" TargetType="Button">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Chrome" Background="Transparent" CornerRadius="4" Padding="5,3">
+                        <ContentPresenter VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Chrome" Property="Background" Value="{StaticResource Navy3Brush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- ============================== Página de ferramenta ============================== -->

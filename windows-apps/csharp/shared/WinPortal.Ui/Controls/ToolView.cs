@@ -22,6 +22,12 @@ public class ToolView : UserControl, IToolView
     public bool IsBusy { get; private set; }
     public event EventHandler? BusyChanged;
 
+    public ToolView()
+    {
+        // Os rótulos dos campos desta tela dividem a mesma largura de coluna (PathField).
+        Grid.SetIsSharedSizeScope(this, true);
+    }
+
     protected Window? Owner => Window.GetWindow(this);
 
     /// <summary>Marca a ferramenta como ocupada e devolve o token de cancelamento.</summary>
