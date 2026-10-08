@@ -1,6 +1,7 @@
 <Window x:Class="WinPortal.Ui.Shell.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:WinPortal.Ui.Controls"
         Title="Configurações" Width="520" SizeToContent="Height" ResizeMode="NoResize" ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner" Background="{StaticResource SurfaceBrush}"
         FontFamily="{StaticResource UiFont}" UseLayoutRounding="True">
@@ -40,5 +41,6 @@
                 BorderThickness="0,1,0,0" Padding="24,14">
             <Button Content="Fechar" HorizontalAlignment="Right" IsCancel="True" IsDefault="True" Click="OnClose" />
         </Border>
+        <controls:CaptionButtons Grid.RowSpan="4" CloseOnly="True" OnNavy="False" />
     </Grid>
 </Window>

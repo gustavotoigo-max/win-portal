@@ -12,7 +12,7 @@ public partial class MessageDialog : Window
     private MessageDialog(string title, string message, DialogKind kind, string okText, string? cancelText)
     {
         InitializeComponent();
-        NativeWindow.UseBrandTitleBar(this);
+        NativeWindow.UseBorderless(this, captionHeight: 44);
         Title = title;
         TitleText.Text = title;
         MessageText.Text = message;

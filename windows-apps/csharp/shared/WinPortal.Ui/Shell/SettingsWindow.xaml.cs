@@ -14,7 +14,7 @@ public partial class SettingsWindow : Window
     public SettingsWindow(ShellWindow shell, ProductInfo product)
     {
         InitializeComponent();
-        NativeWindow.UseBrandTitleBar(this);
+        NativeWindow.UseBorderless(this, captionHeight: 48);
         Owner = shell;
         _shell = shell;
         _loading = true;

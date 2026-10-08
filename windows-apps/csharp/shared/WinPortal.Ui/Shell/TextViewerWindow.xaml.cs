@@ -9,7 +9,7 @@ public partial class TextViewerWindow : Window
     public TextViewerWindow(Window? owner, string title, string content)
     {
         InitializeComponent();
-        NativeWindow.UseBrandTitleBar(this);
+        NativeWindow.UseBorderless(this, captionHeight: 48);
         Title = title;
         HeaderText.Text = title;
         Body.Text = content;

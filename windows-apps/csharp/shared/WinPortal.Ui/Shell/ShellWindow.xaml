@@ -1,6 +1,7 @@
 <Window x:Class="WinPortal.Ui.Shell.ShellWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:WinPortal.Ui.Controls"
         WindowStartupLocation="CenterScreen" Background="{StaticResource AppBackgroundBrush}"
         FontFamily="{StaticResource UiFont}" UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
     <Grid>
@@ -12,12 +13,13 @@
             <RowDefinition Height="34" />
         </Grid.RowDefinitions>
 
-        <!-- Topo azul-marinho -->
-        <Border Background="{StaticResource NavyBrush}" Padding="24,0">
+        <!-- Topo azul-marinho: também é a barra da janela (arrastar, duplo clique, botões) -->
+        <Border Background="{StaticResource NavyBrush}" Padding="24,0,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Image x:Name="LogoImage" Width="38" Height="38" VerticalAlignment="Center"
@@ -27,7 +29,8 @@
                     <TextBlock x:Name="TaglineText" FontSize="12" Margin="0,1,0,0" Foreground="{StaticResource TextOnNavyMutedBrush}"
                                TextTrimming="CharacterEllipsis" />
                 </StackPanel>
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0"
+                            WindowChrome.IsHitTestVisibleInChrome="True">
                     <Button x:Name="SettingsButton" Style="{StaticResource NavyButton}" Click="OnSettingsClick" Margin="0,0,10,0"
                             ToolTip="Tema e atualizações">
                         <StackPanel Orientation="Horizontal">
@@ -44,6 +47,7 @@
                         </StackPanel>
                     </Button>
                 </StackPanel>
+                <controls:CaptionButtons Grid.Column="3" />
             </Grid>
         </Border>
         <Rectangle Grid.Row="1" Fill="{StaticResource AccentGradientBrush}" />
@@ -64,7 +68,8 @@
                     <TextBlock x:Name="UpdateDetail" FontSize="12" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" />
                     <ProgressBar x:Name="UpdateProgress" Margin="0,6,0,0" Visibility="Collapsed" MaxWidth="420" HorizontalAlignment="Left" Width="420" />
                 </StackPanel>
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0"
+                            WindowChrome.IsHitTestVisibleInChrome="True">
                     <Button x:Name="UpdateNotesButton" Style="{StaticResource LinkButton}" Content="O que mudou" Margin="0,0,16,0"
                             VerticalAlignment="Center" Click="OnUpdateNotes" />
                     <Button x:Name="UpdateLaterButton" Content="Depois" Margin="0,0,10,0" Click="OnUpdateLater" />
