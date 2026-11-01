@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import AdminEmailTest from "@/components/admin/AdminEmailTest";
 import PageShell from "@/components/site/PageShell";
 import { getAdminContext } from "@/lib/admin-auth";
 import { isEmailConfigured, siteUrl } from "@/lib/email/send-email";
@@ -40,6 +41,11 @@ export default async function AdminEmailsPage() {
           </div>
           <div className="hero-actions"><Link className="btn btn-ghost" href="/ADM">Licenças</Link></div>
         </header>
+        <section className="panel">
+          <h2>Teste de envio</h2>
+          <p className="muted">Envia um e-mail para a sua conta de administrador e mostra o resultado.</p>
+          <AdminEmailTest />
+        </section>
         {samples.map(([title, when, mail]) => (
           <section className="panel" key={title}>
             <h2>{title}</h2>
