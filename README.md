@@ -145,3 +145,32 @@ Os aplicativos novos (começando pelo FbRecovery) entram com a conta do site pel
 - Produtos com `store: false` em `lib/products.js` (ex.: `fbrecovery`) ficam fora da vitrine e da loja;
   a licença é criada pelo ADM. O id precisa existir também em `npap.product`.
 - O contrato antigo (`/api/ativar`, `/api/revalidar`) continua igual para os aplicativos atuais.
+
+## FbRecovery (único produto do site)
+
+- Página: `/pt/fbrecovery`. Endereços antigos `/pt/solucoes/...` redirecionam para ela.
+- Valor R$ 0,00 por enquanto: a licença é ativada **com cupom** (`/pt/comprar/fbrecovery`).
+- "Baixar instalador" (`/api/download/fbrecovery`) baixa direto o `FbRecovery-Setup.exe` do release mais recente
+  `fbrecovery-v<versão>` deste repositório (publicado pela automação do repositório FbRecovery).
+
+## Cupons (ADM → Cupons)
+
+Tabela `public.coupons` (migração `neon/migrations/20261103_cupons.sql`). Cada cupom tem desconto (%), validade,
+limite de usos, prazo da licença em dias (opcional, para testadores), computadores e produto. Um uso por conta;
+o uso é reservado de forma atômica na compra e devolvido se a compra falhar.
+
+## E-mails
+
+Enviados pelo site (`lib/email`): conta criada, licença ativada e senha alterada. Prévia em `/ADM/emails`.
+Envio por SMTP (Gmail agora, Hostinger depois, só trocando as variáveis):
+
+| Variável | Gmail | Hostinger |
+|---|---|---|
+| `SMTP_HOST` | `smtp.gmail.com` | `smtp.hostinger.com` |
+| `SMTP_PORT` | `465` | `465` |
+| `SMTP_USER` | seu e-mail Gmail | o e-mail do domínio |
+| `SMTP_PASS` | senha de app (conta com verificação em 2 etapas) | senha da caixa |
+| `EMAIL_FROM` | `Nexotool <seu e-mail>` | `Nexotool <contato@seu-dominio>` |
+
+Verificação de e-mail e troca de senha são enviadas pelo Neon Auth; configure o mesmo SMTP em
+Neon → Settings → Auth (provedor de e-mail SMTP personalizado) para saírem com o seu remetente.

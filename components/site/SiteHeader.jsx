@@ -38,7 +38,7 @@ export default function SiteHeader() {
 
         <nav className="main-nav" aria-label="Navegação principal">
           <div className="mega">
-            <Link className="nav-link mega-trigger" href="/pt/solucoes">
+            <Link className="nav-link mega-trigger" href="/pt/fbrecovery">
               Produtos
               <svg aria-hidden="true" viewBox="0 0 12 12" width="10" height="10"><path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
             </Link>
@@ -47,7 +47,7 @@ export default function SiteHeader() {
                 <div className="mega-group" key={group.key}>
                   <p className="mega-title">{group.title}</p>
                   {group.products.map((product) => (
-                    <Link className="mega-item" href={`/pt/solucoes/${product.id}`} key={product.id}>
+                    <Link className="mega-item" href={product.pagePath} key={product.id}>
                       <span className="mega-icon"><Image src={product.iconImage} alt="" width={80} height={80} unoptimized /></span>
                       <span>
                         <strong>{product.title}</strong>
@@ -69,7 +69,7 @@ export default function SiteHeader() {
           <details className="mobile-nav">
             <summary aria-label="Abrir menu"><Icon name="menu" /></summary>
             <div className="mobile-nav-panel">
-              <Link href="/pt/solucoes">Todos os produtos</Link>
+              <Link href="/pt/fbrecovery">FbRecovery</Link>
               <Link href="/pt#como-funciona">Como funciona</Link>
               <Link href="/pt#perguntas">Dúvidas</Link>
               <Link href="/pt/dashboard">Minha conta</Link>

@@ -17,7 +17,7 @@ export const metadata = {
 export default async function CheckoutPage({ params }) {
   const { productId } = await params;
   const product = getProductPage(productId);
-  if (!product || product.store === false) notFound();
+  if (!product) notFound();
 
   const user = await getCurrentUser();
   if (!user) {
@@ -28,7 +28,7 @@ export default async function CheckoutPage({ params }) {
     <PageShell className="checkout-page">
       <div className="container">
         <nav className="breadcrumb" aria-label="Você está em">
-          <Link href={`/pt/solucoes/${product.id}`}>{product.title}</Link>
+          <Link href={product.pagePath}>{product.title}</Link>
           <span>/</span>
           <span>Finalizar compra</span>
         </nav>

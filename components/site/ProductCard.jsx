@@ -5,7 +5,7 @@ import ProductIcon from "@/components/site/ProductIcon";
 export default function ProductCard({ product, featured = false }) {
   return (
     <article className={`product-card${featured ? " featured" : ""}`}>
-      <Link className="product-card-link" href={`/pt/solucoes/${product.id}`} aria-label={`${product.title}, ${product.priceLabel}`} />
+      <Link className="product-card-link" href={product.pagePath} aria-label={`${product.title}, ${product.priceLabel}`} />
       <div className="product-card-top">
         <ProductIcon product={product} />
         <span className="chip">{product.categoryTitle}</span>
@@ -14,7 +14,7 @@ export default function ProductCard({ product, featured = false }) {
       <p>{product.tagline}</p>
       <div className="product-card-bottom">
         <span className="price">
-          <small>Licença vitalícia</small>
+          <small>Licença</small>
           {product.priceLabel}
         </span>
         <span className="card-cta">Ver detalhes <Icon name="arrow" size={16} /></span>

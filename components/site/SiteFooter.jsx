@@ -11,13 +11,13 @@ export default function SiteFooter() {
       <div className="container footer-grid">
         <div className="footer-brand">
           <Brand />
-          <p>Ferramentas Windows para recuperação de dados, bancos de dados e organização de arquivos.</p>
+          <p>FbRecovery: análise e recuperação de bancos Firebird corrompidos.</p>
         </div>
         {groups.map((group) => (
           <div key={group.key}>
             <p className="footer-title">{group.title}</p>
             {group.products.map((product) => (
-              <Link href={`/pt/solucoes/${product.id}`} key={product.id}>{product.title}</Link>
+              <Link href={product.pagePath} key={product.id}>{product.title}</Link>
             ))}
           </div>
         ))}
@@ -26,7 +26,6 @@ export default function SiteFooter() {
           <Link href="/pt/dashboard">Minhas licenças</Link>
           <Link href="/pt/login">Entrar</Link>
           <Link href="/pt/cadastro">Criar conta</Link>
-          <Link href="/pt/solucoes/complete-solution">Solução Completa</Link>
         </div>
       </div>
       <div className="container footer-bottom">

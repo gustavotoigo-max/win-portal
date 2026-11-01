@@ -80,7 +80,7 @@ export default function LicenseCard({ license }) {
           <a className="btn btn-ghost btn-sm" href={product.downloadUrl}>
             <Icon name="download" size={16} /> Baixar instalador
           </a>
-          <Link className="link-muted" href={`/pt/solucoes/${product.id}`}>Página do produto</Link>
+          <Link className="link-muted" href={product.pagePath}>Página do produto</Link>
         </footer>
       )}
     </article>

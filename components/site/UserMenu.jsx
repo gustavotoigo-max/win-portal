@@ -38,7 +38,7 @@ export default function UserMenu() {
           </div>
           <Link href="/pt/dashboard">Minhas licenças</Link>
           <Link href="/pt/dashboard#pedidos">Meus pedidos</Link>
-          <Link href="/pt/solucoes">Comprar produtos</Link>
+          <Link href="/pt/fbrecovery">FbRecovery</Link>
           <form action="/api/auth/logout" method="post">
             <input type="hidden" name="locale" value="pt" />
             <button type="submit">Sair</button>

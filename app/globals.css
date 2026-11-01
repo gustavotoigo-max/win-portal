@@ -3140,3 +3140,29 @@ select:focus {
   background: var(--danger-50);
   color: var(--danger);
 }
+
+/* ---- ADM: cupons ---- */
+.coupon-create-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+.coupon-create-form label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.coupon-create-form .coupon-note { grid-column: span 3; }
+.coupon-create-form .btn { height: 46px; }
+.coupon-create-form .form-message { grid-column: 1 / -1; }
+.input-with-button { display: flex; gap: 8px; }
+.input-with-button input { flex: 1; min-width: 0; }
+.row-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.plain-list { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; }
+.muted.block { display: block; }
+@media (max-width: 900px) {
+  .coupon-create-form { grid-template-columns: 1fr 1fr; }
+  .coupon-create-form .coupon-note { grid-column: 1 / -1; }
+}
