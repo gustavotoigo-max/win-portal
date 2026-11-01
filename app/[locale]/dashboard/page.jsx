@@ -38,7 +38,7 @@ export default async function DashboardPage() {
             <h1 className="page-title">{firstName ? `Olá, ${firstName}` : "Suas licenças"}</h1>
             <p className="muted">Conectado como {user.email}</p>
           </div>
-          <Link className="btn btn-primary" href="/pt/solucoes"><Icon name="cart" size={18} /> Comprar outra ferramenta</Link>
+          <Link className="btn btn-primary" href="/pt/fbrecovery"><Icon name="cart" size={18} /> Conhecer o FbRecovery</Link>
         </header>
 
         <div className="stat-row">
@@ -63,8 +63,8 @@ export default async function DashboardPage() {
             <div className="empty-state">
               <Icon name="key" size={28} />
               <h3>Você ainda não tem licenças</h3>
-              <p>Escolha uma ferramenta na loja. Assim que o pedido for concluído, a chave aparece aqui.</p>
-              <Link className="btn btn-primary" href="/pt/solucoes">Ver produtos</Link>
+              <p>Ative o FbRecovery com o seu cupom. A licença aparece aqui assim que a compra é concluída.</p>
+              <Link className="btn btn-primary" href="/pt/fbrecovery">Conhecer o FbRecovery</Link>
             </div>
           )}
         </section>
@@ -120,7 +120,7 @@ export default async function DashboardPage() {
           <Icon name="support" />
           <div>
             <strong>Como ativar</strong>
-            <span>No aplicativo, informe o e-mail <strong>{user.email}</strong> e a chave da licença. Trocou de computador? Desvincule o antigo acima e ative no novo.</span>
+            <span>Abra o FbRecovery e entre pelo navegador com a conta <strong>{user.email}</strong>. Trocou de computador? Libere o antigo acima e entre no novo.</span>
           </div>
         </section>
       </div>

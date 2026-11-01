@@ -51,6 +51,8 @@ export default function ResetPasswordForm({ token }) {
         return;
       }
 
+      // aviso de segurança por e-mail (só sai se a troca deixou a sessão aberta)
+      await fetch("/api/conta/senha-alterada", { method: "POST" }).catch(() => {});
       const response = await fetch("/api/auth/redirect-target", { cache: "no-store" });
       const payload = response.ok ? await response.json() : null;
       window.location.href = payload?.target || "/pt/login";

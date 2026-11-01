@@ -1,4 +1,4 @@
-import { getProductOrNull } from "@/lib/products";
+import { getProductOrNull, productPath } from "@/lib/products";
 import { getLatestProductRelease } from "@/lib/github-releases";
 import { NextResponse } from "next/server";
 
@@ -26,5 +26,5 @@ export async function GET(request, { params }) {
   if (targetUrl) return NextResponse.redirect(targetUrl);
 
   // Sem arquivo publicado: volta para a página do produto com um aviso, em vez de abrir o GitHub.
-  return NextResponse.redirect(new URL(`/pt/solucoes/${product.id}?download=indisponivel`, request.url));
+  return NextResponse.redirect(new URL(`${productPath(product.id)}?download=indisponivel`, request.url));
 }

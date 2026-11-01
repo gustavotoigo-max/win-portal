@@ -8,7 +8,7 @@ export default function NotFound() {
         <strong>404</strong>
         <h1>Página não encontrada</h1>
         <p className="muted">O endereço pode ter mudado. Que tal ver os produtos?</p>
-        <Link className="btn btn-primary" href="/pt/solucoes">Ver produtos</Link>
+        <Link className="btn btn-primary" href="/pt/fbrecovery">Conhecer o FbRecovery</Link>
       </div>
     </PageShell>
   );

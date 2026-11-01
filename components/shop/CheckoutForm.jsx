@@ -18,7 +18,8 @@ export default function CheckoutForm({ product, email }) {
 
   const discount = coupon?.discount || 0;
   const total = Math.max(0, subtotal - discount);
-  const canFinish = total === 0;
+  // sem gateway de pagamento: a compra conclui com um cupom aplicado que zere o total
+  const canFinish = Boolean(coupon) && total === 0;
 
   async function applyCoupon(event) {
     event.preventDefault();
@@ -38,8 +39,11 @@ export default function CheckoutForm({ product, email }) {
         setCouponMessage({ type: "error", text: payload.message || "Cupom inválido." });
         return;
       }
-      setCoupon({ code: payload.coupon.code, label: payload.coupon.label, discount: payload.discount });
-      setCouponMessage({ type: "success", text: `${payload.coupon.label} aplicado.` });
+      setCoupon({ code: payload.coupon.code, label: payload.coupon.label, discount: payload.discount, licenseDays: payload.coupon.licenseDays });
+      setCouponMessage({
+        type: "success",
+        text: `${payload.coupon.label} aplicado.` + (payload.coupon.licenseDays ? ` Licença válida por ${payload.coupon.licenseDays} dias.` : "")
+      });
     } catch {
       setCouponMessage({ type: "error", text: "Não foi possível validar o cupom agora." });
     } finally {
@@ -90,7 +94,7 @@ export default function CheckoutForm({ product, email }) {
       </section>
 
       <section className="panel">
-        <h2 className="panel-title"><span className="panel-step">2</span> Cupom de desconto</h2>
+        <h2 className="panel-title"><span className="panel-step">2</span> Cupom</h2>
         {coupon ? (
           <div className="coupon-applied">
             <Icon name="tag" size={18} />
@@ -126,8 +130,8 @@ export default function CheckoutForm({ product, email }) {
           <div className="payment-soon">
             <Icon name="lock" size={18} />
             <div>
-              <strong>Pagamento online em breve</strong>
-              <span>Cartão e Pix ainda não estão disponíveis nesta loja. Para concluir agora, aplique um cupom válido.</span>
+              <strong>Ative com o seu cupom</strong>
+              <span>O pagamento online ainda não está disponível. Aplique o cupom que você recebeu para ativar a licença.</span>
             </div>
           </div>
         )}
@@ -143,9 +147,9 @@ export default function CheckoutForm({ product, email }) {
         </dl>
         {error && <p className="form-message error">{error}</p>}
         <button className="btn btn-primary btn-lg btn-block" type="button" disabled={!canFinish || isSubmitting} onClick={finish}>
-          {isSubmitting ? "Concluindo..." : canFinish ? "Concluir compra" : `Pagar ${money(total)}`}
+          {isSubmitting ? "Ativando..." : canFinish ? "Ativar licença" : coupon ? `Pagar ${money(total)}` : "Aplique o cupom"}
         </button>
-        <p className="muted small center">Loja em modo de demonstração: nenhum valor é cobrado.</p>
+        <p className="muted small center">Nenhum valor é cobrado nesta etapa.</p>
       </section>
     </div>
   );

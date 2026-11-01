@@ -4,6 +4,7 @@ import Icon from "@/components/site/Icon";
 import ThemeSwitcher from "@/components/site/ThemeSwitcher";
 import UserMenu from "@/components/site/UserMenu";
 import { getProductPagesByCategory } from "@/lib/product-pages";
+import { getPriceMap } from "@/lib/prices";
 
 // Logotipo Nexotool: símbolo vetorial plano e o nome em texto, no mesmo peso
 // visual da interface. A arte original (com brilho) fica em brand/nexo-brand-v1.
@@ -28,8 +29,10 @@ export function Brand({ priority = false }) {
 
 // Cabecalho estatico: o estado de login e resolvido no cliente (UserMenu),
 // assim as paginas publicas podem ser servidas como HTML estatico.
-export default function SiteHeader() {
+export default async function SiteHeader() {
   const groups = getProductPagesByCategory();
+  const prices = await getPriceMap();
+  const priceLabel = (id) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format((prices.get(id)?.price_cents || 0) / 100);
 
   return (
     <header className="site-header">
@@ -38,7 +41,7 @@ export default function SiteHeader() {
 
         <nav className="main-nav" aria-label="Navegação principal">
           <div className="mega">
-            <Link className="nav-link mega-trigger" href="/pt/solucoes">
+            <Link className="nav-link mega-trigger" href="/pt/fbrecovery">
               Produtos
               <svg aria-hidden="true" viewBox="0 0 12 12" width="10" height="10"><path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
             </Link>
@@ -47,11 +50,11 @@ export default function SiteHeader() {
                 <div className="mega-group" key={group.key}>
                   <p className="mega-title">{group.title}</p>
                   {group.products.map((product) => (
-                    <Link className="mega-item" href={`/pt/solucoes/${product.id}`} key={product.id}>
+                    <Link className="mega-item" href={product.pagePath} key={product.id}>
                       <span className="mega-icon"><Image src={product.iconImage} alt="" width={80} height={80} unoptimized /></span>
                       <span>
                         <strong>{product.title}</strong>
-                        <small>{product.priceLabel}</small>
+                        <small>{priceLabel(product.id)}</small>
                       </span>
                     </Link>
                   ))}
@@ -69,7 +72,7 @@ export default function SiteHeader() {
           <details className="mobile-nav">
             <summary aria-label="Abrir menu"><Icon name="menu" /></summary>
             <div className="mobile-nav-panel">
-              <Link href="/pt/solucoes">Todos os produtos</Link>
+              <Link href="/pt/fbrecovery">FbRecovery</Link>
               <Link href="/pt#como-funciona">Como funciona</Link>
               <Link href="/pt#perguntas">Dúvidas</Link>
               <Link href="/pt/dashboard">Minha conta</Link>

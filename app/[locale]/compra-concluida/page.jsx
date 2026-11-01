@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { LicenseKey } from "@/components/account/LicenseKey";
 import Icon from "@/components/site/Icon";
 import PageShell from "@/components/site/PageShell";
 import { getCustomerLicenses } from "@/lib/account";
@@ -32,16 +31,13 @@ export default async function PurchaseDonePage({ searchParams }) {
       <div className="container narrow">
         <div className="success-card">
           <span className="success-icon"><Icon name="check" size={30} strokeWidth={2.4} /></span>
-          <h1>Compra concluída!</h1>
+          <h1>Licença ativada!</h1>
           <p className="muted">
             Pedido <span className="mono">{license.orderNumber}</span>. Sua licença do <strong>{product.title}</strong> já está
             ativa e fica sempre disponível em Minha conta.
           </p>
 
-          <div className="success-key">
-            <span className="field-label">Sua chave de ativação</span>
-            <LicenseKey licenseKey={license.key} large />
-          </div>
+          {license.validity && license.validity !== "Vitalícia" ? <p className="muted">Licença {license.validity.toLowerCase()}.</p> : null}
 
           <ol className="success-steps">
             <li>
@@ -56,8 +52,8 @@ export default async function PurchaseDonePage({ searchParams }) {
             <li>
               <span className="step-number">2</span>
               <div>
-                <strong>Abra o aplicativo e vá até a ativação</strong>
-                <span>Informe o e-mail <strong>{user.email}</strong> e a chave acima.</span>
+                <strong>Abra o programa e entre pelo navegador</strong>
+                <span>Confirme o acesso no site com a conta <strong>{user.email}</strong>. Não há chave para digitar.</span>
               </div>
             </li>
             <li>
@@ -71,7 +67,7 @@ export default async function PurchaseDonePage({ searchParams }) {
 
           <div className="hero-actions center">
             <Link className="btn btn-ghost" href="/pt/dashboard">Ir para Minha conta</Link>
-            <Link className="btn btn-ghost" href="/pt/solucoes">Continuar comprando</Link>
+            <Link className="btn btn-ghost" href="/pt/fbrecovery">Página do FbRecovery</Link>
           </div>
         </div>
       </div>

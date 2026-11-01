@@ -4,7 +4,7 @@ import { buildLicenseEmail } from "@/lib/email/license-email-template";
 import { sendEmail } from "@/lib/email/send-email";
 import { issueLicense, recordLicenseEvent } from "@/lib/licenses/issue";
 import { getProductPage } from "@/lib/product-pages";
-import { getProductById } from "@/lib/products";
+import { getProductById, productPath } from "@/lib/products";
 import { queryOne } from "@/lib/neon/database";
 
 function jsonError(code, message, status = 400) {
@@ -71,14 +71,15 @@ export async function POST(request) {
     });
 
     const productPage = getProductPage(product.id);
-    const downloadUrl = new URL(`/pt/solucoes/${product.id}`, request.url).toString();
+    const downloadUrl = new URL(productPath(product.id), request.url).toString();
     const emailTemplate = buildLicenseEmail({
       customerEmail,
-      licenseKey,
       orderNumber: order.order_number,
       product: productPage,
       expiresAt,
-      downloadUrl
+      maxMachines,
+      downloadUrl: new URL(productPage.downloadUrl, request.url).toString(),
+      productUrl: downloadUrl
     });
     const emailResult = await sendEmail({
       to: customerEmail,
