@@ -133,3 +133,15 @@ pelos aplicativos.
 
 O endpoint `/api/download/<product-id>` procura primeiro o instalador no GitHub
 Releases e depois usa as URLs diretas configuradas. Consulte `RELEASES.md`.
+
+## Login dos aplicativos pelo navegador (NPAPcore)
+
+Os aplicativos novos (começando pelo FbRecovery) entram com a conta do site pelo servidor
+[NPAPcore](https://github.com/gustavotoigo-max/NPAPcore-Server): o app mostra um código e abre
+`/pt/conectar?codigo=XXXX-XXXX`; a pessoa entra no site e confirma. A página grava a decisão em
+`npap.device_authorization` no Neon, e o servidor lê de lá (o site nunca chama o servidor).
+
+- Migração: `neon/migrations/20261101_npap_server.sql` (schema `npap`, aditivo; não altera `public.*`).
+- Produtos com `store: false` em `lib/products.js` (ex.: `fbrecovery`) ficam fora da vitrine e da loja;
+  a licença é criada pelo ADM. O id precisa existir também em `npap.product`.
+- O contrato antigo (`/api/ativar`, `/api/revalidar`) continua igual para os aplicativos atuais.

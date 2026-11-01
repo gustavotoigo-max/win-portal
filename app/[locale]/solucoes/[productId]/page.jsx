@@ -33,7 +33,7 @@ function formatSize(bytes) {
 export default async function ProductPage({ params }) {
   const { productId } = await params;
   const product = getProductPage(productId);
-  if (!product) notFound();
+  if (!product || product.store === false) notFound();
 
   const release = await getLatestProductRelease(product);
   const publishedAt = release?.publishedAt

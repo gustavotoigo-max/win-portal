@@ -17,7 +17,7 @@ export const metadata = {
 export default async function CheckoutPage({ params }) {
   const { productId } = await params;
   const product = getProductPage(productId);
-  if (!product) notFound();
+  if (!product || product.store === false) notFound();
 
   const user = await getCurrentUser();
   if (!user) {

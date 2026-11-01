@@ -3008,3 +3008,86 @@ select:focus {
   font-size: 0.875rem;
   line-height: 1.4;
 }
+
+/* ---------- Conectar aplicativo (login pelo navegador, NPAPcore) ---------- */
+
+.connect-card {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.connect-form {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+}
+
+.connect-code-input {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 1.3rem;
+  letter-spacing: 0.18em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.connect-details {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin: 4px 0;
+  padding: 18px 20px;
+  border-radius: var(--radius);
+  background: var(--bg);
+  text-align: left;
+}
+
+.connect-details div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.connect-details dt {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.connect-details dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+.connect-warning {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: var(--warning-50);
+  color: var(--warning);
+  font-size: 0.92rem;
+  text-align: left;
+}
+
+.connect-warning svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.connect-error {
+  color: var(--danger, #c0392b);
+  font-size: 0.92rem;
+}
+
+.connect-icon-warning {
+  background: var(--warning-50);
+  color: var(--warning);
+}
+
+.connect-icon-muted {
+  background: var(--surface-2);
+  color: var(--ink-2);
+}

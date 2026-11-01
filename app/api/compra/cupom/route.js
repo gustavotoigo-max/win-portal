@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { findCoupon, quoteOrder } from "@/lib/coupons";
-import { getProductOrNull } from "@/lib/products";
+import { getProductOrNull, isStoreProduct } from "@/lib/products";
 
 export async function POST(request) {
   const body = await request.json().catch(() => ({}));
   const product = getProductOrNull(body.productId);
 
-  if (!product) {
+  if (!isStoreProduct(product)) {
     return NextResponse.json({ ok: false, message: "Produto não encontrado." }, { status: 404 });
   }
 
