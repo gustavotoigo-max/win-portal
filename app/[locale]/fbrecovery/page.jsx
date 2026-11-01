@@ -10,22 +10,22 @@ export const revalidate = 300;
 
 export const metadata = {
   title: "FbRecovery",
-  description: "Análise e recuperação de bancos Firebird corrompidos, com enxerto a partir de backups antigos."
+  description: "Seu banco Firebird não abre? Análise rápida e segura para qualquer versão do Firebird e um banco pronto para o sistema voltar a funcionar."
 };
 
 const steps = [
   ["Crie sua conta e ative a licença", "Cadastre-se no site e conclua a compra com o seu cupom. A licença aparece em Minha conta."],
   ["Baixe e instale", "O instalador baixa direto desta página. Windows 10 ou 11, 64 bits."],
   ["Entre pelo navegador", "Ao abrir o programa, confirme o acesso no site com a sua conta. Não há chave para digitar."],
-  ["Abra o banco e recupere", "Escolha o .fdb (e backups antigos, se tiver). O banco recuperado e os relatórios ficam na pasta que você escolher."]
+  ["Abra o banco e recupere", "Escolha o arquivo .fdb. Em minutos você vê o diagnóstico e recebe o banco novo e o relatório na pasta que escolher."]
 ];
 
 const faq = [
   ["O arquivo original é alterado?", "Nunca. O programa só lê o arquivo; o banco recuperado é sempre um arquivo novo."],
   ["Meus arquivos ficam guardados em algum lugar?", "Não. O banco é usado apenas durante a análise e a recuperação e é apagado assim que o resultado é baixado."],
   ["Preciso de internet?", "Sim. O programa confere a licença e faz a análise e a recuperação com a conexão ativa."],
-  ["Quais versões do Firebird?", "Bancos criados no Firebird 1.x, 2.0, 2.1, 2.5, 3, 4 e 5 (ODS 10 a 13.1)."],
-  ["E se eu não tiver backup?", "A recuperação funciona sem backup: repara a estrutura, extrai o que for legível e gera um banco novo. Com um backup antigo, mais dados voltam."],
+  ["Quais versões do Firebird?", "Todas as versões em uso: do Firebird 1.5 ao 5.0. O programa identifica a versão sozinho."],
+  ["Quanto tempo leva?", "A análise sai em minutos. A recuperação depende do tamanho do banco, e você acompanha o andamento na tela."],
   ["Posso usar em outro computador?", "Cada licença vale para 1 computador por vez. Em Minha conta você libera o computador antigo para usar em outro."]
 ];
 
@@ -74,7 +74,7 @@ export default async function FbRecoveryPage() {
           <aside className="buy-box">
             <span className="buy-label">Licença</span>
             <strong className="buy-price">{product.priceLabel}</strong>
-            <span className="buy-sub">1 computador · ative com o seu cupom</span>
+            <span className="buy-sub">Licença para 1 computador</span>
             <Link className="btn btn-primary btn-lg btn-block" href={`/pt/comprar/${product.id}`}>
               <Icon name="cart" size={18} /> Ativar licença
             </Link>
@@ -96,7 +96,7 @@ export default async function FbRecoveryPage() {
         <div className="container">
           <div className="section-head">
             <span className="eyebrow">Recursos</span>
-            <h2>O que o FbRecovery faz</h2>
+            <h2>Do banco parado ao sistema funcionando</h2>
           </div>
           <div className="feature-grid">
             {product.features.map(([title, text]) => (
@@ -152,7 +152,7 @@ export default async function FbRecoveryPage() {
       <section className="container">
         <div className="cta-band">
           <h2>Tem um banco Firebird que não abre?</h2>
-          <p>Crie sua conta, ative a licença com o seu cupom e baixe o FbRecovery.</p>
+          <p>Descubra em minutos o que aconteceu e coloque o sistema do seu cliente para funcionar de novo.</p>
           <div className="hero-actions center">
             <Link className="btn btn-primary btn-lg" href={`/pt/comprar/${product.id}`}>Ativar licença</Link>
             <a className="btn btn-outline-light btn-lg" href={product.downloadUrl} download>Baixar instalador</a>

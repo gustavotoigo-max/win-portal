@@ -6,17 +6,17 @@ import ProductCard from "@/components/site/ProductCard";
 import { getPricedProductPage } from "@/lib/prices";
 
 const highlights = [
-  ["shield", "Original intocado", "O programa só lê o arquivo; o resultado é sempre um banco novo."],
-  ["database", "Firebird 1.x a 5", "O motor certo para cada banco, escolhido automaticamente."],
-  ["repair", "Enxerto de backups", "Backups antigos devolvem setores, estrutura e blobs perdidos."],
-  ["monitor", "Controle pela conta", "Entre pelo navegador e libere computadores no painel."]
+  ["database", "Qualquer versão", "Do Firebird 1.5 ao 5.0, identificada sozinha."],
+  ["bolt", "Análise em minutos", "Veja na hora o que foi afetado no banco."],
+  ["shield", "Seguro", "O arquivo original nunca é alterado."],
+  ["check", "Sistema de volta", "Um banco novo, pronto para o sistema abrir."]
 ];
 
 const steps = [
   ["Crie sua conta", "Cadastre-se com e-mail ou com a sua conta Google."],
   ["Ative a licença", "Conclua a compra com o seu cupom. A licença aparece em Minha conta."],
   ["Baixe e entre", "Instale o FbRecovery e confirme o acesso no site, sem chave."],
-  ["Recupere o banco", "Abra o .fdb, adicione backups se tiver e gere o banco novo."]
+  ["Recupere o banco", "Abra o arquivo .fdb e receba o banco novo, pronto para uso."]
 ];
 
 const faq = [
@@ -38,10 +38,10 @@ export default async function HomePage() {
         <div className="container hero-grid">
           <div className="hero-copy">
             <span className="eyebrow eyebrow-light">Recuperação de bancos Firebird</span>
-            <h1>Bancos Firebird corrompidos de volta ao trabalho.</h1>
+            <h1>O banco Firebird não abre e o sistema parou?</h1>
             <p className="lead">
-              O FbRecovery examina o .fdb página por página, mostra o que se perdeu e gera um banco novo e utilizável,
-              aproveitando backups antigos para trazer de volta o que faltou.
+              O FbRecovery analisa o banco em minutos, mostra o que foi afetado e entrega um banco pronto para o sistema
+              voltar a funcionar. Qualquer versão do Firebird, sem nunca alterar o arquivo original.
             </p>
             <div className="hero-actions">
               <Link className="btn btn-primary btn-lg" href={product.pagePath}>
@@ -63,7 +63,7 @@ export default async function HomePage() {
                   </div>
                   <span className="status status-active">Recuperado</span>
                 </div>
-                <div className="fake-field"><small>Backups doadores</small><span>backup_outubro.fdb</span></div>
+                <div className="fake-field"><small>Análise</small><span>concluída em 40 segundos</span></div>
                 <div className="fake-field"><small>Restaurado</small><span>97,4% dos registros · 100% dos objetos</span></div>
                 <div className="fake-progress"><span /></div>
                 <p className="fake-ok"><Icon name="check" size={16} /> Todas as tabelas legíveis no banco novo</p>
@@ -96,8 +96,8 @@ export default async function HomePage() {
         <div className="container">
           <div className="section-head">
             <span className="eyebrow">Produto</span>
-            <h2>Feito para quem recupera bancos todos os dias</h2>
-            <p>Diagnóstico, reparo e enxerto num só programa, com relatório pronto para o cliente.</p>
+            <h2>Menos tempo com o sistema parado</h2>
+            <p>Diagnóstico rápido e um banco pronto para uso, com relatório para mostrar ao cliente.</p>
           </div>
           <div className="product-grid">
             <ProductCard product={product} featured />
