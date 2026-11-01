@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LicenseKey } from "@/components/account/LicenseKey";
 import ReleaseMachineButton from "@/components/account/ReleaseMachineButton";
+import NpapActionButton from "@/components/admin/NpapActionButton";
 import Icon from "@/components/site/Icon";
 import ProductIcon from "@/components/site/ProductIcon";
 
@@ -19,10 +20,17 @@ export default function LicenseCard({ license }) {
       </header>
 
       <div className="license-card-body">
-        <div>
-          <span className="field-label">Chave de ativação</span>
-          <LicenseKey licenseKey={license.key} />
-        </div>
+        {license.server ? (
+          <div>
+            <span className="field-label">Como entrar</span>
+            <p className="muted small">Abra o programa e clique em Entrar pelo navegador. Não precisa de chave.</p>
+          </div>
+        ) : (
+          <div>
+            <span className="field-label">Chave de ativação</span>
+            <LicenseKey licenseKey={license.key} />
+          </div>
+        )}
 
         <dl className="license-facts">
           <div><dt>Validade</dt><dd>{license.validity}</dd></div>
@@ -39,18 +47,30 @@ export default function LicenseCard({ license }) {
                   <div>
                     <strong>{machine.name}</strong>
                     <small>
-                      {machine.status === "active" ? "Ativo" : "Inativo"}
-                      {machine.version ? ` · versão ${machine.version}` : ""} · última validação {machine.lastSeen}
+                      {license.server
+                        ? `${machine.status === "blocked" ? "Bloqueado" : machine.inUse ? "Em uso agora" : "Conectado"} · último uso ${machine.lastSeen}`
+                        : `${machine.status === "active" ? "Ativo" : "Inativo"}${machine.version ? ` · versão ${machine.version}` : ""} · última validação ${machine.lastSeen}`}
                     </small>
                   </div>
-                  {license.status === "active" && (
+                  {license.server ? (
+                    <NpapActionButton
+                      endpoint="/api/conta/computadores"
+                      body={{ licenseId: license.id, deviceId: machine.id }}
+                      label="Liberar"
+                      confirmText={`O programa deixará de funcionar em ${machine.name} até entrar de novo. Liberar?`}
+                    />
+                  ) : license.status === "active" && (
                     <ReleaseMachineButton activationId={machine.id} machineName={machine.name} />
                   )}
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="muted small">Nenhum computador ativado ainda. Abra o aplicativo e informe seu e-mail e esta chave.</p>
+            <p className="muted small">
+              {license.server
+                ? "Nenhum computador conectado ainda. Abra o programa e entre pelo navegador."
+                : "Nenhum computador ativado ainda. Abra o aplicativo e informe seu e-mail e esta chave."}
+            </p>
           )}
         </div>
       </div>

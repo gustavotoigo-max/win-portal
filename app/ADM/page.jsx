@@ -131,6 +131,11 @@ export default async function AdminPage() {
             <h1 className="page-title">{t.title}</h1>
             <p className="muted">{t.subtitle}</p>
           </div>
+          {adminContext.isAdmin && (
+            <div className="hero-actions">
+              <Link className="btn btn-ghost" href="/ADM/servidor">Sessões e computadores (servidor)</Link>
+            </div>
+          )}
         </header>
 
         {!adminContext.isAdmin ? (

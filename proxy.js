@@ -11,6 +11,7 @@ export function proxy(request) {
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
     pathname === "/ADM" ||
+    pathname.startsWith("/ADM/") ||
     pathname.startsWith("/favicon") ||
     PUBLIC_FILE.test(pathname)
   ) {
