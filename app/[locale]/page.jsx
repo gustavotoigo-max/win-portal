@@ -109,7 +109,7 @@ export default async function HomePage() {
         <div className="container">
           <div className="section-head">
             <span className="eyebrow">Como funciona</span>
-            <h2>Da conta à recuperação em quatro passos</h2>
+            <h2>Recuperação em quatro passos</h2>
           </div>
           <ol className="steps">
             {steps.map(([title, text], index) => (
