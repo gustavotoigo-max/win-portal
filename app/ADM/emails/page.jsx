@@ -22,7 +22,7 @@ export default async function AdminEmailsPage() {
     ["Conta criada", "Enviado no primeiro acesso (e-mail e senha ou Google).", welcomeEmail({ base, name: "Maria Souza", email: "maria@exemplo.com" })],
     ["Licença ativada", "Enviado ao concluir a compra com cupom ou ao criar a licença no ADM.", purchaseEmail({
       base, email: "maria@exemplo.com", orderNumber: "FBRECOVERY-20261101120000-1234", product, expiresAt: "2026-12-31T23:59:59-03:00",
-      maxMachines: 1, downloadUrl: `${base}/api/download/fbrecovery`, productUrl: `${base}/pt/fbrecovery`, couponCode: "TESTE-AB12"
+      maxMachines: 1, downloadUrl: `${base}/api/download/fbrecovery`, productUrl: `${base}/pt/fbrecovery`
     })],
     ["Senha alterada", "Aviso de segurança depois da troca de senha.", passwordChangedEmail({ base, email: "maria@exemplo.com" })]
   ];

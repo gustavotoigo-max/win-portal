@@ -97,7 +97,7 @@ export async function POST(request) {
         expiresAt,
         downloadUrl: new URL(productPage.downloadUrl, request.url).toString(),
         productUrl: new URL(productPath(product.id), request.url).toString(),
-        couponCode: done.code
+        maxMachines: done.maxMachines || 1
       })
     });
 
