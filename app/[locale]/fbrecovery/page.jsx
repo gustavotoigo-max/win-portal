@@ -4,7 +4,7 @@ import Icon from "@/components/site/Icon";
 import ProductIcon from "@/components/site/ProductIcon";
 import PageShell from "@/components/site/PageShell";
 import { getLatestProductRelease } from "@/lib/github-releases";
-import { getProductPage } from "@/lib/product-pages";
+import { getPricedProductPage } from "@/lib/prices";
 
 export const revalidate = 300;
 
@@ -35,7 +35,7 @@ function formatSize(bytes) {
 }
 
 export default async function FbRecoveryPage() {
-  const product = getProductPage("fbrecovery");
+  const product = await getPricedProductPage("fbrecovery");
   const release = await getLatestProductRelease(product);
   const publishedAt = release?.publishedAt
     ? new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(new Date(release.publishedAt))

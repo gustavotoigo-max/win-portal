@@ -4,6 +4,7 @@ import Icon from "@/components/site/Icon";
 import ThemeSwitcher from "@/components/site/ThemeSwitcher";
 import UserMenu from "@/components/site/UserMenu";
 import { getProductPagesByCategory } from "@/lib/product-pages";
+import { getPriceMap } from "@/lib/prices";
 
 // Logotipo Nexotool: símbolo vetorial plano e o nome em texto, no mesmo peso
 // visual da interface. A arte original (com brilho) fica em brand/nexo-brand-v1.
@@ -28,8 +29,10 @@ export function Brand({ priority = false }) {
 
 // Cabecalho estatico: o estado de login e resolvido no cliente (UserMenu),
 // assim as paginas publicas podem ser servidas como HTML estatico.
-export default function SiteHeader() {
+export default async function SiteHeader() {
   const groups = getProductPagesByCategory();
+  const prices = await getPriceMap();
+  const priceLabel = (id) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format((prices.get(id)?.price_cents || 0) / 100);
 
   return (
     <header className="site-header">
@@ -51,7 +54,7 @@ export default function SiteHeader() {
                       <span className="mega-icon"><Image src={product.iconImage} alt="" width={80} height={80} unoptimized /></span>
                       <span>
                         <strong>{product.title}</strong>
-                        <small>{product.priceLabel}</small>
+                        <small>{priceLabel(product.id)}</small>
                       </span>
                     </Link>
                   ))}

@@ -3,7 +3,7 @@ import Icon from "@/components/site/Icon";
 import ProductIcon from "@/components/site/ProductIcon";
 import PageShell from "@/components/site/PageShell";
 import ProductCard from "@/components/site/ProductCard";
-import { getProductPage } from "@/lib/product-pages";
+import { getPricedProductPage } from "@/lib/prices";
 
 const highlights = [
   ["shield", "Original intocado", "O programa só lê o arquivo; o resultado é sempre um banco novo."],
@@ -27,8 +27,10 @@ const faq = [
   ["Preciso de internet?", "Sim, o programa trabalha conectado: confere a licença e faz a análise e a recuperação com a conexão ativa."]
 ];
 
-export default function HomePage() {
-  const product = getProductPage("fbrecovery");
+export const revalidate = 300;
+
+export default async function HomePage() {
+  const product = await getPricedProductPage("fbrecovery");
 
   return (
     <PageShell>

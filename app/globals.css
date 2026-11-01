@@ -3166,3 +3166,23 @@ select:focus {
   .coupon-create-form { grid-template-columns: 1fr 1fr; }
   .coupon-create-form .coupon-note { grid-column: 1 / -1; }
 }
+
+/* ---- ADM: preços dos produtos ---- */
+.price-list { display: grid; gap: 10px; }
+.price-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 180px auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 10px;
+}
+.price-row-new { border-color: #f59e0b; }
+.price-row-product { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.price-row-product small { display: block; }
+.price-input { display: flex; align-items: center; gap: 6px; }
+.price-input input { width: 100%; text-align: right; }
+.price-row .form-message { grid-column: 1 / -1; margin: 0; }
+.status-pending { background: #fef3c7; color: #92400e; }
+@media (max-width: 700px) { .price-row { grid-template-columns: 1fr; } }

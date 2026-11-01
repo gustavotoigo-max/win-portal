@@ -5,6 +5,7 @@ import { sendEmail } from "@/lib/email/send-email";
 import { issueLicense, recordLicenseEvent } from "@/lib/licenses/issue";
 import { isDatabaseConfigured } from "@/lib/neon/database";
 import { getProductPage } from "@/lib/product-pages";
+import { getPricedProduct } from "@/lib/prices";
 import { getProductOrNull, isStoreProduct, productPath } from "@/lib/products";
 import { ensureProfile, getCurrentUser } from "@/lib/session";
 
@@ -28,7 +29,7 @@ export async function POST(request) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const product = getProductOrNull(body.productId);
+    const product = await getPricedProduct(getProductOrNull(body.productId));
     if (!isStoreProduct(product)) {
       return jsonError("invalid_product", "Produto não encontrado.", 404);
     }

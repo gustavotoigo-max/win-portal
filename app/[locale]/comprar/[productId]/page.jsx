@@ -4,7 +4,7 @@ import CheckoutForm from "@/components/shop/CheckoutForm";
 import Icon from "@/components/site/Icon";
 import ProductIcon from "@/components/site/ProductIcon";
 import PageShell from "@/components/site/PageShell";
-import { getProductPage } from "@/lib/product-pages";
+import { getPricedProductPage } from "@/lib/prices";
 import { getCurrentUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +16,7 @@ export const metadata = {
 
 export default async function CheckoutPage({ params }) {
   const { productId } = await params;
-  const product = getProductPage(productId);
+  const product = await getPricedProductPage(productId);
   if (!product) notFound();
 
   const user = await getCurrentUser();

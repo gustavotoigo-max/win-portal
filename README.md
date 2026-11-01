@@ -174,3 +174,9 @@ Envio por SMTP (Gmail agora, Hostinger depois, só trocando as variáveis):
 
 Verificação de e-mail e troca de senha são enviadas pelo Neon Auth; configure o mesmo SMTP em
 Neon → Settings → Auth (provedor de e-mail SMTP personalizado) para saírem com o seu remetente.
+
+## Preços (ADM → Produtos e preços)
+
+Os produtos existem no catálogo do código (`lib/products.js`); o preço fica no banco (`public.product_prices`,
+migração `neon/migrations/20261104_precos.sql`) e é editado no ADM. Produto novo do catálogo, sem preço cadastrado,
+aparece no ADM como **Sem preço** e no site como R$ 0,00 até o valor ser salvo. Ao salvar, as páginas são atualizadas.

@@ -1,10 +1,12 @@
 import AdminCreateLicenseForm from "@/components/admin/AdminCreateLicenseForm";
 import AdminLicensePanel from "@/components/admin/AdminLicensePanel";
+import AdminProductPrices from "@/components/admin/AdminProductPrices";
 import PageShell from "@/components/site/PageShell";
 import { getAdminContext } from "@/lib/admin-auth";
 import { adminTexts as t } from "@/lib/admin-texts";
 import { decryptLicenseKey } from "@/lib/license-crypto";
 import { isDatabaseConfigured, query } from "@/lib/neon/database";
+import { getCatalogWithPrices } from "@/lib/prices";
 import { products } from "@/lib/products";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -115,8 +117,18 @@ async function getAdminLicenses() {
   return { licenses, adminContext };
 }
 
+async function getPriceTable() {
+  try {
+    await query("select 1 from public.product_prices limit 1");
+    return { catalog: await getCatalogWithPrices(), missingTable: false };
+  } catch {
+    return { catalog: [], missingTable: true };
+  }
+}
+
 export default async function AdminPage() {
   const { licenses, adminContext } = await getAdminLicenses();
+  const prices = adminContext.isAdmin && isDatabaseConfigured() ? await getPriceTable() : { catalog: [], missingTable: false };
   const counts = licenses.reduce((acc, license) => {
     acc[license.status] = (acc[license.status] || 0) + 1;
     return acc;
@@ -159,6 +171,12 @@ export default async function AdminPage() {
               <div className="stat"><div><strong>{(counts.revoked || 0) + (counts.blocked || 0)}</strong><span>revogadas ou bloqueadas</span></div></div>
               <div className="stat"><div><strong>{counts.expired || 0}</strong><span>expiradas</span></div></div>
             </div>
+
+            <section className="panel" id="precos">
+              <h2>Produtos e preços</h2>
+              <p className="muted">Todo produto novo do catálogo aparece aqui marcado como &quot;Sem preço&quot;. Defina o valor e salve: o site atualiza em instantes.</p>
+              <AdminProductPrices products={prices.catalog} missingTable={prices.missingTable} />
+            </section>
 
             <section className="panel">
               <h2>{t.manualTitle}</h2>
