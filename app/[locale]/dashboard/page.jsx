@@ -120,7 +120,7 @@ export default async function DashboardPage() {
           <Icon name="support" />
           <div>
             <strong>Como ativar</strong>
-            <span>Abra o FbRecovery e entre pelo navegador com a conta <strong>{user.email}</strong>. Trocou de computador? Libere o antigo acima e entre no novo.</span>
+            <span>Abra o programa e entre pelo navegador com a conta <strong>{user.email}</strong>. Trocou de computador? Libere o antigo acima e entre no novo.</span>
           </div>
         </section>
       </div>

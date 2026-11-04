@@ -168,7 +168,7 @@ export default async function AdminServerPage() {
               </table>
             </div>
           ) : (
-            <p className="muted">Nenhuma licença de programa do servidor (ex.: FbRecovery) emitida ainda.</p>
+            <p className="muted">Nenhuma licença de programa do servidor emitida ainda.</p>
           )}
           <p className="muted small">
             &quot;Liberar vaga&quot; tira o computador da licença (o cliente pode usar em outro). &quot;Bloquear&quot; impede aquele

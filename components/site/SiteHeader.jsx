@@ -73,6 +73,7 @@ export default async function SiteHeader() {
             <summary aria-label="Abrir menu"><Icon name="menu" /></summary>
             <div className="mobile-nav-panel">
               <Link href="/pt/fbrecovery">FbRecovery</Link>
+              <Link href="/pt/sqlrecovery">Nexo SQL Recovery</Link>
               <Link href="/pt#como-funciona">Como funciona</Link>
               <Link href="/pt#perguntas">Dúvidas</Link>
               <Link href="/pt/dashboard">Minha conta</Link>

@@ -28,6 +28,7 @@ tag mais recente do produto e exige o asset com o nome exato da tabela abaixo.
 | MySQL Analyzer | `mysql-analyzer-vX.Y.Z` | `MySQLAnalyzer.exe` |
 | Sector DBFB Repair | `sector-dbfb-repair-vX.Y.Z` | `SectorDBRepair.exe` |
 | DWG Cleaner | `dwg-cleaner-vX.Y.Z` | `DWGCleaner.exe` |
+| Nexo SQL Recovery | `sqlrecovery-vX.Y.Z` | `NexoSqlRecovery-Setup.exe` |
 | Rename Folder | `rename-folder-vX.Y.Z` | `RenameFolder.exe` |
 | MDB Integrity | `mdb-integrity-vX.Y.Z` | `MDBIntegrity.exe` |
 | Empty Folder Cleaner | `empty-folder-cleaner-vX.Y.Z` | `EmptyFolders.exe` |
