@@ -11,7 +11,7 @@ export default function SiteFooter() {
       <div className="container footer-grid">
         <div className="footer-brand">
           <Brand />
-          <p>FbRecovery: bancos Firebird que não abrem de volta ao trabalho, em qualquer versão.</p>
+          <p>Bancos Firebird e SQL Server que não abrem de volta ao trabalho.</p>
         </div>
         {groups.map((group) => (
           <div key={group.key}>

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Icon from "@/components/site/Icon";
 import PageShell from "@/components/site/PageShell";
 import { getCustomerLicenses } from "@/lib/account";
+import { productPath } from "@/lib/products";
 import { getCurrentUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -67,7 +68,7 @@ export default async function PurchaseDonePage({ searchParams }) {
 
           <div className="hero-actions center">
             <Link className="btn btn-ghost" href="/pt/dashboard">Ir para Minha conta</Link>
-            <Link className="btn btn-ghost" href="/pt/fbrecovery">Página do FbRecovery</Link>
+            <Link className="btn btn-ghost" href={productPath(product.id)}>Página do {product.name}</Link>
           </div>
         </div>
       </div>

@@ -39,6 +39,7 @@ export default function UserMenu() {
           <Link href="/pt/dashboard">Minhas licenças</Link>
           <Link href="/pt/dashboard#pedidos">Meus pedidos</Link>
           <Link href="/pt/fbrecovery">FbRecovery</Link>
+          <Link href="/pt/sqlrecovery">Nexo SQL Recovery</Link>
           <form action="/api/auth/logout" method="post">
             <input type="hidden" name="locale" value="pt" />
             <button type="submit">Sair</button>
