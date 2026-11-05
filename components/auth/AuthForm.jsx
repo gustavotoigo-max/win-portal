@@ -46,7 +46,7 @@ export default function AuthForm({ mode, next = "" }) {
   function authRedirectUrl(method) {
     const params = new URLSearchParams({ locale: "pt", method });
     if (next) params.set("next", next);
-    return `${window.location.origin}/api/auth/callback?${params.toString()}`;
+    return `${window.location.origin}/pt/entrando?${params.toString()}`;
   }
 
   function friendlyAuthError(error) {
@@ -90,6 +90,11 @@ export default function AuthForm({ mode, next = "" }) {
   async function redirectAfterAuth() {
     try {
       const response = await fetch(`/api/auth/redirect-target${nextQuery}`, { cache: "no-store" });
+
+      if (response.status === 401) {
+        setMessage("O site não conseguiu confirmar o seu acesso. Tente entrar de novo.");
+        return;
+      }
 
       if (response.ok) {
         const payload = await response.json();
